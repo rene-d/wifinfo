@@ -2,13 +2,6 @@
 
 #include <Arduino.h>
 
-#define Debugln Serial.println
-#define Debug Serial.print
-#define Debugf Serial.printf
-#define Debugf_P Serial.printf_P
-
-#define DebugF Serial.print
-#define DebuglnF Serial.println
 
 enum LedColors
 {

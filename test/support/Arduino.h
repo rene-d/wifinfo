@@ -3,6 +3,7 @@
 #include <string>
 
 static inline unsigned long millis() { return 1000; }
+static inline unsigned long micros() { return 1000000; }
 static inline void delay(unsigned) {}
 
 #define F(x) x

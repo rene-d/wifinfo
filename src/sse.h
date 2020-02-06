@@ -1,3 +1,8 @@
+/*
+ * Server-sent Events (SSE) for ESP8266
+ * Copyright (c) 2020 rene-d. All right reserved.
+ */
+
 #pragma once
 
 #include <ESP8266WebServer.h>

@@ -33,6 +33,85 @@ ST 008 _\r\
 \nMOTDETAT 000000 B\r\
 \x03";
 
+static const std::string test_trame_incomplete = "\
+\x02\
+\nADCO 111111111111 A\r\
+\nOPTARIF HC.. <\r\
+\nISOUSC 30 9\r\
+\nHCHC 052890470 )\r\
+\nHCHP 049126843 8\r\
+\nPTEC HP.. \
+\n E\r\
+\nPAPP 01890 3\r\
+\nHHPHC D /\r\
+\nMOTDETAT 000000 B\r\
+\x03";
+
+
+
+static const std::string test_trame_mauvais_groupe = "\
+\x02\
+\nADCO 111111111111 A\r\
+\nOPTARIF HC.. <\r\
+\nISOUSC 30 9\r\
+\nH\r\
+\nHCHP 049126843 8\r\
+\nPTEC HP..  \r\
+\nIINST 008 _\r\
+\nIMAX 042 E\r\
+\nPAPP 01890 3\r\
+\nHHPHC D /\r\
+\nMOTDETAT 000000 B\r\
+\x03";
+
+
+static const std::string test_trame_trop_longue = "\
+\x02\
+\nADCO 111111111111 A\r\
+\nOPTARIF HC.. <\r\
+\nISOUSC 30 9\r\
+\nHCHC 052890470 )\r\
+\nHCHP 049126843 8\r\
+\nHCHC 052890470 )\r\
+\nHCHP 049126843 8\r\
+\nHCHC 052890470 )\r\
+\nHCHP 049126843 8\r\
+\nHCHC 052890470 )\r\
+\nHCHP 049126843 8\r\
+\nHCHC 052890470 )\r\
+\nHCHP 049126843 8\r\
+\nHCHC 052890470 )\r\
+\nHCHP 049126843 8\r\
+\nHCHC 052890470 )\r\
+\nHCHP 049126843 8\r\
+\nHCHC 052890470 )\r\
+\nHCHP 049126843 8\r\
+\nPTEC HP.. \
+\n E\r\
+\nPAPP 01890 3\r\
+\nHHPHC D /\r\
+\nMOTDETAT 000000 B\r\
+\x03";
+
+
+static const std::string test_trame_groupe_trop_long = "\
+\x02\
+\nADCO 111111111111 A\r\
+\nOPTARIF HC.. <\r\
+\nISOUSC 30 9\r\
+\nHCHC AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\
+\nPTEC HP.. \
+\n E\r\
+\nPAPP 01890 3\r\
+\nHHPHC D /\r\
+\nMOTDETAT 000000 B\r\
+\x03";
+
 TEST(teleinfo, decode_ok)
 {
     TeleinfoDecoder tinfo_decode;
@@ -57,7 +136,17 @@ TEST(teleinfo, decode_ok)
 TEST(teleinfo, decode_ko)
 {
     TeleinfoDecoder tinfo_decode;
-
+/*
+    Teleinfo tinfo;
+    const char *label;
+    const char *value;
+    const char *state;
+    tinfo.copy_from(tinfo_decode);
+    ASSERT_EQ(tinfo.get_value("BLAH"), nullptr);
+    state = nullptr;
+    while (tinfo.get_value_next(label, value, &state))
+    {}
+*/
     for (auto c : test_trame_ko)
     {
         tinfo_decode.put(c);
@@ -88,6 +177,48 @@ TEST(teleinfo, decode_ko)
     ASSERT_FALSE(tinfo_decode.ready());
 
     // la réception d'une trame ok doit réussir
+    for (auto c : trame_teleinfo)
+    {
+        tinfo_decode.put(c);
+    }
+    ASSERT_TRUE(tinfo_decode.ready());
+
+    // la réception d'une trame incomplète doit échouer
+    for (auto c : test_trame_incomplete)
+    {
+        tinfo_decode.put(c);
+    }
+    ASSERT_FALSE(tinfo_decode.ready());
+
+    // la réception d'une trame incomplète doit échouer
+    for (auto c : test_trame_trop_longue)
+    {
+        tinfo_decode.put(c);
+    }
+    ASSERT_FALSE(tinfo_decode.ready());
+
+    // tout et n'importe quoi
+    for (int c = 0; c <= 127;  ++c)
+    {
+        tinfo_decode.put(c);
+    }
+    ASSERT_FALSE(tinfo_decode.ready());
+
+    // pas de place pour le crc dans un groupe
+    for (auto c : test_trame_mauvais_groupe)
+    {
+        tinfo_decode.put(c);
+    }
+    ASSERT_FALSE(tinfo_decode.ready());
+
+    // test_trame_groupe_trop_long
+    for (auto c : test_trame_groupe_trop_long)
+    {
+        tinfo_decode.put(c);
+    }
+    ASSERT_FALSE(tinfo_decode.ready());
+
+    // la réception d'une trame ok doit réussir après tous ces échecs
     for (auto c : trame_teleinfo)
     {
         tinfo_decode.put(c);

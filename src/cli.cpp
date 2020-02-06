@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2015-2020 rene-d. All right reserved.
+ */
+
 #include "timesync.h"
 #include "sse.h"
 #include "config.h"

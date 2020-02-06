@@ -1,5 +1,4 @@
 #include "filesystem.h"
-#include "debug.h"
 #include <Arduino.h>
 #include <FS.h>
 #include <user_interface.h>
@@ -11,18 +10,18 @@ void fs_setup()
     if (!SPIFFS.begin())
     {
         // Serious problem
-        Debugln(F("SPIFFS Mount failed !"));
+        Serial.println(F("SPIFFS Mount failed !"));
     }
     else
     {
-        Debugln(F("SPIFFS Mount succesfull"));
+        Serial.println(F("SPIFFS Mount succesfull"));
 
         Dir dir = SPIFFS.openDir("/");
         while (dir.next())
         {
             const String& fileName = dir.fileName();
             size_t fileSize = dir.fileSize();
-            Debugf("FS File: %s, size: %zu\n", fileName.c_str(), fileSize);
+            Serial.printf("FS File: %s, size: %zu\n", fileName.c_str(), fileSize);
         }
     }
 }
@@ -72,9 +71,9 @@ void fs_get_spiffs_json(String &response)
     SPIFFS.info(info);
     response += F("\"Total\":");
     response += info.totalBytes;
-    response += F(", \"Used\":");
+    response += F(",\"Used\":");
     response += info.usedBytes;
-    response += F(", \"ram\":");
+    response += F(",\"ram\":");
     response += system_get_free_heap_size();
     response += F("}]");
 

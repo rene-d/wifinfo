@@ -1,3 +1,7 @@
+/*
+ * librairie Teleinfo
+ * Copyright (c) 2015-2020 rene-d. All right reserved.
+ */
 #pragma once
 
 #include <Arduino.h>

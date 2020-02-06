@@ -1,6 +1,6 @@
 #include "sys.h"
 #include "config.h"
-#include "debug.h"
+#include "led.h"
 #include <ESP8266WiFi.h>
 #include <sys/time.h>
 
@@ -218,21 +218,21 @@ int sys_wifi_connect(bool setup)
     if (setup)
     {
         //#ifdef DEBUG
-        DebuglnF("========== WiFi diags start");
+        Serial.println("========== WiFi diags start");
         WiFi.printDiag(Serial);
-        DebuglnF("========== WiFi diags end");
+        Serial.println("========== WiFi diags end");
         Serial.flush();
         //#endif
 
         // no correct SSID
         if (!*config.ssid)
         {
-            DebugF("no Wifi SSID in config, trying to get SDK ones...");
+            Serial.printf("no Wifi SSID in config, trying to get SDK ones...");
 
             // Let's see of SDK one is okay
             if (WiFi.SSID() == "")
             {
-                DebuglnF("Not found may be blank chip!");
+                Serial.println("Not found may be blank chip!");
             }
             else
             {
@@ -245,7 +245,7 @@ int sys_wifi_connect(bool setup)
                 if (WiFi.psk() != "")
                     strcpy(config.psk, WiFi.psk().c_str());
 
-                DebuglnF("found one!");
+                Serial.println("found one!");
 
                 // save back new config
                 config_save();
@@ -257,24 +257,24 @@ int sys_wifi_connect(bool setup)
         {
             uint8_t timeout;
 
-            DebugF("Connecting to: ");
-            Debugln(config.ssid);
+            Serial.printf("Connecting to: ");
+            Serial.println(config.ssid);
             Serial.flush();
 
             // Do wa have a PSK ?
             if (*config.psk)
             {
                 // protected network
-                Debug(F(" with key '"));
-                Debug(config.psk);
-                Debug(F("'..."));
+                Serial.print(F(" with key '"));
+                Serial.print(config.psk);
+                Serial.print(F("'..."));
                 Serial.flush();
                 WiFi.begin(config.ssid, config.psk);
             }
             else
             {
                 // Open network
-                Debug(F("unsecure AP"));
+                Serial.print(F("unsecure AP"));
                 Serial.flush();
                 WiFi.begin(config.ssid);
             }
@@ -296,21 +296,21 @@ int sys_wifi_connect(bool setup)
         if (ret == WL_CONNECTED)
         {
             nb_reconnect++; // increase reconnections count
-            DebuglnF("connected!");
+            Serial.println("connected!");
             WiFi.mode(WIFI_STA);
             ad = WiFi.localIP();
             sprintf(toprint, "%d.%d.%d.%d", ad[0], ad[1], ad[2], ad[3]);
-            DebugF("IP address   : ");
-            Debugln(toprint);
-            DebugF("MAC address  : ");
-            Debugln(WiFi.macAddress());
+            Serial.printf("IP address   : ");
+            Serial.println(toprint);
+            Serial.printf("MAC address  : ");
+            Serial.println(WiFi.macAddress());
 
             // not connected ? start AP
         }
         else
         {
             char ap_ssid[32];
-            DebuglnF("Error!");
+            Serial.println("Error!");
             Serial.flush();
 
             // STA+AP Mode without connected to STA, autoconnect will search
@@ -322,35 +322,35 @@ int sys_wifi_connect(bool setup)
 
             // SSID = hostname
             strcpy(ap_ssid, config.host);
-            DebugF("Switching to AP ");
-            Debugln(ap_ssid);
+            Serial.printf("Switching to AP ");
+            Serial.println(ap_ssid);
             Serial.flush();
 
             // protected network
             if (*config.ap_psk)
             {
-                DebugF(" with key '");
-                Debug(config.ap_psk);
-                DebuglnF("'");
+                Serial.printf(" with key '");
+                Serial.print(config.ap_psk);
+                Serial.println("'");
                 WiFi.softAP(ap_ssid, config.ap_psk);
                 // Open network
             }
             else
             {
-                DebuglnF(" with no password");
+                Serial.println(" with no password");
                 WiFi.softAP(ap_ssid);
             }
             WiFi.mode(WIFI_AP_STA);
 
-            DebugF("IP address   : ");
-            Debugln(WiFi.softAPIP());
-            DebugF("MAC address  : ");
-            Debugln(WiFi.softAPmacAddress());
+            Serial.printf("IP address   : ");
+            Serial.println(WiFi.softAPIP());
+            Serial.printf("MAC address  : ");
+            Serial.println(WiFi.softAPmacAddress());
         }
         // Version 1.0.7 : Use auto reconnect Wifi
         WiFi.setAutoConnect(true);
         WiFi.setAutoReconnect(true);
-        DebuglnF("auto-reconnect armed !");
+        Serial.println("auto-reconnect armed !");
 
         // // Set OTA parameters
         // ArduinoOTA.setPort(config.ota_port);
@@ -386,11 +386,11 @@ Comments: -
 void sys_handle_factory_reset(ESP8266WebServer &server)
 {
     // Just to debug where we are
-    Debugln(F("Serving /factory_reset page..."));
+    Serial.println(F("Serving /factory_reset page..."));
     config_reset();
     ESP.eraseConfig();
     server.send(200, "text/plain", FPSTR("Reset"));
-    Debugln(F("Ok!"));
+    Serial.println(F("Ok!"));
     delay(1000);
     ESP.restart();
     while (true)
@@ -407,9 +407,9 @@ Comments: -
 void sys_handle_reset(ESP8266WebServer &server)
 {
     // Just to debug where we are
-    Debugln(F("Serving /reset page..."));
+    Serial.println(F("Serving /reset page..."));
     server.send(200, "text/plain", FPSTR("Restart"));
-    Debugln(F("Ok!"));
+    Serial.println(F("Ok!"));
     delay(1000);
     ESP.restart();
     while (true)

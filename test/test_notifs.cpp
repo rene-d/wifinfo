@@ -42,7 +42,7 @@ TEST(notifs, http)
     // pas de requête http
     strcpy(config.httpReq.host, "");
     HTTPClient::begin_called = 0;
-    http_notif("GEN");
+    tic_notifs();
     ASSERT_EQ(HTTPClient::begin_called, 0);
 }
 

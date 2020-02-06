@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
+# Copyright (c) ƒ2020 rene-d. All right reserved.
 
 # https://github.com/kangax/html-minifier
 
 
-import os
-import gzip
 import shutil
 import pathlib
 import subprocess

@@ -21,7 +21,6 @@
 // **********************************************************************************
 #include "config.h"
 #include "tic.h"
-#include "debug.h"
 #include <EEPROM.h>
 
 // Configuration structure for whole program
@@ -33,21 +32,10 @@ void config_setup()
     //EEPROM.begin(sizeof(_Config));
     EEPROM.begin(1024);
 
-    DebugF("Config size=");
-    Debug(sizeof(_Config));
-    DebugF(" (emoncms=");
-    Debug(sizeof(_emoncms));
-    DebugF("  jeedom=");
-    Debug(sizeof(_jeedom));
-    DebugF("  http request=");
-    Debug(sizeof(_httpRequest));
-    Debugln(" )");
-    //  Debugflush();
-
     // Read Configuration from EEP
     if (config_read())
     {
-        DebuglnF("Good CRC, not set! From now, we can use EEPROM config !");
+        Serial.println("Good CRC, not set! From now, we can use EEPROM config !");
     }
     else
     {
@@ -60,7 +48,7 @@ void config_setup()
         // Indicate the error in global flags
         config.config |= CFG_BAD_CRC;
 
-        DebuglnF("Reset to default");
+        Serial.println("Reset to default");
     }
 }
 
@@ -136,7 +124,7 @@ void eeprom_dump(uint8_t bytesPerRow, size_t size)
     if (bytesPerRow == 0)
         bytesPerRow = 16;
 
-    Debugln();
+    Serial.println();
 
     // loop thru EEP address
     for (i = 0; i < size; i++)
@@ -146,19 +134,19 @@ void eeprom_dump(uint8_t bytesPerRow, size_t size)
         {
             // Display Address
             sprintf_P(buff, PSTR("%04X : "), i);
-            Debug(buff);
+            Serial.print(buff);
         }
 
         // write byte in hex form
         sprintf_P(buff, PSTR("%02X "), EEPROM.read(i));
-        Debug(buff);
+        Serial.print(buff);
 
         // Last byte of the row ?
         // start a new line
         if (++j >= bytesPerRow)
         {
             j = 0;
-            Debugln();
+            Serial.println();
         }
     }
 }
@@ -238,7 +226,7 @@ bool config_save(void)
     // default config and breaks OTA
     ret_code = config_read(false);
 
-    Debugln(F("Write config "));
+    Serial.println(F("Write config "));
 
     // return result
     return (ret_code);
@@ -253,68 +241,68 @@ Comments: -
 ====================================================================== */
 void config_show()
 {
-    Debugln("");
-    DebuglnF("===== Wifi");
-    DebugF("ssid     :");
-    Debugln(config.ssid);
-    DebugF("psk      :");
-    Debugln(config.psk);
-    DebugF("host     :");
-    Debugln(config.host);
-    DebuglnF("===== Avancé");
-    DebugF("ap_psk   :");
-    Debugln(config.ap_psk);
-    DebugF("OTA auth :");
-    Debugln(config.ota_auth);
-    DebugF("OTA port :");
-    Debugln(config.ota_port);
+    Serial.println("");
+    Serial.println("===== Wifi");
+    Serial.printf("ssid     :");
+    Serial.println(config.ssid);
+    Serial.printf("psk      :");
+    Serial.println(config.psk);
+    Serial.printf("host     :");
+    Serial.println(config.host);
+    Serial.println("===== Avancé");
+    Serial.printf("ap_psk   :");
+    Serial.println(config.ap_psk);
+    Serial.printf("OTA auth :");
+    Serial.println(config.ota_auth);
+    Serial.printf("OTA port :");
+    Serial.println(config.ota_port);
 
-    DebugF("Config   :");
+    Serial.printf("Config   :");
     if (config.config & CFG_RGB_LED)
-        DebugF(" RGB");
+        Serial.printf(" RGB");
     if (config.config & CFG_DEBUG)
-        DebugF(" DEBUG");
+        Serial.printf(" DEBUG");
     if (config.config & CFG_LCD)
-        DebugF(" LCD");
-    Debugln("");
+        Serial.printf(" LCD");
+    Serial.println("");
 
-    DebuglnF("===== Emoncms");
-    DebugF("host     :");
-    Debugln(config.emoncms.host);
-    DebugF("port     :");
-    Debugln((int)config.emoncms.port);
-    DebugF("url      :");
-    Debugln(config.emoncms.url);
-    DebugF("key      :");
-    Debugln(config.emoncms.apikey);
-    DebugF("node     :");
-    Debugln(config.emoncms.node);
-    DebugF("freq     :");
-    Debugln(config.emoncms.freq);
+    Serial.println("===== Emoncms");
+    Serial.printf("host     :");
+    Serial.println(config.emoncms.host);
+    Serial.printf("port     :");
+    Serial.println((int)config.emoncms.port);
+    Serial.printf("url      :");
+    Serial.println(config.emoncms.url);
+    Serial.printf("key      :");
+    Serial.println(config.emoncms.apikey);
+    Serial.printf("node     :");
+    Serial.println(config.emoncms.node);
+    Serial.printf("freq     :");
+    Serial.println(config.emoncms.freq);
 
-    DebuglnF("===== Jeedom");
-    DebugF("host     :");
-    Debugln(config.jeedom.host);
-    DebugF("port     :");
-    Debugln(config.jeedom.port);
-    DebugF("url      :");
-    Debugln(config.jeedom.url);
-    DebugF("key      :");
-    Debugln(config.jeedom.apikey);
-    DebugF("compteur :");
-    Debugln(config.jeedom.adco);
-    DebugF("freq     :");
-    Debugln(config.jeedom.freq);
+    Serial.println("===== Jeedom");
+    Serial.printf("host     :");
+    Serial.println(config.jeedom.host);
+    Serial.printf("port     :");
+    Serial.println(config.jeedom.port);
+    Serial.printf("url      :");
+    Serial.println(config.jeedom.url);
+    Serial.printf("key      :");
+    Serial.println(config.jeedom.apikey);
+    Serial.printf("compteur :");
+    Serial.println(config.jeedom.adco);
+    Serial.printf("freq     :");
+    Serial.println(config.jeedom.freq);
 
-    DebuglnF("===== HTTP request");
-    DebugF("host     :");
-    Debugln(config.httpReq.host);
-    DebugF("port     :");
-    Debugln(config.httpReq.port);
-    DebugF("path     :");
-    Debugln(config.httpReq.path);
-    DebugF("freq     :");
-    Debugln(config.httpReq.freq);
+    Serial.println("===== HTTP request");
+    Serial.printf("host     :");
+    Serial.println(config.httpReq.host);
+    Serial.printf("port     :");
+    Serial.println(config.httpReq.port);
+    Serial.printf("path     :");
+    Serial.println(config.httpReq.path);
+    Serial.printf("freq     :");
+    Serial.println(config.httpReq.freq);
 
     Serial.flush();
 }
@@ -444,7 +432,7 @@ void config_handle_form(ESP8266WebServer &server)
     // We validated config ?
     if (server.hasArg("save"))
     {
-        DebuglnF("===== Posted configuration");
+        Serial.println("===== Posted configuration");
 
         // WifInfo
         strncpy(config.ssid, server.arg("ssid").c_str(), CFG_SSID_SIZE);
@@ -495,7 +483,7 @@ void config_handle_form(ESP8266WebServer &server)
         response = "Missing Form Field";
     }
 
-    Debugf_P(PSTR("Sending response %d %s\n"), ret, response.c_str());
+    Serial.printf_P(PSTR("Sending response %d %s\n"), ret, response.c_str());
 
     server.send(ret, "text/plain", response);
 
