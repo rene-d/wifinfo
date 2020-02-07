@@ -1,0 +1,16 @@
+.DS_Store
+.git
+.gitattributes
+.gitignore
+.pio
+.vscode
+README.md
+build
+buildall.sh
+cli.py
+data
+data_src
+docs
+lib
+platformio.ini
+prep_data_folder.py

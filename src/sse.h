@@ -6,6 +6,7 @@
 #pragma once
 
 #include <ESP8266WebServer.h>
+#include <user_interface.h>
 #include <list>
 
 class SseClient
@@ -21,13 +22,13 @@ public:
 
         if (client_)
         {
-            Serial.printf("new client %p\n", this);
+            Serial.printf_P(PSTR("new client %p\n"), this);
 
-            client_.println("HTTP/1.1 200 OK");
-            client_.println("Content-Type: text/event-stream;charset=UTF-8");
-            client_.println("Connection: close");              // the connection will be closed after completion of the response
-            client_.println("Access-Control-Allow-Origin: *"); // allow any connection. We don't want Arduino to host all of the website ;-)
-            client_.println("Cache-Control: no-cache");        // refresh the page automatically every 5 sec
+            client_.println(F("HTTP/1.1 200 OK"));
+            client_.println(F("Content-Type: text/event-stream;charset=UTF-8"));
+            client_.println(F("Connection: close"));              // the connection will be closed after completion of the response
+            client_.println(F("Access-Control-Allow-Origin: *")); // allow any connection. We don't want Arduino to host all of the website ;-)
+            client_.println(F("Cache-Control: no-cache"));        // refresh the page automatically every 5 sec
             client_.println();
             client_.flush();
         }
@@ -39,7 +40,7 @@ public:
         delay(1);
         // close the connection:
         client_.stop();
-        Serial.printf("client %p disconnected\n", this);
+        Serial.printf_P(PSTR("client %p disconnected\n"), this);
     }
 
     bool connected()
@@ -47,14 +48,14 @@ public:
         return client_.connected();
     }
 
-    void send_event(const String& data)
+    void send_event(const String &data)
     {
-        client_.println("event: esp8266"); // this name could be anything, really.
+        client_.println(F("event: esp8266")); // this name could be anything, really.
 
-        client_.print("data: ");
+        client_.print(F("data: "));
         client_.print(data);
 
-        client_.print("\r\n\r\n");
+        client_.print(F("\r\n\r\n"));
 
         client_.flush();
     }
@@ -74,6 +75,11 @@ public:
     {
         if (clients_.size() < 2)
         {
+            if (clients_.size() == 0)
+            {
+                // Set CPU speed to 160MHz
+                system_update_cpu_freq(160);
+            }
             clients_.push_back(new SseClient(server));
         }
         else
@@ -112,6 +118,12 @@ public:
             {
                 delete *it;
                 it = clients_.erase(it);
+
+                if (clients_.size() == 0)
+                {
+                    // back to 80MHz
+                    system_update_cpu_freq(80);
+                }
             }
         }
     }

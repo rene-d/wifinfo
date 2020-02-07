@@ -7,7 +7,6 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 
-
 # Code Coverage Configuration
 add_library(coverage_config INTERFACE)
 
@@ -27,9 +26,7 @@ if(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 endif()
 
 
-
 enable_testing()
-
 
 
 add_executable(tic

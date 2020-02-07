@@ -419,7 +419,7 @@
                                         </div>
                                         <div class="form-group">
                                             <label class="col-sm-3 control-label">Port</label>
-                                            <div class="col-sm-9">
+                                            <div class="col-sm-2">
                                                 <input type="text" class="form-control" id="httpreq_port" name="httpreq_port" maxlength="5" placeholder="Port">
                                             </div>
                                         </div>
@@ -449,28 +449,30 @@
                                         </div>
                                         <div class="form-group">
                                             <label class="col-sm-3 control-label">Déclencheurs</label>
-
                                             <div class="col-sm-9">
                                                 <label class="checkbox-inline"><input type="checkbox" id="cfg_trigger_hp" name="cfg_trigger_hp" value="">Passage
-                                                    en
-                                                    HP</label>
+                                                    en HP</label>
                                                 <label class="checkbox-inline"><input type="checkbox" id="cfg_trigger_hc" name="cfg_trigger_hc" value="">Passage
-                                                    en
-                                                    HC</label>
-
+                                                    en HC</label>
                                                 <label class="checkbox-inline"><input type="checkbox" id="cfg_trigger_adps" name="cfg_trigger_adps"
                                                         value="">ADPS</label>
+                                                <label class="checkbox-inline"><input type="checkbox" id="cfg_trigger_seuils" name="cfg_trigger_seuils"
+                                                        value="">Seuils</label>
                                             </div>
                                         </div>
                                         <div class="form-group">
                                             <label class="col-sm-3 control-label">Seuils</label>
                                             <div class="col-sm-9">
-
-                                                <input type="text" class="form-control" id="cfg_threshold_high" name="cfg_threshold_high" maxlength="5"
-                                                    placeholder="Seuil bas">
-
-                                                <input type="text" class="form-control" id="cfg_threshold_low" name="cfg_threshold_low" maxlength="5"
-                                                    placeholder="Seuil haut">
+                                                <div class="form-group">
+                                                    <div class="col-sm-3">
+                                                        <input type="text" class="form-control" id="cfg_threshold_high" name="cfg_threshold_high" maxlength="5"
+                                                            placeholder="Seuil bas">
+                                                    </div>
+                                                    <div class="col-sm-3">
+                                                        <input type="text" class="form-control" id="cfg_threshold_low" name="cfg_threshold_low" maxlength="5"
+                                                            placeholder="Seuil haut">
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -521,12 +523,6 @@
                                             </div>
                                         </div>
 
-                                        <div class="form-group">
-                                            <label class="col-sm-3 control-label">Rsyslog port</label>
-                                            <div class="col-sm-9">
-                                                <input type="text" class="form-control" id="syslog_port" name="syslog_port" maxlength="5" placeholder="514">
-                                            </div>
-                                        </div>
 
                                         <div class="form-group">
                                             <label class="col-sm-3 control-label">Options actives</label>
@@ -534,8 +530,6 @@
                                                 <label class="checkbox-inline"><input type="checkbox" id="cfg_debug" name="cfg_debug" value="">Debug
                                                     série</label>
                                                 <label class="checkbox-inline"><input type="checkbox" id="cfg_rgb" name="cfg_rgb" value="">LED RGB</label>
-                                                <label class="checkbox-inline"><input type="checkbox" id="cfg_oled" name="cfg_oled" value="">Affichage Ecran
-                                                    OLED</label>
                                             </div>
                                         </div>
                                     </div>
@@ -543,8 +537,7 @@
                                     <div class="panel-footer">
                                         <div class="text-center">
                                             <div class="btn-group">
-                                                <button class="btn btn-danger" id="btn_reboot">Redémarrer
-                                                    WiFinfo</button>
+                                                <button class="btn btn-danger" id="btn_reboot">Redémarrer WiFinfo</button>
                                             </div>
                                             <div class="btn-group">
                                                 <button class="btn btn-danger" data-toggle="modal" data-target="#confirm-raz">RAZ Usine</button>

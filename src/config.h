@@ -49,7 +49,7 @@
 #define CFG_HTTPREQ_HOST_SIZE 32
 #define CFG_HTTPREQ_PATH_SIZE 150
 #define CFG_HTTPREQ_DEFAULT_PORT 80
-#define CFG_HTTPREQ_DEFAULT_HOST "127.0.0.1"
+#define CFG_HTTPREQ_DEFAULT_HOST ""
 #define CFG_HTTPREQ_DEFAULT_PATH "/json.htm?type=command&param=udevice&idx=1&nvalue=0&svalue=%HCHP%;%HCHC%;0;0;%PAPP%;0"
 
 // Port pour l'OTA
@@ -92,6 +92,12 @@
 #define CFG_FORM_HTTPREQ_PORT FPSTR("httpreq_port")
 #define CFG_FORM_HTTPREQ_PATH FPSTR("httpreq_path")
 #define CFG_FORM_HTTPREQ_FREQ FPSTR("httpreq_freq")
+#define CFG_FORM_HTTPREQ_FREQ FPSTR("cfg_trigger_hp")
+#define CFG_FORM_HTTPREQ_FREQ FPSTR("cfg_trigger_hc")
+#define CFG_FORM_HTTPREQ_FREQ FPSTR("cfg_trigger_adps")
+#define CFG_FORM_HTTPREQ_FREQ FPSTR("cfg_trigger_seuils")
+#define CFG_FORM_HTTPREQ_FREQ FPSTR("cfg_threshold_high")
+#define CFG_FORM_HTTPREQ_FREQ FPSTR("cfg_threshold_low")
 
 #define CFG_FORM_IP FPSTR("wifi_ip");
 #define CFG_FORM_GW FPSTR("wifi_gw");

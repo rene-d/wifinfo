@@ -35,7 +35,7 @@ void config_setup()
     // Read Configuration from EEP
     if (config_read())
     {
-        Serial.println("Good CRC, not set! From now, we can use EEPROM config !");
+        Serial.println(F("Good CRC, not set! From now, we can use EEPROM config !"));
     }
     else
     {
@@ -48,7 +48,7 @@ void config_setup()
         // Indicate the error in global flags
         config.config |= CFG_BAD_CRC;
 
-        Serial.println("Reset to default");
+        Serial.println(F("Reset to default"));
     }
 }
 
@@ -118,7 +118,6 @@ void eeprom_dump(uint8_t bytesPerRow, size_t size)
 {
     size_t i;
     size_t j = 0;
-    char buff[128];
 
     // default to 16 bytes per row
     if (bytesPerRow == 0)
@@ -133,13 +132,11 @@ void eeprom_dump(uint8_t bytesPerRow, size_t size)
         if (j == 0)
         {
             // Display Address
-            sprintf_P(buff, PSTR("%04X : "), i);
-            Serial.print(buff);
+            Serial.printf_P(PSTR("%04X : "), i);
         }
 
         // write byte in hex form
-        sprintf_P(buff, PSTR("%02X "), EEPROM.read(i));
-        Serial.print(buff);
+        Serial.printf_P(PSTR("%02X "), EEPROM.read(i));
 
         // Last byte of the row ?
         // start a new line
@@ -241,67 +238,65 @@ Comments: -
 ====================================================================== */
 void config_show()
 {
-    Serial.println("");
-    Serial.println("===== Wifi");
-    Serial.printf("ssid     :");
+    Serial.println();
+    Serial.println(F("===== Wi-Fi"));
+    Serial.print(F("ssid     :"));
     Serial.println(config.ssid);
-    Serial.printf("psk      :");
+    Serial.print(F("psk      :"));
     Serial.println(config.psk);
-    Serial.printf("host     :");
+    Serial.print(F("host     :"));
     Serial.println(config.host);
-    Serial.println("===== Avancé");
-    Serial.printf("ap_psk   :");
+    Serial.println(F("===== Advanced"));
+    Serial.print("ap_psk   :");
     Serial.println(config.ap_psk);
-    Serial.printf("OTA auth :");
+    Serial.print("OTA auth :");
     Serial.println(config.ota_auth);
-    Serial.printf("OTA port :");
+    Serial.print("OTA port :");
     Serial.println(config.ota_port);
 
-    Serial.printf("Config   :");
+    Serial.print("Config   :");
     if (config.config & CFG_RGB_LED)
-        Serial.printf(" RGB");
+        Serial.print(" RGB");
     if (config.config & CFG_DEBUG)
-        Serial.printf(" DEBUG");
-    if (config.config & CFG_LCD)
-        Serial.printf(" LCD");
+        Serial.print(" DEBUG");
     Serial.println("");
 
-    Serial.println("===== Emoncms");
-    Serial.printf("host     :");
+    Serial.println(F("===== Emoncms"));
+    Serial.print("host     :");
     Serial.println(config.emoncms.host);
-    Serial.printf("port     :");
+    Serial.print("port     :");
     Serial.println((int)config.emoncms.port);
-    Serial.printf("url      :");
+    Serial.print("url      :");
     Serial.println(config.emoncms.url);
-    Serial.printf("key      :");
+    Serial.print("key      :");
     Serial.println(config.emoncms.apikey);
-    Serial.printf("node     :");
+    Serial.print("node     :");
     Serial.println(config.emoncms.node);
-    Serial.printf("freq     :");
+    Serial.print("freq     :");
     Serial.println(config.emoncms.freq);
 
     Serial.println("===== Jeedom");
-    Serial.printf("host     :");
+    Serial.print("host     :");
     Serial.println(config.jeedom.host);
-    Serial.printf("port     :");
+    Serial.print("port     :");
     Serial.println(config.jeedom.port);
-    Serial.printf("url      :");
+    Serial.print("url      :");
     Serial.println(config.jeedom.url);
-    Serial.printf("key      :");
+    Serial.print("key      :");
     Serial.println(config.jeedom.apikey);
-    Serial.printf("compteur :");
+    Serial.print("compteur :");
     Serial.println(config.jeedom.adco);
-    Serial.printf("freq     :");
+    Serial.print("freq     :");
     Serial.println(config.jeedom.freq);
 
     Serial.println("===== HTTP request");
-    Serial.printf("host     :");
+    Serial.print("host     :");
     Serial.println(config.httpReq.host);
-    Serial.printf("port     :");
+    Serial.print("port     :");
     Serial.println(config.httpReq.port);
-    Serial.printf("path     :");
+    Serial.print("path     :");
     Serial.println(config.httpReq.path);
-    Serial.printf("freq     :");
+    Serial.print("freq     :");
     Serial.println(config.httpReq.freq);
 
     Serial.flush();
@@ -322,7 +317,7 @@ void config_get_json(String &r)
     // Json start
     r = FPSTR("{");
 
-    r += "\"";
+    r += FPSTR("\"");
     r += CFG_FORM_SSID;
     r += FPSTR(FP_QCQ);
     r += config.ssid;
@@ -467,12 +462,12 @@ void config_handle_form(ESP8266WebServer &server)
         if (config_save())
         {
             ret = 200;
-            response = "OK";
+            response = F("OK");
         }
         else
         {
             ret = 412;
-            response = "Unable to save configuration";
+            response = F("Unable to save configuration");
         }
 
         config_show();
@@ -480,7 +475,7 @@ void config_handle_form(ESP8266WebServer &server)
     else
     {
         ret = 400;
-        response = "Missing Form Field";
+        response = F("Missing Form Field");
     }
 
     Serial.printf_P(PSTR("Sending response %d %s\n"), ret, response.c_str());

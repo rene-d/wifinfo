@@ -5,7 +5,9 @@
 
 enum LedColors
 {
+    COLOR_RED,
     COLOR_ORANGE,
+    COLOR_MAGENTA,
 };
 
 inline void led_on()

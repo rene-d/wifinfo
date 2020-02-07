@@ -24,8 +24,8 @@ import time
 codecs.register(lambda c: hexlify_codec.getregentry() if c == "hexlify" else None)
 
 
-hchc = 52890470
-hchp = 49126843
+hchc = 15000000
+hchp = 10000000
 iinst = 670 / 230
 tic_time = time.time()
 heures_pleines = True

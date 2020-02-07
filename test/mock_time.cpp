@@ -2,7 +2,6 @@
 #include <time.h>
 #include <sys/time.h>
 
-
 static const char A_SMALL_STEP_FOR_MAN[] = "1969-07-21T02:56:00Z";
 
 int gettimeofday(struct timeval *tv, void * /*tzv*/)

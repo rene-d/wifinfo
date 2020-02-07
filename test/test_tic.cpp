@@ -47,8 +47,6 @@ static const std::string test_trame_incomplete = "\
 \nMOTDETAT 000000 B\r\
 \x03";
 
-
-
 static const std::string test_trame_mauvais_groupe = "\
 \x02\
 \nADCO 111111111111 A\r\
@@ -63,7 +61,6 @@ static const std::string test_trame_mauvais_groupe = "\
 \nHHPHC D /\r\
 \nMOTDETAT 000000 B\r\
 \x03";
-
 
 static const std::string test_trame_trop_longue = "\
 \x02\
@@ -92,7 +89,6 @@ static const std::string test_trame_trop_longue = "\
 \nHHPHC D /\r\
 \nMOTDETAT 000000 B\r\
 \x03";
-
 
 static const std::string test_trame_groupe_trop_long = "\
 \x02\
@@ -133,20 +129,66 @@ TEST(teleinfo, decode_ok)
     ASSERT_STREQ(tinfo_decode.get_value("unknown", "123"), "123");
 }
 
-TEST(teleinfo, decode_ko)
+TEST(teleinfo, decode_int)
+{
+    const char *value;
+
+    value = "000123";
+    ASSERT_TRUE(Teleinfo::get_integer(value));
+    ASSERT_STREQ(value, "123");
+
+    value = "000";
+    ASSERT_TRUE(Teleinfo::get_integer(value));
+    ASSERT_STREQ(value, "0");
+
+    value = "000123a";
+    ASSERT_FALSE(Teleinfo::get_integer(value));
+    ASSERT_STREQ(value, "000123a");
+}
+
+TEST(teleinfo, decode_ko_getters)
 {
     TeleinfoDecoder tinfo_decode;
-/*
     Teleinfo tinfo;
     const char *label;
     const char *value;
     const char *state;
+    String js;
+    char raw[Teleinfo::MAX_FRAME_SIZE];
+
+    for (auto c : test_trame_ko)
+    {
+        tinfo_decode.put(c);
+    }
+
+    // la trame ne doit pas décodée
+    ASSERT_FALSE(tinfo_decode.ready());
+
+    // ni copiée
     tinfo.copy_from(tinfo_decode);
-    ASSERT_EQ(tinfo.get_value("BLAH"), nullptr);
+    ASSERT_TRUE(tinfo.is_empty());
+
+    // pas de valeur
+    ASSERT_EQ(tinfo.get_value("ADCO"), nullptr);
+
     state = nullptr;
-    while (tinfo.get_value_next(label, value, &state))
-    {}
-*/
+    ASSERT_FALSE(tinfo.get_value_next(label, value, &state));
+
+    // pas de données
+    tinfo.get_frame_array_json(js);
+    ASSERT_EQ(js, "[]");
+
+    tinfo.get_frame_dict_json(js);
+    ASSERT_EQ(js, "{}");
+
+    tinfo.get_frame_ascii(raw, sizeof(raw));
+    ASSERT_STREQ(raw, "");
+}
+
+TEST(teleinfo, decode_ko)
+{
+    TeleinfoDecoder tinfo_decode;
+
     for (auto c : test_trame_ko)
     {
         tinfo_decode.put(c);
@@ -161,6 +203,7 @@ TEST(teleinfo, decode_ko)
         tinfo_decode.put(c);
     }
     ASSERT_FALSE(tinfo_decode.ready());
+    ASSERT_TRUE(tinfo_decode.is_empty());
 
     // la réception d'une trame ok doit réussir
     for (auto c : trame_teleinfo)
@@ -198,7 +241,7 @@ TEST(teleinfo, decode_ko)
     ASSERT_FALSE(tinfo_decode.ready());
 
     // tout et n'importe quoi
-    for (int c = 0; c <= 127;  ++c)
+    for (int c = 0; c <= 127; ++c)
     {
         tinfo_decode.put(c);
     }
@@ -323,5 +366,7 @@ TEST(teleinfo, iterate)
         }
         ++nb;
     }
+
+    // 11 valeurs dans la trame de téléinformation
     ASSERT_EQ(nb, 11);
 }

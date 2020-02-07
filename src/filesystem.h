@@ -1,4 +1,4 @@
-w#pragma once
+#pragma once
 
 #include <Arduino.h>
 

@@ -37,26 +37,26 @@ public:
 
 protected:
     char frame_[MAX_FRAME_SIZE]; // buffer de mémorisation de la trame
-    size_t offset_{0};           // offset courant (i.e. longueur de la trame)
-    timeval timestamp_;          // date du début de la trame
+    size_t size_{0};             // offset courant (i.e. longueur de la trame)
+    timeval timestamp_{0};       // date du début de la trame
 
 public:
     void copy_from(const Teleinfo &tinfo)
     {
-        offset_ = tinfo.offset_;
-        memmove(frame_, tinfo.frame_, offset_);
+        size_ = tinfo.size_;
+        memmove(frame_, tinfo.frame_, size_);
         timestamp_ = tinfo.timestamp_;
     }
 
     bool is_empty() const
     {
-        return offset_ == 0;
+        return size_ == 0;
     }
 
     const char *get_value(const char *label, const char *default_value = nullptr, bool remove_leading_zeros = false) const
     {
         const char *p = frame_;
-        const char *end = frame_ + offset_;
+        const char *end = frame_ + size_;
 
         while (p < end)
         {
@@ -101,7 +101,7 @@ public:
     bool get_value_next(const char *&label, const char *&value, char const **state) const
     {
         const char *p = frame_;
-        const char *end = frame_ + offset_;
+        const char *end = frame_ + size_;
 
         if (state == nullptr)
             return false;
@@ -151,7 +151,7 @@ public:
 
     void get_frame_array_json(String &data) const
     {
-        if (offset_ == 0)
+        if (size_ == 0)
         {
             data = "[]";
             return;
@@ -162,7 +162,7 @@ public:
         data += "\", \"fl\":8,\"ck\":0}";
 
         const char *p = frame_;
-        const char *end = frame_ + offset_;
+        const char *end = frame_ + size_;
         while (p < end)
         {
             data += ",{\"na\":\"";
@@ -185,6 +185,12 @@ public:
 
     void get_frame_dict_json(String &data) const
     {
+        if (size_ == 0)
+        {
+            data = "{}";
+            return;
+        }
+
         data = "{\"_UPTIME\":";
         data += millis() / 1000;
         data += ",\"timestamp\":\"";
@@ -192,7 +198,7 @@ public:
         data += "\"";
 
         const char *p = frame_;
-        const char *end = frame_ + offset_;
+        const char *end = frame_ + size_;
         while (p < end)
         {
             data += ",\"";
@@ -227,7 +233,7 @@ public:
     {
         size_t j = 0;
         bool label = true;
-        for (size_t i = 0; i < offset_; ++i)
+        for (size_t i = 0; i < size_; ++i)
         {
             int c = frame_[i];
             if (c == 0)
@@ -281,6 +287,7 @@ public:
 
 class TeleinfoDecoder : public Teleinfo
 {
+    size_t offset_{0};             // offset courant (i.e. longueur de la trame)
     size_t offset_start_group_{0}; // offset de début d'un groupe (état wait_cr)
     enum
     {
@@ -288,24 +295,24 @@ class TeleinfoDecoder : public Teleinfo
         wait_lf_or_etx,
         wait_cr
     } state_{wait_stx}; // automate de réception
-    bool ready_{false}; // trame complète, on peut la lire
 
 public:
+    // trame complète, on peut la lire
     bool ready() const
     {
-        return ready_;
+        return size_ != 0;
     }
 
     void put(int c)
     {
-        ready_ = false;
+        size_ = 0;
 
         if (c == STX)
         {
             // début de trame, on réinitialise et on attend un LF (ou un ETX à la rigueur...)
             offset_ = 0;
             state_ = wait_lf_or_etx;
-            ready_ = false;
+            // ready_ = false;
             gettimeofday(&timestamp_, nullptr);
         }
         else if (c == LF)
@@ -388,7 +395,8 @@ public:
         {
             if (state_ == wait_lf_or_etx)
             {
-                ready_ = true;
+                // ready_ = true;
+                size_ = offset_;
                 state_ = wait_stx;
                 //validate_frame();
             }

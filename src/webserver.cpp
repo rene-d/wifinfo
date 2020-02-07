@@ -11,7 +11,6 @@
 ESP8266WebServer server(80);
 SseClients sse_clients;
 
-
 template <void (*get_json)(String &)>
 void server_send_json()
 {
@@ -96,6 +95,9 @@ void webserver_setup()
     server.serveStatic("/js", SPIFFS, "/js", "max-age=86400");
     server.serveStatic("/css", SPIFFS, "/css", "max-age=86400");
     server.serveStatic("/version", SPIFFS, "/version", "max-age=86400");
+
+    // enregistre le handler de /update
+    sys_ota_register(server);
 
     server.onNotFound(webserver_handle_notfound);
 
