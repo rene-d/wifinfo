@@ -50,7 +50,7 @@ static void test_config_notif(bool emoncms, bool jeedom, bool httpreq)
     {
         strcpy(config.httpReq.host, "sql.home");
         config.httpReq.port = 88;
-        strcpy(config.httpReq.path, "/tic.php?hchc=$HCHC&hchp=$HCHP&papp=$PAPP");
+        strcpy(config.httpReq.url, "/tic.php?hchc=$HCHC&hchp=$HCHP&papp=$PAPP");
         config.httpReq.freq = 15;
         config.httpReq.trigger_ptec = 0;
         config.httpReq.trigger_seuils = 0;
@@ -140,14 +140,14 @@ TEST(notifs, http_notif)
     tinfo_init(1800, false);
 
     // syntaxe 1: ~HCHC~
-    strcpy(config.httpReq.path, "/tic.php?hchc=~HCHC~&hchp=~HCHP~&papp=~PAPP~&tilde=~~");
+    strcpy(config.httpReq.url, "/tic.php?hchc=~HCHC~&hchp=~HCHP~&papp=~PAPP~&tilde=~~");
     HTTPClient::begin_called = 0;
     http_notif("");
     ASSERT_EQ(HTTPClient::begin_called, 1);
     ASSERT_EQ(HTTPClient::begin_url, "/tic.php?hchc=52890470&hchp=49126843&papp=1800&tilde=~");
 
     // syntaxe 2: $HCHC
-    strcpy(config.httpReq.path, "/tic.php?hchc=$HCHC&hchp=$HCHP&papp=$PAPP");
+    strcpy(config.httpReq.url, "/tic.php?hchc=$HCHC&hchp=$HCHP&papp=$PAPP");
     HTTPClient::begin_called = 0;
     http_notif("");
     ASSERT_EQ(HTTPClient::begin_called, 1);
@@ -161,7 +161,7 @@ TEST(notifs, http_notif)
 TEST(notifs, http_timer)
 {
     test_config_notif(false, false, true);
-    strcpy(config.httpReq.path, "/tic.php?p=$PAPP&t=$_type");
+    strcpy(config.httpReq.url, "/tic.php?p=$PAPP&t=$_type");
 
     tinfo_init(1234, false);
 
@@ -204,7 +204,7 @@ TEST(notifs, http_timer)
 TEST(notifs, http_ptec)
 {
     test_config_notif(false, false, true);
-    strcpy(config.httpReq.path, "/tic.php?p=$PAPP&ptec=$PTEC&t=$_type");
+    strcpy(config.httpReq.url, "/tic.php?p=$PAPP&ptec=$PTEC&t=$_type");
     config.httpReq.trigger_ptec = 1; // active les notifs de PTEC
 
     tinfo_init();
@@ -255,7 +255,7 @@ TEST(notifs, http_seuils)
     tinfo_init();
 
     // active les notifs de seuils
-    strcpy(config.httpReq.path, "/tic.php?p=$PAPP&t=$_type");
+    strcpy(config.httpReq.url, "/tic.php?p=$PAPP&t=$_type");
     config.httpReq.trigger_seuils = 1;
 
     HTTPClient::begin_called = 0;
@@ -300,7 +300,7 @@ TEST(notifs, http_adps)
     test_config_notif(false, false, true);
 
     // active les notifications de dépassement
-    strcpy(config.httpReq.path, "/tic.php?p=$PAPP&t=$_type");
+    strcpy(config.httpReq.url, "/tic.php?p=$PAPP&t=$_type");
     config.httpReq.trigger_adps = 1;
 
     HTTPClient::begin_called = 0;

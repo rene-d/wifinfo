@@ -1,8 +1,8 @@
-
 #include "httpreq.h"
+
 #include <ESP8266HTTPClient.h>
 
- void http_request(const char *host, uint16_t port, const String &url)
+void http_request(const char *host, uint16_t port, const String &url)
 {
     WiFiClient client;
     HTTPClient http;
@@ -11,7 +11,7 @@
 
     http.begin(client, host, port, url);
 
-    Serial.printf("http://%s:%d%s => ",  host, port, url.c_str());
+    Serial.printf("http://%s:%d%s => ", host, port, url.c_str());
 
     int http_code = http.GET();
 

@@ -3,6 +3,7 @@
 #include "config.h"
 #include "httpreq.h"
 #include "sse.h"
+#include "led.h"
 #include <PolledTimeout.h>
 
 extern SseClients sse_clients;
@@ -33,6 +34,9 @@ void tic_decode(int c)
 
     if (tinfo_decoder.ready())
     {
+        if (config.config & CONFIG_LED_TINFO)
+            led_on();
+
         tinfo.copy_from(tinfo_decoder);
 
         Serial.printf("teleinfo: [%lu] %s  %s  %s  %s\n",
@@ -43,6 +47,9 @@ void tic_decode(int c)
                       tinfo.get_value("PAPP", "?"));
 
         tic_notifs();
+
+        if (config.config & CONFIG_LED_TINFO)
+            led_off();
     }
 }
 
@@ -92,7 +99,8 @@ void tic_notifs()
 
 void tic_make_timers()
 {
-    if (config.httpReq.freq == 0)
+    // http
+    if (config.httpReq.freq == 0 || config.httpReq.host[0] == 0 || config.httpReq.port == 0)
     {
         timer_http.resetToNeverExpires();
         Serial.println("timer_http disabled");
@@ -103,18 +111,20 @@ void tic_make_timers()
         Serial.printf("timer_http enabled, freq=%d s\n", config.httpReq.freq);
     }
 
-    if (config.jeedom.freq == 0)
+    // jeedom
+    if (config.jeedom.freq == 0 || config.jeedom.host[0] == 0 || config.jeedom.port == 0)
     {
         timer_jeedom.resetToNeverExpires();
         Serial.println("timer_jeedom disabled");
     }
     else
     {
-        timer_http.reset(config.jeedom.freq * 1000);
-        Serial.printf("httpReq enabled, freq=%d s\n", config.jeedom.freq);
+        timer_jeedom.reset(config.jeedom.freq * 1000);
+        Serial.printf("timer_jeedom enabled, freq=%d s\n", config.jeedom.freq);
     }
 
-    if (config.emoncms.freq == 0)
+    // emoncms
+    if (config.emoncms.freq == 0 || config.emoncms.host[0] == 0 || config.emoncms.port == 0)
     {
         timer_emoncms.resetToNeverExpires();
         Serial.println("timer_emoncms disabled");
@@ -189,11 +199,11 @@ const char *tic_get_value(const char *label)
 void http_notif(const char *notif)
 {
     String uri;
-    uri.reserve(strlen(config.httpReq.path) + 32);
+    uri.reserve(strlen(config.httpReq.url) + 32);
 
     char label[16];
 
-    for (const char *p = config.httpReq.path; *p; ++p)
+    for (const char *p = config.httpReq.url; *p; ++p)
     {
         if (*p == '~')
         {
@@ -211,7 +221,14 @@ void http_notif(const char *notif)
             }
             else
             {
-                uri += tinfo.get_value(label, "null", true);
+                if (strcmp(label, "_type") == 0)
+                {
+                    uri += notif;
+                }
+                else
+                {
+                    uri += tinfo.get_value(label, "null", true);
+                }
             }
         }
         else if (*p == '$')
@@ -247,6 +264,7 @@ void http_notif(const char *notif)
         }
     }
 
+    Serial.printf("http_notif: %s\n", notif);
     http_request(config.httpReq.host, config.httpReq.port, uri);
 }
 

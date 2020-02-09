@@ -1,14 +1,16 @@
-/*
- * Copyright (c) 2015-2020 rene-d. All right reserved.
- */
-
+#include "cli.h"
 #include "timesync.h"
 #include "sse.h"
 #include "config.h"
+#include "filesystem.h"
+#include "tic.h"
 
 #include <Arduino.h>
 #include <SimpleCLI.h>
 #include <PolledTimeout.h>
+#include <EEPROM.h>
+
+static void cli_eeprom_dump(uint8_t bytesPerRow, size_t size);
 
 extern SseClients sse_clients;
 
@@ -52,6 +54,77 @@ void cli_setup()
 
     cli.addSingleArgCmd("config", [](cmd *) {
         config_show();
+    });
+
+    cli.addSingleArgCmd("ls", [](cmd *) {
+        fs_ls();
+    });
+
+    cli.addSingleArgCmd("dump", [](cmd *) {
+        cli_eeprom_dump(16, 1024);
+    });
+
+    cli.addSingleArgCmd("set", [](cmd *cmdPtr) {
+        Command cmd(cmdPtr);
+        String arg = cmd.getArgument().getValue();
+
+        if (arg == "timers")
+        {
+            tic_make_timers();
+        }
+    });
+
+    cli.addSingleArgCmd("esp", [](cmd *cmdPtr) {
+        Command cmd(cmdPtr);
+        String arg = cmd.getArgument().getValue();
+
+        if (arg == "restart")
+        {
+            Serial.println(F("restarting ESP..."));
+            Serial.flush();
+
+            ESP.restart();
+            while (true)
+            {
+                delay(1);
+            }
+        }
+
+        Serial.print("ChipId            : 0x");
+        Serial.println(ESP.getChipId(), HEX);
+        Serial.print("CpuFreqMHz        : ");
+        Serial.println(ESP.getCpuFreqMHz());
+        // Serial.print("Vcc               : ");
+        // Serial.println(ESP.getVcc());
+
+        Serial.print("SdkVersion        : ");
+        Serial.println(ESP.getSdkVersion());
+        Serial.print("CoreVersion       : ");
+        Serial.println(ESP.getCoreVersion());
+        Serial.print("FullVersion       : ");
+        Serial.println(ESP.getFullVersion());
+
+        Serial.print("FreeHeap          : ");
+        Serial.println(ESP.getFreeHeap());
+        Serial.print("MaxFreeBlockSize  : ");
+        Serial.println(ESP.getMaxFreeBlockSize());
+        Serial.print("HeapFragmentation : ");
+        Serial.println(ESP.getHeapFragmentation());
+
+        Serial.print(F("WiFi status     : "));
+        Serial.println(WiFi.status());
+        Serial.print(F("WiFi mode       : "));
+        Serial.println(WiFi.getMode());
+        Serial.print(F("localIP         : "));
+        Serial.println(WiFi.localIP());
+        Serial.print(F("hostname        : "));
+        Serial.println(WiFi.hostname());
+        Serial.print(F("softAPIP        : "));
+        Serial.println(WiFi.softAPIP());
+        Serial.flush();
+
+        WiFi.printDiag(Serial);
+        Serial.flush();
     });
 
     cli.setOnError([](cmd_error *errorPtr) {
@@ -105,4 +178,39 @@ int cli_loop_read()
         }
     }
     return -1;
+}
+
+// dump eeprom value to serial
+void cli_eeprom_dump(uint8_t bytesPerRow, size_t size)
+{
+    size_t i;
+    size_t j = 0;
+
+    // default to 16 bytes per row
+    if (bytesPerRow == 0)
+        bytesPerRow = 16;
+
+    Serial.println();
+
+    // loop thru EEP address
+    for (i = 0; i < size; i++)
+    {
+        // First byte of the row ?
+        if (j == 0)
+        {
+            // Display Address
+            Serial.printf_P(PSTR("%04X : "), i);
+        }
+
+        // write byte in hex form
+        Serial.printf_P(PSTR("%02X "), EEPROM.read(i));
+
+        // Last byte of the row ?
+        // start a new line
+        if (++j >= bytesPerRow)
+        {
+            j = 0;
+            Serial.println();
+        }
+    }
 }

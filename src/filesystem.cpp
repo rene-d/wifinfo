@@ -1,4 +1,5 @@
 #include "filesystem.h"
+
 #include <Arduino.h>
 #include <FS.h>
 #include <user_interface.h>
@@ -14,14 +15,17 @@ void fs_setup()
     else
     {
         Serial.println(F("SPIFFS Mount succesful"));
+    }
+}
 
-        Dir dir = SPIFFS.openDir("/");
-        while (dir.next())
-        {
-            const String &fileName = dir.fileName();
-            size_t fileSize = dir.fileSize();
-            Serial.printf("FS File: %s, size: %zu\n", fileName.c_str(), fileSize);
-        }
+void fs_ls()
+{
+    Dir dir = SPIFFS.openDir("/");
+    while (dir.next())
+    {
+        const String &fileName = dir.fileName();
+        size_t fileSize = dir.fileSize();
+        Serial.printf("FS File: %s, size: %zu\n", fileName.c_str(), fileSize);
     }
 }
 

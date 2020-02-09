@@ -3,7 +3,7 @@
 data/
 .pio/
 build/
-test/coverage/
+coverage/
 
 
 #

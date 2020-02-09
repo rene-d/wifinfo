@@ -9,7 +9,8 @@ RUN curl -slkL https://github.com/linux-test-project/lcov/releases/download/v1.1
 &&  cd / \
 &&  rm -rf /tmp/lcov-1.14
 
+VOLUME /tic
+
 VOLUME /coverage
-VOLUME /test
 
 WORKDIR /build

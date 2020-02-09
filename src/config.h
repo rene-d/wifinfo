@@ -47,20 +47,20 @@
 #define CFG_JDOM_DEFAULT_ADCO "0000111122223333"
 
 #define CFG_HTTPREQ_HOST_SIZE 32
-#define CFG_HTTPREQ_PATH_SIZE 150
+#define CFG_HTTPREQ_URL_SIZE 150
 #define CFG_HTTPREQ_DEFAULT_PORT 80
 #define CFG_HTTPREQ_DEFAULT_HOST ""
-#define CFG_HTTPREQ_DEFAULT_PATH "/json.htm?type=command&param=udevice&idx=1&nvalue=0&svalue=%HCHP%;%HCHC%;0;0;%PAPP%;0"
+#define CFG_HTTPREQ_DEFAULT_URL "/json.htm?type=command&param=udevice&idx=1&nvalue=0&svalue=%HCHP%;%HCHC%;0;0;%PAPP%;0"
 
 // Port pour l'OTA
 #define DEFAULT_OTA_PORT 8266
 #define DEFAULT_OTA_AUTH "OTA_WifInfo"
 
 // Bit definition for different configuration modes
-#define CFG_LCD 0x0001     // Enable display
-#define CFG_DEBUG 0x0002   // Enable serial debug
-#define CFG_RGB_LED 0x0004 // Enable RGB LED
-#define CFG_BAD_CRC 0x8000 // Bad CRC when reading configuration
+#define CONFIG_LED_TINFO 0x0001 // blink led sur réception téléinfo
+// #define CFG_DEBUG 0x0002   // Enable serial debug
+// #define CFG_RGB_LED 0x0004 // Enable RGB LED
+// #define CFG_BAD_CRC 0x8000 // Bad CRC when reading configuration
 
 // Web Interface Configuration Form field names
 #define CFG_FORM_SSID FPSTR("ssid")
@@ -86,7 +86,7 @@
 
 #define CFG_FORM_HTTPREQ_HOST FPSTR("httpreq_host")
 #define CFG_FORM_HTTPREQ_PORT FPSTR("httpreq_port")
-#define CFG_FORM_HTTPREQ_PATH FPSTR("httpreq_path")
+#define CFG_FORM_HTTPREQ_URL FPSTR("httpreq_url")
 #define CFG_FORM_HTTPREQ_FREQ FPSTR("httpreq_freq")
 
 #define CFG_FORM_HTTPREQ_TRIGGER_PTEC FPSTR("httpreq_trigger_ptec")
@@ -129,7 +129,7 @@ struct _jeedom
 struct _httpRequest
 {
     char host[CFG_HTTPREQ_HOST_SIZE + 1]; // FQDN
-    char path[CFG_HTTPREQ_PATH_SIZE + 1]; // Path
+    char url[CFG_HTTPREQ_URL_SIZE + 1];   // Path
     uint16_t port;                        // Protocol port (HTTP/HTTPS)
     uint32_t freq;                        // refresh rate
     uint8_t trigger_adps : 1;

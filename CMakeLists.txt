@@ -6,10 +6,13 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+find_library(GTEST NAMES gtest)
 
-# find_package(gtest REQUIRED)
-# include_directories(/usr/local/include)
-# link_directories(/usr/local/lib)
+if(GTEST-NOTFOUND)
+    find_package(gtest REQUIRED)
+else()
+    set(GTEST_BOTH_LIBRARIES gtest gtest_main)
+endif()
 
 # Code Coverage Configuration
 add_library(coverage_config INTERFACE)
@@ -29,29 +32,25 @@ if(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   endif()
 endif()
 
-
 enable_testing()
 
-
 add_executable(tic
-    test_teleinfo.cpp
-    test_config.cpp
-    test_tic.cpp
-    test_sys.cpp
-    test_support.cpp mock_time.cpp mock.cpp mock_support.cpp)
+    test/test_teleinfo.cpp
+    test/test_config.cpp
+    test/test_tic.cpp
+    test/test_sys.cpp
+    test/test_support.cpp test/mock_time.cpp test/mock.cpp test/mock_support.cpp)
 
 target_include_directories(tic
+    PRIVATE ${GTEST_INCLUDE_DIRS}
     PRIVATE src
-    PRIVATE support)
+    PRIVATE test/support)
 
 target_link_libraries(tic
-    PRIVATE gtest gtest_main
+    PRIVATE ${GTEST_BOTH_LIBRARIES}
     #PRIVATE nlohmann_json::nlohmann_json
 )
-
 target_compile_options(tic PUBLIC -Wall -pedantic)
-
-# Include code-coverage settings:
 target_link_libraries(tic PUBLIC coverage_config)
 
 add_test(NAME tic_test COMMAND tic)

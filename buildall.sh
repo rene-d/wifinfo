@@ -3,12 +3,12 @@
 set -euo pipefail
 
 platformio run -t size
+platformio run -t buildfs
 
 docker buildx build -t test .
-
 docker run --rm -ti \
-    -v $(pwd)/test:/test \
-    -v $(pwd)/src:/test/src \
+    -v $(pwd):/tic:ro \
     -v $(pwd)/build:/build \
     -v $(pwd)/coverage:/coverage \
-    test /test/runtest.sh
+    test \
+    /tic/runtest.sh

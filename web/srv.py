@@ -6,10 +6,7 @@
 
 import time
 import flask
-import sys
 from flask_cors import CORS, cross_origin
-import random
-from flask import jsonify, request
 import datetime
 import math
 import json
@@ -130,7 +127,7 @@ def tinfo_json():
         {"na": "HHPHC", "va": "D", "ck": "", "fl": 8},
         {"na": "MOTDETAT", "va": "000000", "ck": "", "fl": 8},
     ]
-    return jsonify(d)
+    return flask.jsonify(d)
 
 
 @app.route("/spiffs.json")
@@ -149,7 +146,7 @@ def spiffs_json():
         ],
         "spiffs": [{"Total": 957314, "Used": 197537, "ram": 37200}],
     }
-    return jsonify(d)
+    return flask.jsonify(d)
 
 
 @app.route("/config.json")
@@ -175,10 +172,16 @@ def config_json():
         "jdom_freq": "0",
         "httpreq_host": "192.168.1.23",
         "httpreq_port": "8080",
-        "httpreq_path": "/tic.php?hchp=$HCHP;hchc=$HCHC;papp=$PAPP;iinst=$IINST",
+        "httpreq_url": "/tic.php?hchp=$HCHP;hchc=$HCHC;papp=$PAPP;iinst=$IINST;type=$_type",
         "httpreq_freq": "300",
+        "httpreq_trigger_ptec": 1,
+        "httpreq_trigger_adps": 1,
+        "httpreq_trigger_seuils": 0,
+
+        "httpreq_seuil_haut": 5700,
+        "httpreq_seuil_bas": 4200,
     }
-    return jsonify(d)
+    return flask.jsonify(d)
 
 
 @app.route("/wifiscan.json")
@@ -187,7 +190,7 @@ def wifiscan_json():
         {"ssid": "orange", "rssi": -84, "bssi": "11:22:33:00:00:00", "channel": 1, "encryptionType": 7},
         {"ssid": "FreeWifi", "rssi": -74, "bssi": "11:22:33:00:00:00", "channel": 6, "encryptionType": 8},
     ]
-    return jsonify(d)
+    return flask.jsonify(d)
 
 
 @app.route("/system.json")
@@ -211,12 +214,12 @@ def system_json():
         {"na": "SPIFFS Occupation", "va": "20%"},
         {"na": "Free RAM", "va": "34.00 kB"},
     ]
-    return jsonify(d)
+    return flask.jsonify(d)
 
 
 @app.route("/config_form.json", methods=["POST"])
 def config_form():
-    for name, value in request.values.items():
+    for name, value in flask.request.values.items():
         print(f"{name} = {value}")
     return "OK"
 

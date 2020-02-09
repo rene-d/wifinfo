@@ -190,14 +190,13 @@ void sys_wifi_scan_json(String &response)
 int sys_wifi_connect()
 {
     int ret = WiFi.status();
-    IPAddress ad;
 
-    //#ifdef DEBUG
-    Serial.println("========== WiFi diags start");
-    WiFi.printDiag(Serial);
-    Serial.println("========== WiFi diags end");
-    Serial.flush();
-    //#endif
+    // #ifdef DEBUG
+    //     Serial.println("========== WiFi diags start");
+    //     WiFi.printDiag(Serial);
+    //     Serial.println("========== WiFi diags end");
+    //     Serial.flush();
+    // #endif
 
     // no correct SSID
     if (!*config.ssid)
@@ -273,9 +272,8 @@ int sys_wifi_connect()
         nb_reconnect++; // increase reconnections count
         Serial.println(F("connected!"));
         WiFi.mode(WIFI_STA);
-        ad = WiFi.localIP();
         Serial.print(F("IP address   : "));
-        Serial.printf("%d.%d.%d.%d", ad[0], ad[1], ad[2], ad[3]);
+        Serial.println(WiFi.localIP());
         Serial.print(F("MAC address  : "));
         Serial.println(WiFi.macAddress());
 
@@ -326,6 +324,7 @@ int sys_wifi_connect()
     WiFi.setAutoReconnect(true);
     Serial.println(F("auto-reconnect armed !"));
 
+#ifdef ENABLE_OTA
     // // Set OTA parameters
     ArduinoOTA.setPort(config.ota_port);
     ArduinoOTA.setHostname(config.host);
@@ -345,6 +344,7 @@ int sys_wifi_connect()
         delay(200);
         ArduinoOTA.handle();
     }
+#endif
 
     return WiFi.status();
 }

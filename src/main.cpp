@@ -1,3 +1,4 @@
+//
 
 #include "timesync.h"
 #include "cli.h"
@@ -27,9 +28,11 @@ void setup()
     Serial.begin(1200, SERIAL_7E1);
 #endif
     Serial.flush();
+    delay(100);
 
+    Serial.println("WifInfo starting...");
     led_on();
-    delay(1000);
+    delay(100);
 
     // chargement de la conf depuis l'EEPROM
     config_setup();
@@ -40,15 +43,17 @@ void setup()
     // initilisation du filesystem
     fs_setup();
 
+#ifdef ENABLE_OTA
     // initialisation des mises à jour OTA
     sys_ota_setup();
+#endif
 
     // démarrage client NTP
     time_setup();
 
     //MDNS.begin("esp8266");
 
-#ifdef CLI_ENABLED
+#ifdef ENABLE_CLI
     // initialise le client série
     cli_setup();
 #endif
@@ -75,11 +80,13 @@ void loop()
 
     webserver_loop();
 
+#ifdef ENABLE_OTA
     ArduinoOTA.handle();
+#endif
 
     // MDNS.update();
 
-#ifdef CLI_ENABLED
+#ifdef ENABLE_CLI
     c = cli_loop_read();
     if (c != -1)
     {

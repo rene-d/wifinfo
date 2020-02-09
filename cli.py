@@ -26,7 +26,7 @@ codecs.register(lambda c: hexlify_codec.getregentry() if c == "hexlify" else Non
 
 hchc = 15000000
 hchp = 10000000
-iinst = 670 / 230
+iinst = 670 / 230 +3
 tic_time = time.time()
 heures_pleines = True
 
@@ -255,8 +255,8 @@ class Colorize(Transform):
 
     def __init__(self):
         # XXX make it configurable, use colorama?
-        self.input_color = "\x1b[36m"
-        self.echo_color = "\x1b[31m"
+        self.input_color = "\033[36m"
+        self.echo_color = "\033[31m"
 
     def rx(self, text):
         return self.input_color + text
@@ -430,7 +430,8 @@ class Miniterm(object):
                     break
 
                 else:
-                    if ord(c) < 32: print("<%02x>"%ord(c))
+                    if ord(c) < 32:
+                        print("\033[36;2m<%02x>\033[0m" % ord(c))
                     text = c
                     for transformation in self.tx_transformations:
                         text = transformation.tx(text)
@@ -461,10 +462,16 @@ class Miniterm(object):
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # default args can be used to override when calling main() from an other script
 # e.g to create a miniterm-my-device.py
-def main(default_port=None):
+def main():
     """Command line tool, entry point"""
 
-    port = "/dev/tty.usbserial-1410"
+    port = ""
+    if len(sys.argv) >= 2:
+        port = sys.argv[1]
+
+    if port == "" or not os.path.exists(port):
+        port = "/dev/tty.usbserial-1410"
+
     if not os.path.exists(port):
         port = "/dev/tty.usbserial-1420"
 

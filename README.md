@@ -5,13 +5,15 @@ WifInfo est un module de consignation de la téléinformation des compteurs éle
 Ce projet est la fusion d'un module de remplacement d'un [eco-devices](http://gce-electronics.com/fr/111-eco-devices) sur base de [ESP-01](https://fr.wikipedia.org/wiki/ESP8266) et de la une réécriture quasi complète - sauf la partie interface web - du projet homonyme de C-H. Hallard [LibTeleinfo](https://github.com/hallard/LibTeleinfo) avec des modifications notamment de [olileger](https://github.com/olileger/LibTeleinfo) et [Doume](https://github.com/Doume/LibTeleinfo).
 
 * Meilleure séparation des fonctions dans des fichiers sources différents
-* Homogénéisation des noms, nettoyage du code source
+* Homogénéisation du nommage, nettoyage du code source
 * Minimisation des allocations mémoire (nouvelle librairie teleinfo)
 * Server-sent event ([SSE](https://fr.wikipedia.org/wiki/Server-sent_events)) pour les mises à jour des index
-* Notifications HTTP sur changements HC/HP et dépasssement (à l'instar des [eco-devices](http://gce-electronics.com/fr/111-eco-devices))
+* Notifications HTTP sur changements HC/HP et dépasssement de seuils ou ADPS
+* Client en liaison série pour mise au point avec [SimpleCLI](https://github.com/spacehuhn/SimpleCLI)
 * Tests sur PC avec [Google Test](https://github.com/google/googletest) et couverture avec [lcov](http://ltp.sourceforge.net/coverage/lcov.php)
 * Client Python de simulation [cli.py](./cli.py) sur base de `miniterm.py` de [pySerial](https://pyserial.readthedocs.io/)
 * Compression et minimisation de la partie web avant écriture du filesystem (`data_src` ⇒ `data` au moment du build)
+* Serveur Python [Flask](https://www.palletsprojects.com/p/flask/) pour développement de la partie web
 * Utilisation de [PlatformIO](https://platformio.org) comme environnement de développement
 
 ## Documentation
@@ -42,6 +44,19 @@ Le répertoire `data` est préparé à l'aide du script suivant (nécessite pyth
 python3 prep_data_folder.py
 ```
 
+## Client de test/mise au point
+
+```bash
+pip3 install pySerial
+python3 cli.py [port]
+```
+
+Pour activer le mode commande, il faut taper <TAB> puis la commande (ls, config, time, esp, ...).
+
+* `Ctrl-T` envoie une trame de téléinformation
+* `Ctrl-Y` bascule l'envoi automatique de trames
+* `Ctrl-P` bascule entre heures creuses et heures pleines
+* `Ctrl-C` sort du client
 
 ## Tests unitaires
 
@@ -58,12 +73,30 @@ Préparation de l'image:
 docker build -t tic .
 ```
 
-Lancement des tests:
+Lancement des tests et couverture:
 ```bash
-docker run --rm -ti -v $(pwd)/test:/test -v $(pwd)/src:/src -v $(pwd)/build:/build tic /test/runtest.sh
+docker run --rm -ti -v $(pwd):/tic:ro -v $(pwd)/coverage:/coverage tic /tic/runtest.sh
 ```
 
-La couverture est disponible dans `./test/coverage/index.html`
+La couverture est disponible dans `./coverage/index.html`
+
+
+## Développement web
+
+### Avec module simulé (aucun esp8266 requis)
+
+```bash
+pip3 install flask flask_cors
+python3 web/srv.py
+```
+L'interface est disponible à cette adresse: [http://localhost:5000/](http://localhost:5000/).
+
+### Avec module et partie web sur PC
+
+[nginx](http://nginx.org/en/) est utilisé en reverse proxy pour accéder aux pages dynamiques du module.
+
+Cf. `default.conf` et `httpdev.sh` dans le sous-répertoire `web`. L'adresse IP du module doit être mise dans `default.conf`.
+
 
 ## Montage
 

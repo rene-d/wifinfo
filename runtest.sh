@@ -1,6 +1,6 @@
 #!/bin/sh
 
-cmake -DCODE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug /test
+cmake -DCODE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug /tic
 make -j
 
 lcov --base-directory . --directory . --zerocounters -q

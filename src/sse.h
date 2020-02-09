@@ -50,8 +50,6 @@ public:
 
     void send_event(const String &data)
     {
-        client_.println(F("event: esp8266")); // this name could be anything, really.
-
         client_.print(F("data: "));
         client_.print(data);
 
