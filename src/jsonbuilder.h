@@ -9,71 +9,56 @@ class JSONBuilder
     String &s;
 
 public:
-    JSONBuilder(String &r, size_t reserve_size = 256) : s(r)
+    JSONBuilder(String &r) : s(r)
     {
-        s.reserve(reserve_size);
+        s.concat(F("{\""));
+    }
+
+    JSONBuilder(String &r, size_t reserve_size) : s(r)
+    {
+        if (reserve_size != 0)
+            s.reserve(reserve_size);
         s.clear();
-        s.concat("{\"");
+        s.concat(F("{\""));
     }
 
-    void append(const __FlashStringHelper *name, const char *value, bool last = false)
+    template <typename T>
+    void append(const T *name, const char *value, bool last = false)
     {
         s.concat(name);
-        s.concat("\":\"");
+        s.concat(F("\":\""));
         s.concat(value);
 
         if (last)
-            s.concat("\"}");
+            s.concat(F("\"}"));
         else
-            s.concat("\",\"");
+            s.concat(F("\",\""));
     }
 
-    void append(const __FlashStringHelper *name, uint32_t value, bool last = false)
+    template <typename T>
+    void append(const T *name, uint32_t value, bool last = false)
     {
         s.concat(name);
-        s.concat("\":");
+        s.concat(F("\":"));
         s.concat(value);
 
         if (last)
-            s.concat("}");
+            s.concat(F("}"));
         else
-            s.concat(",\"");
+            s.concat(F(",\""));
     }
 
-    void append(const char *name, const char *value, bool last = false)
+    template <typename T>
+    void append_without_quote(const T *name, const char *value, bool last = false)
     {
         s.concat(name);
-        s.concat("\":\"");
+        s.concat(F("\":"));
         s.concat(value);
 
         if (last)
-            s.concat("\"}");
+            s.concat(F("}"));
         else
-            s.concat("\",\"");
-    }
-
-    void append_without_quote(const char *name, const char *value, bool last = false)
-    {
-        s.concat(name);
-        s.concat("\":");
-        s.concat(value);
-
-        if (last)
-            s.concat("}");
-        else
-            s.concat(",\"");
-    }
-
-    void append(const char *name, uint32_t value, bool last = false)
-    {
-        s.concat(name);
-        s.concat("\":");
-        s.concat(value);
-
-        if (last)
-            s.concat("}");
-        else
-            s.concat(",\"");
+            s.concat(F(",\""));
     }
 
     void finalize()
@@ -103,34 +88,43 @@ class JSONTableBuilder
     String &s;
 
 public:
-    JSONTableBuilder(String &r, size_t reserve_size = 256) : s(r)
+    JSONTableBuilder(String &r) : s(r)
     {
-        s.reserve(reserve_size);
+        s.concat(F("["));
+    }
+
+    JSONTableBuilder(String &r, size_t reserve_size) : s(r)
+    {
+        if (reserve_size != 0)
+            s.reserve(reserve_size);
         s.clear();
-        s.concat("[");
+        s.concat(F("["));
     }
 
-    void append(const char *name, const char *value)
+    template <typename T>
+    void append(const T *name, const char *value)
     {
-        s.concat("{\"na\":\"");
+        s.concat(F("{\"na\":\""));
         s.concat(name);
-        s.concat("\",\"va\":\"");
+        s.concat(F("\",\"va\":\""));
         s.concat(value);
-        s.concat("\"},");
+        s.concat(F("\"},"));
     }
 
-    void append(const char *name, const String &value)
+    template <typename T>
+    void append(const T *name, const String &value)
     {
         append(name, value.c_str());
     }
 
-    void append(const char *name, uint32_t value)
+    template <typename T>
+    void append(const T *name, uint32_t value)
     {
-        s.concat("{\"na\":\"");
+        s.concat(F("{\"na\":\""));
         s.concat(name);
-        s.concat("\",\"va\":");
+        s.concat(F("\",\"va\":"));
         s.concat(value);
-        s.concat("},");
+        s.concat(F("},"));
     }
 
     void finalize()

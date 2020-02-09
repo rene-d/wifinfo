@@ -6,13 +6,13 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-find_library(GTEST NAMES gtest)
+# find_library(GTEST NAMES gtest)
 
-if(GTEST-NOTFOUND)
-    find_package(gtest REQUIRED)
-else()
-    set(GTEST_BOTH_LIBRARIES gtest gtest_main)
-endif()
+# if(GTEST-NOTFOUND)
+     find_package(gtest REQUIRED)
+# else()
+#     set(GTEST_BOTH_LIBRARIES gtest gtest_main)
+# endif()
 
 # Code Coverage Configuration
 add_library(coverage_config INTERFACE)
@@ -39,7 +39,11 @@ add_executable(tic
     test/test_config.cpp
     test/test_tic.cpp
     test/test_sys.cpp
-    test/test_support.cpp test/mock_time.cpp test/mock.cpp test/mock_support.cpp)
+    test/test_filesystem.cpp
+    test/test_support.cpp
+    test/mock_time.cpp
+    test/mock.cpp
+    test/mock_support.cpp)
 
 target_include_directories(tic
     PRIVATE ${GTEST_INCLUDE_DIRS}

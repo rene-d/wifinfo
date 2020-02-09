@@ -1,20 +1,17 @@
 #include "mock.h"
 
 // WIP
-//#include "sys.cpp"
-
+#include "sys.cpp"
 
 TEST(sys, get_json)
 {
-    // String r;
+    String data;
 
-    // config_reset();
+    sys_get_info_json(data);
 
-    // config_get_json(r);
+    // std::cout << data << std::endl;
 
-    // auto j1 = json::parse(r.s);
+    auto j1 = json::parse(data.s);
 
-    // ASSERT_EQ(j1["ssid"], config.ssid);
-    // ASSERT_EQ(j1["host"], config.host);
-    // ASSERT_EQ(j1["httpreq_port"], config.httpReq.port);
+    ASSERT_TRUE(j1.is_array());
 }

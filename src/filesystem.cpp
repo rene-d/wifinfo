@@ -1,4 +1,5 @@
 #include "filesystem.h"
+#include "jsonbuilder.h"
 
 #include <Arduino.h>
 #include <FS.h>
@@ -32,46 +33,37 @@ void fs_ls()
 // Return JSON string containing list of SPIFFS files
 void fs_get_spiffs_json(String &response)
 {
-    bool first_item = true;
-
     response.reserve(512); // about 400 bytes
 
-    // Files Array
-    response = F("{\"files\":[");
-
-    // Loop trough all files
-    Dir dir = SPIFFS.openDir("/");
-    while (dir.next())
-    {
-        String fileName = dir.fileName();
-        size_t fileSize = dir.fileSize();
-
-        if (first_item)
-            first_item = false;
-        else
-            response += F(",");
-        response += F("{\"na\":\"");
-        response += fileName.c_str();
-        response += F("\",\"va\":");
-        response += fileSize;
-        response += F("}");
-    }
-    response += F("],");
+    response = F("{\"files\":");
 
     // SPIFFS File system array
-    response += F("\"spiffs\":[{");
+    {
+        JSONTableBuilder js(response);
 
-    // Get SPIFFS File system informations
-    FSInfo info;
-    SPIFFS.info(info);
-    response += F("\"Total\":");
-    response += info.totalBytes;
-    response += F(",\"Used\":");
-    response += info.usedBytes;
-    response += F(",\"ram\":");
-    response += system_get_free_heap_size();
-    response += F("}]");
+        // Loop trough all files
+        Dir dir = SPIFFS.openDir("/");
+        while (dir.next())
+        {
+            js.append(dir.fileName().c_str(), dir.fileSize());
+        }
 
-    // Json end
-    response += F("}");
+        js.finalize();
+    }
+
+    response += F(",\"spiffs\":[");
+
+    // SPIFFS File system informations
+    {
+        JSONBuilder js(response);
+
+        FSInfo info;
+        SPIFFS.info(info);
+
+        js.append(F("Total"), info.totalBytes);
+        js.append(F("Used"), info.usedBytes);
+        js.append(F("RAM"), system_get_free_heap_size(), true);
+    }
+
+    response += F("]}");
 }

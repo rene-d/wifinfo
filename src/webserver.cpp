@@ -96,8 +96,10 @@ void webserver_setup()
     server.serveStatic("/css", SPIFFS, "/css", "max-age=86400");
     server.serveStatic("/version", SPIFFS, "/version", "max-age=86400");
 
+#ifdef ENABLE_OTA
     // enregistre le handler de /update
     sys_ota_register(server);
+#endif
 
     server.onNotFound(webserver_handle_notfound);
 

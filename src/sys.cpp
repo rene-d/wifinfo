@@ -1,9 +1,11 @@
 #include "sys.h"
 #include "config.h"
 #include "led.h"
+#include "jsonbuilder.h"
 #include <ESP8266WiFi.h>
 #include <ArduinoOTA.h>
 #include <ESP8266WebServer.h>
+#include <FS.h>
 #include <user_interface.h>
 #include <sys/time.h>
 
@@ -14,7 +16,10 @@ extern "C" int clock_gettime(clockid_t unused, struct timespec *tp);
 #endif
 
 static int nb_reconnect = 0;
+
+#ifdef ENABLE_OTA
 static bool ota_blink = false;
+#endif
 
 // format a size to human readable format
 String sys_format_size(size_t bytes)
@@ -55,98 +60,47 @@ String sys_uptime()
 // Return JSON string containing system data
 void sys_get_info_json(String &response)
 {
-    response.reserve(512);
-
     char buffer[32];
 
-    // JSON start
-    response += F("[");
+    JSONTableBuilder js(response, 1024);
 
-    response += F("{\"na\":\"Uptime\",\"va\":\"");
-    response += sys_uptime();
-    response += F("\"},");
+    js.append(F("Uptime"), sys_uptime());
 
     if (WiFi.status() == WL_CONNECTED)
     {
-        response += "{\"na\":\"Wi-Fi RSSI\",\"va\":\"";
-        response += WiFi.RSSI();
-        response += " dB\"},";
-        response += "{\"na\":\"Wi-Fi network\",\"va\":\"";
-        response += config.ssid;
-        response += F("\"},");
-        uint8_t mac[] = {0, 0, 0, 0, 0, 0};
-        uint8_t *macread = WiFi.macAddress(mac);
-        char macaddress[20];
-        sprintf_P(macaddress, PSTR("%02x:%02x:%02x:%02x:%02x:%02x"), macread[0], macread[1], macread[2], macread[3], macread[4], macread[5]);
-        response += F("{\"na\":\"Adresse MAC station\",\"va\":\"");
-        response += macaddress;
-        response += F("\"},");
+        sprintf_P(buffer, PSTR("%d dB"), WiFi.RSSI());
+        js.append(F("Wi-Fi RSSI"), buffer);
+        js.append(F("Wi-Fi network"), config.ssid);
+        js.append(F("Adresse MAC station"), WiFi.macAddress());
     }
-    response += F("{\"na\":\"Nb reconnexions Wi-Fi\",\"va\":\"");
-    response += nb_reconnect;
-    response += F("\"},");
 
-    response += F("{\"na\":\"WifInfo Version\",\"va\":\"" WIFINFO_VERSION "\"},");
+    js.append(F("Nb reconnexions Wi-Fi"), nb_reconnect);
+    js.append(F("WifInfo Version"), WIFINFO_VERSION);
+    js.append(F("Compilé le"), __DATE__ " " __TIME__);
+    js.append(F("SDK Version"), system_get_sdk_version());
 
-    response += F("{\"na\":\"Compilé le\",\"va\":\"" __DATE__ " " __TIME__ "\"},");
+    sprintf_P(buffer, PSTR("0x%0X"), system_get_chip_id());
+    js.append(F("Chip ID"), buffer);
 
-    response += F("{\"na\":\"SDK Version\",\"va\":\"");
-    response += system_get_sdk_version();
-    response += F("\"},");
+    sprintf_P(buffer, PSTR("0x%0X"), system_get_boot_version());
+    js.append(F("Boot Version"), buffer);
 
-    response += F("{\"na\":\"Chip ID\",\"va\":\"");
-    sprintf_P(buffer, "0x%0X", system_get_chip_id());
-    response += buffer;
-    response += F("\"},");
-
-    response += F("{\"na\":\"Boot Version\",\"va\":\"");
-    sprintf_P(buffer, "0x%0X", system_get_boot_version());
-    response += buffer;
-    response += F("\"},");
-
-    response += F("{\"na\":\"Flash Real Size\",\"va\":\"");
-    response += sys_format_size(ESP.getFlashChipRealSize());
-    response += F("\"},");
-
-    response += F("{\"na\":\"Firmware Size\",\"va\":\"");
-    response += sys_format_size(ESP.getSketchSize());
-    response += F("\"},");
-
-    response += F("{\"na\":\"Free Size\",\"va\":\"");
-    response += sys_format_size(ESP.getFreeSketchSpace());
-    response += F("\"},");
-
-    /*
-    response += F("{\"na\":\"Analog\",\"va\":\"");
-    int adc = ((1000 * analogRead(A0)) / 1024);
-    sprintf_P(buffer, PSTR("%d mV"), adc);
-    response += buffer;
-    response += F("\"},");
-    */
+    js.append(F("Flash Real Size"), sys_format_size(ESP.getFlashChipRealSize()));
+    js.append(F("Firmware Size"), sys_format_size(ESP.getSketchSize()));
+    js.append(F("Free Size"), sys_format_size(ESP.getFreeSketchSpace()));
 
     FSInfo info;
     SPIFFS.info(info);
 
-    response += F("{\"na\":\"SPIFFS Total\",\"va\":\"");
-    response += sys_format_size(info.totalBytes);
-    response += F("\"},");
+    js.append(F("SPIFFS Total"), sys_format_size(info.totalBytes));
+    js.append(F("SPIFFS Used"), sys_format_size(info.usedBytes));
 
-    response += F("{\"na\":\"SPIFFS Used\",\"va\":\"");
-    response += sys_format_size(info.usedBytes);
-    response += F("\"},");
+    sprintf_P(buffer, PSTR("%zd %%"), 100 * info.usedBytes / info.totalBytes);
+    js.append(F("SPIFFS Occupation"), buffer);
 
-    response += F("{\"na\":\"SPIFFS Occupation\",\"va\":\"");
-    sprintf_P(buffer, "%d%%", 100 * info.usedBytes / info.totalBytes);
-    response += buffer;
-    response += F("\"},");
+    js.append(F("Free RAM"), sys_format_size(system_get_free_heap_size()));
 
-    // Free mem should be last one
-    response += F("{\"na\":\"Free RAM\",\"va\":\"");
-    response += sys_format_size(system_get_free_heap_size());
-    response += F("\"}"); // Last don't have comma at end
-
-    // JSON end
-    response += F("]");
+    js.finalize();
 }
 
 // Purpose : scan Wifi Access Point and return JSON code
@@ -356,7 +310,7 @@ void sys_handle_factory_reset(ESP8266WebServer &server)
     Serial.println(F("Serving /factory_reset page..."));
     config_reset();
     ESP.eraseConfig();
-    server.send(200, "text/plain", FPSTR("Reset"));
+    server.send(200, "text/plain", "Reset");
     Serial.println(F("Ok!"));
     delay(1000);
     ESP.restart();
@@ -369,13 +323,15 @@ void sys_handle_reset(ESP8266WebServer &server)
 {
     // Just to debug where we are
     Serial.println(F("Serving /reset page..."));
-    server.send(200, "text/plain", FPSTR("Restart"));
+    server.send(200, "text/plain", "Restart");
     Serial.println(F("Ok!"));
     delay(1000);
     ESP.restart();
     while (true)
         delay(1);
 }
+
+#ifdef ENABLE_OTA
 
 void sys_ota_setup()
 {
@@ -490,3 +446,5 @@ void sys_ota_register(ESP8266WebServer &server)
             delay(0);
         });
 }
+
+#endif // ENABLE_OTA

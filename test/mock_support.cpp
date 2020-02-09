@@ -3,11 +3,13 @@
 #include <user_interface.h>
 #include <EEPROM.h>
 #include <ESP8266WiFi.h>
+#include <FS.h>
 
 ESPClass ESP;
 EEPROMClass EEPROM;
 WiFiClass WiFi;
 SerialClass Serial;
+SPIFFSClass SPIFFS;
 
 int HTTPClient::begin_called = 0;
 std::string HTTPClient::begin_host;
