@@ -2,7 +2,7 @@
 
 WifInfo est un module de consignation de la téléinformation des compteurs électriques avec serveur web embarqué.
 
-Ce projet est la fusion d'un module de remplacement d'un [eco-devices](http://gce-electronics.com/fr/111-eco-devices) sur base de [ESP-01](https://fr.wikipedia.org/wiki/ESP8266) et de la une réécriture quasi complète - sauf la partie interface web - du projet homonyme de C-H. Hallard [LibTeleinfo](https://github.com/hallard/LibTeleinfo) avec des modifications notamment de [olileger](https://github.com/olileger/LibTeleinfo) et [Doume](https://github.com/Doume/LibTeleinfo).
+Ce projet est la fusion de développements réalisés en vue du remplacement d'un [eco-devices](http://gce-electronics.com/fr/111-eco-devices) sur base de [ESP-01](https://fr.wikipedia.org/wiki/ESP8266) et de la une réécriture quasi complète - sauf la partie interface web - du projet homonyme de C-H. Hallard [LibTeleinfo](https://github.com/hallard/LibTeleinfo) avec des modifications notamment de [olileger](https://github.com/olileger/LibTeleinfo) et [Doume](https://github.com/Doume/LibTeleinfo).
 
 * Meilleure séparation des fonctions dans des fichiers sources différents
 * Homogénéisation du nommage, nettoyage du code source
@@ -19,6 +19,8 @@ Ce projet est la fusion d'un module de remplacement d'un [eco-devices](http://gc
 ## Documentation
 
 Documentation ERDF sur la [téléinformation client](https://www.enedis.fr/sites/default/files/Enedis-NOI-CPT_02E.pdf) pour les compteurs électroniques et pour les compteurs [Linky](https://www.enedis.fr/sites/default/files/Enedis-NOI-CPT_54E.pdf).
+
+Module [PiTInfo](https://hallard.me/pitinfov12/) et explications pourquoi le montage avec uniquement optocoupleur et résistances ne suffit pas avec un esp8266.
 
 ## Compilation
 
@@ -87,16 +89,18 @@ La couverture est disponible dans `./coverage/index.html`
 
 ```bash
 pip3 install flask flask_cors
-python3 web/srv.py
+python3 tools/srv.py
 ```
-L'interface est disponible à cette adresse: [http://localhost:5000/](http://localhost:5000/).
+L'interface est alors disponible à cette adresse: [http://localhost:5000/](http://localhost:5000/).
 
 ### Avec module et partie web sur PC
 
 [nginx](http://nginx.org/en/) est utilisé en reverse proxy pour accéder aux pages dynamiques du module.
 
-Cf. `default.conf` et `httpdev.sh` dans le sous-répertoire `web`. L'adresse IP du module doit être mise dans `default.conf`.
-
+```bash
+tools/httpdev.sh [adresse IP du module]
+```
+L'interface alors sera disponible à cette adresse: [http://localhost:5001/](http://localhost:5001/), avec les requêtes dynamiques redirigées vers le module (qui doit donc être opérationnel et joignable).
 
 ## Montage
 

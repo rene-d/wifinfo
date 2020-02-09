@@ -50,7 +50,7 @@ static void test_config_notif(bool emoncms, bool jeedom, bool httpreq)
     {
         strcpy(config.httpReq.host, "sql.home");
         config.httpReq.port = 88;
-        strcpy(config.httpReq.url, "/tic.php?hchc=$HCHC&hchp=$HCHP&papp=$PAPP");
+        strcpy(config.httpReq.url, "/tinfo.php?hchc=$HCHC&hchp=$HCHP&papp=$PAPP");
         config.httpReq.freq = 15;
         config.httpReq.trigger_ptec = 0;
         config.httpReq.trigger_seuils = 0;
@@ -140,18 +140,18 @@ TEST(notifs, http_notif)
     tinfo_init(1800, false);
 
     // syntaxe 1: ~HCHC~
-    strcpy(config.httpReq.url, "/tic.php?hchc=~HCHC~&hchp=~HCHP~&papp=~PAPP~&tilde=~~");
+    strcpy(config.httpReq.url, "/tinfo.php?hchc=~HCHC~&hchp=~HCHP~&papp=~PAPP~&tilde=~~");
     HTTPClient::begin_called = 0;
     http_notif("");
     ASSERT_EQ(HTTPClient::begin_called, 1);
-    ASSERT_EQ(HTTPClient::begin_url, "/tic.php?hchc=52890470&hchp=49126843&papp=1800&tilde=~");
+    ASSERT_EQ(HTTPClient::begin_url, "/tinfo.php?hchc=52890470&hchp=49126843&papp=1800&tilde=~");
 
     // syntaxe 2: $HCHC
-    strcpy(config.httpReq.url, "/tic.php?hchc=$HCHC&hchp=$HCHP&papp=$PAPP");
+    strcpy(config.httpReq.url, "/tinfo.php?hchc=$HCHC&hchp=$HCHP&papp=$PAPP");
     HTTPClient::begin_called = 0;
     http_notif("");
     ASSERT_EQ(HTTPClient::begin_called, 1);
-    ASSERT_EQ(HTTPClient::begin_url, "/tic.php?hchc=52890470&hchp=49126843&papp=1800");
+    ASSERT_EQ(HTTPClient::begin_url, "/tinfo.php?hchc=52890470&hchp=49126843&papp=1800");
     ASSERT_EQ(HTTPClient::begin_port, 88);
     ASSERT_EQ(HTTPClient::begin_host, "sql.home");
 }
@@ -161,7 +161,7 @@ TEST(notifs, http_notif)
 TEST(notifs, http_timer)
 {
     test_config_notif(false, false, true);
-    strcpy(config.httpReq.url, "/tic.php?p=$PAPP&t=$_type");
+    strcpy(config.httpReq.url, "/tinfo.php?p=$PAPP&t=$_type");
 
     tinfo_init(1234, false);
 
@@ -178,7 +178,7 @@ TEST(notifs, http_timer)
     timer_http.trigger();
     tic_notifs();
     ASSERT_EQ(HTTPClient::begin_called, 1);
-    ASSERT_EQ(HTTPClient::begin_url, "/tic.php?p=1234&t=");
+    ASSERT_EQ(HTTPClient::begin_url, "/tinfo.php?p=1234&t=");
 
     // pas d'échéance timer: pas de requête
     tic_notifs();
@@ -189,7 +189,7 @@ TEST(notifs, http_timer)
     timer_http.trigger();
     tic_notifs();
     ASSERT_EQ(HTTPClient::begin_called, 2);
-    ASSERT_EQ(HTTPClient::begin_url, "/tic.php?p=4321&t=");
+    ASSERT_EQ(HTTPClient::begin_url, "/tinfo.php?p=4321&t=");
 
     // pas de requête http même si le timer se déclenche
     strcpy(config.httpReq.host, "");
@@ -204,7 +204,7 @@ TEST(notifs, http_timer)
 TEST(notifs, http_ptec)
 {
     test_config_notif(false, false, true);
-    strcpy(config.httpReq.url, "/tic.php?p=$PAPP&ptec=$PTEC&t=$_type");
+    strcpy(config.httpReq.url, "/tinfo.php?p=$PAPP&ptec=$PTEC&t=$_type");
     config.httpReq.trigger_ptec = 1; // active les notifs de PTEC
 
     tinfo_init();
@@ -218,7 +218,7 @@ TEST(notifs, http_ptec)
     tinfo_init(1800, true);
     tic_notifs();
     ASSERT_EQ(HTTPClient::begin_called, 1);
-    ASSERT_EQ(HTTPClient::begin_url, "/tic.php?p=1800&ptec=HC..&t=PTEC");
+    ASSERT_EQ(HTTPClient::begin_url, "/tinfo.php?p=1800&ptec=HC..&t=PTEC");
 
     // pas de changement: pas de notif supplémentaire
     tinfo_init(2800, true);
@@ -230,7 +230,7 @@ TEST(notifs, http_ptec)
     tinfo_init(1000, false);
     tic_notifs();
     ASSERT_EQ(HTTPClient::begin_called, 2);
-    ASSERT_EQ(HTTPClient::begin_url, "/tic.php?p=1000&ptec=HP..&t=PTEC");
+    ASSERT_EQ(HTTPClient::begin_url, "/tinfo.php?p=1000&ptec=HP..&t=PTEC");
 
     // désactive les notifs de période en cours
     config.httpReq.trigger_ptec = 0;
@@ -255,7 +255,7 @@ TEST(notifs, http_seuils)
     tinfo_init();
 
     // active les notifs de seuils
-    strcpy(config.httpReq.url, "/tic.php?p=$PAPP&t=$_type");
+    strcpy(config.httpReq.url, "/tinfo.php?p=$PAPP&t=$_type");
     config.httpReq.trigger_seuils = 1;
 
     HTTPClient::begin_called = 0;
@@ -267,7 +267,7 @@ TEST(notifs, http_seuils)
     tinfo_init(6000, false);
     tic_notifs();
     ASSERT_EQ(HTTPClient::begin_called, 1);
-    ASSERT_EQ(HTTPClient::begin_url, "/tic.php?p=6000&t=HAUT");
+    ASSERT_EQ(HTTPClient::begin_url, "/tinfo.php?p=6000&t=HAUT");
 
     tinfo_init(5000, false);
     tic_notifs();
@@ -282,7 +282,7 @@ TEST(notifs, http_seuils)
     tinfo_init(4000, false);
     tic_notifs();
     ASSERT_EQ(HTTPClient::begin_called, 2);
-    ASSERT_EQ(HTTPClient::begin_url, "/tic.php?p=4000&t=BAS");
+    ASSERT_EQ(HTTPClient::begin_url, "/tinfo.php?p=4000&t=BAS");
 
     tinfo_init(5000, false);
     tic_notifs();
@@ -300,7 +300,7 @@ TEST(notifs, http_adps)
     test_config_notif(false, false, true);
 
     // active les notifications de dépassement
-    strcpy(config.httpReq.url, "/tic.php?p=$PAPP&t=$_type");
+    strcpy(config.httpReq.url, "/tinfo.php?p=$PAPP&t=$_type");
     config.httpReq.trigger_adps = 1;
 
     HTTPClient::begin_called = 0;
@@ -316,7 +316,7 @@ TEST(notifs, http_adps)
     tinfo_init(7000, true, 10);
     tic_notifs();
     ASSERT_EQ(HTTPClient::begin_called, 1);
-    ASSERT_EQ(HTTPClient::begin_url, "/tic.php?p=7000&t=ADPS");
+    ASSERT_EQ(HTTPClient::begin_url, "/tinfo.php?p=7000&t=ADPS");
 
     tinfo_init(7200, true, 11);
     tic_notifs();
@@ -325,7 +325,7 @@ TEST(notifs, http_adps)
     tinfo_init(4000, true, 0);
     tic_notifs();
     ASSERT_EQ(HTTPClient::begin_called, 2);
-    ASSERT_EQ(HTTPClient::begin_url, "/tic.php?p=4000&t=NORM");
+    ASSERT_EQ(HTTPClient::begin_url, "/tinfo.php?p=4000&t=NORM");
 
     tinfo_init(1000, true, 0);
     tic_notifs();

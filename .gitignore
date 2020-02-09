@@ -4,6 +4,7 @@ data/
 .pio/
 build/
 coverage/
+__pycache__/
 
 
 #

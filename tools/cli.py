@@ -17,62 +17,11 @@ import fcntl
 import serial
 from serial.tools import hexlify_codec
 import os.path
-import time
+from simutic import tic
 
 # pylint: disable=wrong-import-order,wrong-import-position
 
 codecs.register(lambda c: hexlify_codec.getregentry() if c == "hexlify" else None)
-
-
-hchc = 15000000
-hchp = 10000000
-iinst = 670 / 230 +3
-tic_time = time.time()
-heures_pleines = True
-
-
-def group(label, value):
-    sum = 0
-    for c in label:
-        sum += ord(c)
-    sum += ord(" ")
-    for c in value:
-        sum += ord(c)
-    sum = (sum & 63) + 32
-    return "\x0A" + label + " " + str(value) + " " + chr(sum) + "\x0D"
-
-
-def tic():
-    global tic_time, hchp, hchc
-
-    now = time.time()
-    delta = (now - tic_time) * iinst * 230 / 3600
-    tic_time = now
-
-    papp = int(iinst * 230)
-
-    if heures_pleines:
-        ptec = "HP.."
-        hchp += delta
-    else:
-        ptec = "HC.."
-        hchc += delta
-
-    frame = "\x02"
-    frame += group("ADCO", "040522079986")
-    frame += group("OPTARIF", "HC..")
-    frame += group("ISOUSC", "30")
-    frame += group("HCHC", f"{int(hchc):09d}")
-    frame += group("HCHP", f"{int(hchp):09d}")
-    frame += group("PTEC", ptec)
-    frame += group("IINST", f"{int(iinst):03d}")
-    frame += group("IMAX", "042")
-    frame += group("PAPP", f"{papp:05d}")
-    frame += group("HHPHC", "D")
-    frame += group("MOTDETAT", "000000")
-    frame += "\x03"
-
-    return frame.encode("ascii")
 
 
 class Periodic(threading.Thread):
@@ -422,8 +371,7 @@ class Miniterm(object):
                     self.pause_tic = not self.pause_tic
 
                 elif c == chr(0x10):  # Ctrl-P
-                    global heures_pleines
-                    heures_pleines = not heures_pleines
+                    tic.bascule()
 
                 elif c == chr(0x03):  # Ctrl-C
                     self.stop()  # exit app
@@ -451,12 +399,12 @@ class Miniterm(object):
 
     def send_tic(self):
         time = datetime.datetime.now().strftime("%H:%M:%S.%f")
-        echo_text = f"{time} frame TIC\n"
+        echo_text = f"{time} trame TIC\n"
         for transformation in self.tx_transformations:
             echo_text = transformation.echo(echo_text)
         self.console.write(echo_text)
 
-        self.serial.write(tic())
+        self.serial.write(tic.trame())
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
