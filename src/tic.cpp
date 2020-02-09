@@ -11,6 +11,7 @@ static char periode_en_cours[8] = {0};
 static bool init_periode_en_cours = true;
 static enum { BAS,
               HAUT } seuil_en_cours = BAS;
+static bool etat_adps = false;
 
 esp8266::polledTimeout::periodicMs timer_http(esp8266::polledTimeout::periodicMs::neverExpires);
 esp8266::polledTimeout::periodicMs timer_emoncms(esp8266::polledTimeout::periodicMs::neverExpires);
@@ -22,6 +23,7 @@ TeleinfoDecoder tinfo_decoder;
 static void http_notif(const char *notif);
 static void http_notif_periode_en_cours();
 static void http_notif_seuils();
+static void http_notif_adps();
 static void jeedom_notif();
 static void emoncms_notif();
 
@@ -49,7 +51,7 @@ void tic_notifs()
 {
     if (config.httpReq.host[0] != 0)
     {
-        if (config.httpReq.trigger_hchp)
+        if (config.httpReq.trigger_ptec)
         {
             http_notif_periode_en_cours();
         }
@@ -59,9 +61,14 @@ void tic_notifs()
             http_notif_seuils();
         }
 
+        if (config.httpReq.trigger_adps)
+        {
+            http_notif_adps();
+        }
+
         if (timer_http)
         {
-            http_notif("GEN");
+            http_notif("");
         }
     }
 
@@ -119,14 +126,59 @@ void tic_make_timers()
     }
 }
 
-void tic_get_json_array(String &html)
+void tic_get_json_array(String &data)
 {
-    tinfo.get_frame_array_json(html);
+    if (tinfo.is_empty())
+    {
+        data = "[]";
+        return;
+    }
+
+    // la trame en JSON fait environ 360 à 373 octets selon ADPS pour un abo HC/HP
+    JSONTableBuilder js(data, 400);
+    const char *label;
+    const char *value;
+    const char *state = nullptr;
+
+    js.append("timestamp", tinfo.get_timestamp_iso8601());
+
+    while (tinfo.get_value_next(label, value, &state))
+    {
+        js.append(label, value);
+    }
+
+    js.finalize();
 }
 
-void tic_get_json_dict(String &html)
+void tic_get_json_dict(String &data)
 {
-    tinfo.get_frame_dict_json(html);
+
+    if (tinfo.is_empty())
+    {
+        data = "{}";
+        return;
+    }
+
+    // la trame fait 217 à 230 selon ADPS pour un abo HC/HP
+    JSONBuilder js(data, 256);
+    const char *label;
+    const char *value;
+    const char *state = nullptr;
+
+    js.append(FPSTR("_UPTIME"), millis() / 1000);
+    js.append(FPSTR("timestamp"), tinfo.get_timestamp_iso8601().c_str());
+
+    while (tinfo.get_value_next(label, value, &state))
+    {
+        bool is_number = tinfo.get_integer(value);
+
+        if (is_number)
+            js.append_without_quote(label, value);
+        else
+            js.append(label, value);
+    }
+
+    js.finalize();
 }
 
 const char *tic_get_value(const char *label)
@@ -143,12 +195,11 @@ void http_notif(const char *notif)
 
     for (const char *p = config.httpReq.path; *p; ++p)
     {
-        /*
-        if (*p == '%')
+        if (*p == '~')
         {
             ++p;
             size_t i = 0;
-            while (*p && *p != '%' && i < sizeof(label) - 1)
+            while (*p && *p != '~' && i < sizeof(label) - 1)
             {
                 label[i++] = *p++;
             }
@@ -156,16 +207,14 @@ void http_notif(const char *notif)
 
             if (i == 0)
             {
-                uri += "%";
+                uri += "~";
             }
             else
             {
                 uri += tinfo.get_value(label, "null", true);
             }
         }
-        else
-        */
-        if (*p == '$')
+        else if (*p == '$')
         {
             ++p;
             if (*p == '$')
@@ -218,10 +267,31 @@ void http_notif_periode_en_cours()
         }
         else
         {
-            if (strcmp(PTEC, "HP..") == 0)
-                http_notif("HP");
-            if (strcmp(PTEC, "HC..") == 0)
-                http_notif("HC");
+            http_notif("PTEC");
+        }
+    }
+}
+
+void http_notif_adps()
+{
+    const char *ADPS = tinfo.get_value("ADPS");
+
+    if (ADPS == NULL)
+    {
+        if (etat_adps == true)
+        {
+            // on était en ADPS: on signale et on rebascule en état normal
+            etat_adps = false;
+            http_notif("NORM");
+        }
+    }
+    else
+    {
+        if (etat_adps == false)
+        {
+            // on vient de passer en ADPS: on signale et on bascule en mode AsDPS
+            etat_adps = true;
+            http_notif("ADPS");
         }
     }
 }
@@ -286,13 +356,7 @@ void jeedom_notif()
     http_request(config.jeedom.host, config.jeedom.port, url);
 }
 
-/* ======================================================================
-Function: build_emoncms_json string (usable by webserver.cpp)
-Purpose : construct the json part of emoncms url
-Input   : -
-Output  : String if some Teleinfo data available
-Comments: -
-====================================================================== */
+// construct the JSON (without " ???) part of emoncms url
 void tic_emoncms_data(String &url)
 {
     const char *label;

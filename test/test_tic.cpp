@@ -1,297 +1,404 @@
 #include "mock.h"
+#include <ESP8266HTTPClient.h>
 
-#include "teleinfo.h"
+#include "tic.cpp"
+#include "httpreq.cpp"
 
-// mauvais crc (étiquette ADCO)
-static const std::string test_trame_ko = "\
-\x02\
-\nADCO 111111111111 A\r\
-\nOPTARIF HC.. <\r\
-\nISOUSC 30 9\r\
-\nHCHC 052890470 )\r\
-\nHCHP 049126843 8\r\
-\nPTEC HP..  \r\
-\nIINST 008 _\r\
-\nIMAX 042 E\r\
-\nPAPP 01890 3\r\
-\nHHPHC D /\r\
-\nMOTDETAT 000000 B\r\
-\x03";
+static const Teleinfo empty_tinfo{};
 
-static const std::string test_trame_partielle_debut = "\
-\x02\
-\nADCO 111111111111 #\r\
-\nOPTARIF HC.. <\r\
-\nISOUSC 30 9\r\
-\nHCHC 052890";
-
-static const std::string test_trame_partielle_fin = "\
-ST 008 _\r\
-\nIMAX 042 E\r\
-\nPAPP 01890 3\r\
-\nHHPHC D /\r\
-\nMOTDETAT 000000 B\r\
-\x03";
-
-static const std::string test_trame_incomplete = "\
-\x02\
-\nADCO 111111111111 A\r\
-\nOPTARIF HC.. <\r\
-\nISOUSC 30 9\r\
-\nHCHC 052890470 )\r\
-\nHCHP 049126843 8\r\
-\nPTEC HP.. \
-\n E\r\
-\nPAPP 01890 3\r\
-\nHHPHC D /\r\
-\nMOTDETAT 000000 B\r\
-\x03";
-
-static const std::string test_trame_mauvais_groupe = "\
-\x02\
-\nADCO 111111111111 A\r\
-\nOPTARIF HC.. <\r\
-\nISOUSC 30 9\r\
-\nH\r\
-\nHCHP 049126843 8\r\
-\nPTEC HP..  \r\
-\nIINST 008 _\r\
-\nIMAX 042 E\r\
-\nPAPP 01890 3\r\
-\nHHPHC D /\r\
-\nMOTDETAT 000000 B\r\
-\x03";
-
-static const std::string test_trame_trop_longue = "\
-\x02\
-\nADCO 111111111111 A\r\
-\nOPTARIF HC.. <\r\
-\nISOUSC 30 9\r\
-\nHCHC 052890470 )\r\
-\nHCHP 049126843 8\r\
-\nHCHC 052890470 )\r\
-\nHCHP 049126843 8\r\
-\nHCHC 052890470 )\r\
-\nHCHP 049126843 8\r\
-\nHCHC 052890470 )\r\
-\nHCHP 049126843 8\r\
-\nHCHC 052890470 )\r\
-\nHCHP 049126843 8\r\
-\nHCHC 052890470 )\r\
-\nHCHP 049126843 8\r\
-\nHCHC 052890470 )\r\
-\nHCHP 049126843 8\r\
-\nHCHC 052890470 )\r\
-\nHCHP 049126843 8\r\
-\nPTEC HP.. \
-\n E\r\
-\nPAPP 01890 3\r\
-\nHHPHC D /\r\
-\nMOTDETAT 000000 B\r\
-\x03";
-
-static const std::string test_trame_groupe_trop_long = "\
-\x02\
-\nADCO 111111111111 A\r\
-\nOPTARIF HC.. <\r\
-\nISOUSC 30 9\r\
-\nHCHC AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\
-\nPTEC HP.. \
-\n E\r\
-\nPAPP 01890 3\r\
-\nHHPHC D /\r\
-\nMOTDETAT 000000 B\r\
-\x03";
-
-TEST(teleinfo, decode_ok)
+//
+static void test_reset_timers()
 {
-    TeleinfoDecoder tinfo_decode;
-
-    for (auto c : trame_teleinfo)
-    {
-        tinfo_decode.put(c);
-    }
-
-    // la trame doit être décodée
-    ASSERT_TRUE(tinfo_decode.ready());
-
-    // la valeur IINST doit être 008
-    ASSERT_STREQ(tinfo_decode.get_value("IINST"), "008");
-    ASSERT_STREQ(tinfo_decode.get_value("IINST", "123"), "008");
-
-    // la valeur inexistante peut être remplacée par une valeur par défaut
-    ASSERT_STREQ(tinfo_decode.get_value("unknown"), nullptr);
-    ASSERT_STREQ(tinfo_decode.get_value("unknown", "123"), "123");
+    timer_emoncms.resetToNeverExpires();
+    timer_jeedom.resetToNeverExpires();
+    timer_http.resetToNeverExpires();
 }
 
-TEST(teleinfo, decode_int)
+// configure les trois types de notifications
+static void test_config_notif(bool emoncms, bool jeedom, bool httpreq)
 {
-    const char *value;
+    test_reset_timers();
 
-    value = "000123";
-    ASSERT_TRUE(Teleinfo::get_integer(value));
-    ASSERT_STREQ(value, "123");
-
-    value = "000";
-    ASSERT_TRUE(Teleinfo::get_integer(value));
-    ASSERT_STREQ(value, "0");
-
-    value = "000123a";
-    ASSERT_FALSE(Teleinfo::get_integer(value));
-    ASSERT_STREQ(value, "000123a");
-}
-
-TEST(teleinfo, decode_ko_getters)
-{
-    TeleinfoDecoder tinfo_decode;
-    Teleinfo tinfo;
-    const char *label;
-    const char *value;
-    const char *state;
-    String js;
-    char raw[Teleinfo::MAX_FRAME_SIZE];
-
-    for (auto c : test_trame_ko)
+    if (emoncms)
     {
-        tinfo_decode.put(c);
+        strcpy(config.emoncms.host, "emoncms.home");
+        config.emoncms.port = 8080;
+        strcpy(config.emoncms.url, "/e.php");
+        strcpy(config.emoncms.apikey, "key");
+        config.emoncms.node = 1;
+        config.emoncms.freq = 300;
+    }
+    else
+    {
+        strcpy(config.emoncms.host, "");
     }
 
-    // la trame ne doit pas décodée
-    ASSERT_FALSE(tinfo_decode.ready());
+    if (jeedom)
+    {
+        strcpy(config.jeedom.host, "jeedom.home");
+        config.jeedom.port = 80;
+        strcpy(config.jeedom.url, "/url.php");
+        strcpy(config.jeedom.adco, "");
+        config.jeedom.freq = 300;
+    }
+    else
+    {
+        strcpy(config.jeedom.host, "");
+    }
 
-    // ni copiée
-    tinfo.copy_from(tinfo_decode);
+    if (httpreq)
+    {
+        strcpy(config.httpReq.host, "sql.home");
+        config.httpReq.port = 88;
+        strcpy(config.httpReq.path, "/tic.php?hchc=$HCHC&hchp=$HCHP&papp=$PAPP");
+        config.httpReq.freq = 15;
+        config.httpReq.trigger_ptec = 0;
+        config.httpReq.trigger_seuils = 0;
+        config.httpReq.trigger_adps = 0;
+        config.httpReq.seuil_haut = 5900;
+        config.httpReq.seuil_bas = 4200;
+    }
+    else
+    {
+        strcpy(config.httpReq.host, "");
+    }
+}
+
+// vérification de la génération des trames téléinfo de test
+//
+TEST(tic, tinfo_builder)
+{
+    ASSERT_TRUE(empty_tinfo.is_empty());
+
+    tinfo.copy_from(empty_tinfo);
     ASSERT_TRUE(tinfo.is_empty());
 
-    // pas de valeur
-    ASSERT_EQ(tinfo.get_value("ADCO"), nullptr);
+    tinfo.copy_from(empty_tinfo);
+    tinfo_init(100, true, 0);
+    ASSERT_FALSE(tinfo.is_empty());
 
-    state = nullptr;
-    ASSERT_FALSE(tinfo.get_value_next(label, value, &state));
+    tinfo.copy_from(empty_tinfo);
+    tinfo_init(200, false, 0);
+    ASSERT_FALSE(tinfo.is_empty());
+
+    tinfo.copy_from(empty_tinfo);
+    tinfo_init(300, true, 100);
+    ASSERT_FALSE(tinfo.is_empty());
+
+    tinfo.copy_from(empty_tinfo);
+    tinfo_init(400, false, 200);
+    ASSERT_FALSE(tinfo.is_empty());
+}
+
+// test du cas général
+//
+TEST(tic, notif_aucun)
+{
+    test_config_notif(false, false, false);
+
+    tinfo.copy_from(empty_tinfo);
+    ASSERT_TRUE(tinfo.is_empty());
+
+    for (auto c : trame_teleinfo)
+    {
+        tic_decode(c);
+    }
+
+    ASSERT_FALSE(tinfo.is_empty());
+}
+
+// test du cas général avec les 3 notifs
+//
+TEST(tic, notif_tous)
+{
+    test_config_notif(true, true, true);
+
+    tinfo.copy_from(empty_tinfo);
+    ASSERT_TRUE(tinfo.is_empty());
+
+    HTTPClient::begin_called = 0;
+
+    timer_emoncms.trigger();
+    timer_jeedom.trigger();
+    timer_http.trigger();
+
+    for (auto c : trame_teleinfo)
+    {
+        tic_decode(c);
+    }
+
+    ASSERT_FALSE(tinfo.is_empty());
+    ASSERT_EQ(HTTPClient::begin_called, 3);
+}
+
+// test de la génération de la requête http
+//
+TEST(notifs, http_notif)
+{
+    test_config_notif(false, false, true);
+
+    tinfo_init(1800, false);
+
+    // syntaxe 1: ~HCHC~
+    strcpy(config.httpReq.path, "/tic.php?hchc=~HCHC~&hchp=~HCHP~&papp=~PAPP~&tilde=~~");
+    HTTPClient::begin_called = 0;
+    http_notif("");
+    ASSERT_EQ(HTTPClient::begin_called, 1);
+    ASSERT_EQ(HTTPClient::begin_url, "/tic.php?hchc=52890470&hchp=49126843&papp=1800&tilde=~");
+
+    // syntaxe 2: $HCHC
+    strcpy(config.httpReq.path, "/tic.php?hchc=$HCHC&hchp=$HCHP&papp=$PAPP");
+    HTTPClient::begin_called = 0;
+    http_notif("");
+    ASSERT_EQ(HTTPClient::begin_called, 1);
+    ASSERT_EQ(HTTPClient::begin_url, "/tic.php?hchc=52890470&hchp=49126843&papp=1800");
+    ASSERT_EQ(HTTPClient::begin_port, 88);
+    ASSERT_EQ(HTTPClient::begin_host, "sql.home");
+}
+
+// test du déclenchement de la notif http
+//
+TEST(notifs, http_timer)
+{
+    test_config_notif(false, false, true);
+    strcpy(config.httpReq.path, "/tic.php?p=$PAPP&t=$_type");
+
+    tinfo_init(1234, false);
+
+    // pas de timer: pas de requête
+    HTTPClient::begin_called = 0;
+    tic_notifs();
+    ASSERT_EQ(HTTPClient::begin_called, 0);
+    tic_notifs();
+    ASSERT_EQ(HTTPClient::begin_called, 0);
+    tic_notifs();
+    ASSERT_EQ(HTTPClient::begin_called, 0);
+
+    // échéance timer: il y a une requête
+    timer_http.trigger();
+    tic_notifs();
+    ASSERT_EQ(HTTPClient::begin_called, 1);
+    ASSERT_EQ(HTTPClient::begin_url, "/tic.php?p=1234&t=");
+
+    // pas d'échéance timer: pas de requête
+    tic_notifs();
+    ASSERT_EQ(HTTPClient::begin_called, 1);
+
+    // échéance timer: il y a une requête
+    tinfo_init(4321, false);
+    timer_http.trigger();
+    tic_notifs();
+    ASSERT_EQ(HTTPClient::begin_called, 2);
+    ASSERT_EQ(HTTPClient::begin_url, "/tic.php?p=4321&t=");
+
+    // pas de requête http même si le timer se déclenche
+    strcpy(config.httpReq.host, "");
+    HTTPClient::begin_called = 0;
+    timer_http.trigger();
+    tic_notifs();
+    ASSERT_EQ(HTTPClient::begin_called, 0);
+}
+
+// test du déclenchement sur changement de Période Tarifaire En Cours
+//
+TEST(notifs, http_ptec)
+{
+    test_config_notif(false, false, true);
+    strcpy(config.httpReq.path, "/tic.php?p=$PAPP&ptec=$PTEC&t=$_type");
+    config.httpReq.trigger_ptec = 1; // active les notifs de PTEC
+
+    tinfo_init();
+
+    HTTPClient::begin_called = 0;
+    tic_notifs();
+    ASSERT_EQ(HTTPClient::begin_called, 0);
+
+    // test passage en heures creuses
+    // notifs activées: il y a une requête
+    tinfo_init(1800, true);
+    tic_notifs();
+    ASSERT_EQ(HTTPClient::begin_called, 1);
+    ASSERT_EQ(HTTPClient::begin_url, "/tic.php?p=1800&ptec=HC..&t=PTEC");
+
+    // pas de changement: pas de notif supplémentaire
+    tinfo_init(2800, true);
+    tic_notifs();
+    ASSERT_EQ(HTTPClient::begin_called, 1);
+
+    // repassage en heures pleines
+    // notifs activées: il y a une requête
+    tinfo_init(1000, false);
+    tic_notifs();
+    ASSERT_EQ(HTTPClient::begin_called, 2);
+    ASSERT_EQ(HTTPClient::begin_url, "/tic.php?p=1000&ptec=HP..&t=PTEC");
+
+    // désactive les notifs de période en cours
+    config.httpReq.trigger_ptec = 0;
+
+    // test passage en heures creuses
+    // notifs désactivées: pas de requête
+    tinfo_init(1900, true);
+    tic_notifs();
+    ASSERT_EQ(HTTPClient::begin_called, 2);
+
+    // repassage en heures pleines
+    // notifs désactivées: pas de requête
+    tinfo_init(1100, false);
+    tic_notifs();
+    ASSERT_EQ(HTTPClient::begin_called, 2);
+}
+
+TEST(notifs, http_seuils)
+{
+    test_config_notif(false, false, true);
+
+    tinfo_init();
+
+    // active les notifs de seuils
+    strcpy(config.httpReq.path, "/tic.php?p=$PAPP&t=$_type");
+    config.httpReq.trigger_seuils = 1;
+
+    HTTPClient::begin_called = 0;
+    tic_notifs();
+    ASSERT_EQ(HTTPClient::begin_called, 0);
+
+    // dépassement seuil haut (sans repasser par le seuil bas)
+
+    tinfo_init(6000, false);
+    tic_notifs();
+    ASSERT_EQ(HTTPClient::begin_called, 1);
+    ASSERT_EQ(HTTPClient::begin_url, "/tic.php?p=6000&t=HAUT");
+
+    tinfo_init(5000, false);
+    tic_notifs();
+    ASSERT_EQ(HTTPClient::begin_called, 1);
+
+    tinfo_init(6000, false);
+    tic_notifs();
+    ASSERT_EQ(HTTPClient::begin_called, 1);
+
+    // retour seuil bas (sans repasser au-dessus du seuil haut)
+
+    tinfo_init(4000, false);
+    tic_notifs();
+    ASSERT_EQ(HTTPClient::begin_called, 2);
+    ASSERT_EQ(HTTPClient::begin_url, "/tic.php?p=4000&t=BAS");
+
+    tinfo_init(5000, false);
+    tic_notifs();
+    ASSERT_EQ(HTTPClient::begin_called, 2);
+
+    tinfo_init(4000, false);
+    tic_notifs();
+    ASSERT_EQ(HTTPClient::begin_called, 2);
+}
+
+// test de la notification d'Avertissement de Dépassement de Puissance Souscrite
+//
+TEST(notifs, http_adps)
+{
+    test_config_notif(false, false, true);
+
+    // active les notifications de dépassement
+    strcpy(config.httpReq.path, "/tic.php?p=$PAPP&t=$_type");
+    config.httpReq.trigger_adps = 1;
+
+    HTTPClient::begin_called = 0;
+
+    tinfo_init(5000, true, 0);
+    tic_notifs();
+    ASSERT_EQ(HTTPClient::begin_called, 0);
+
+    tinfo_init(6000, true, 0);
+    tic_notifs();
+    ASSERT_EQ(HTTPClient::begin_called, 0);
+
+    tinfo_init(7000, true, 10);
+    tic_notifs();
+    ASSERT_EQ(HTTPClient::begin_called, 1);
+    ASSERT_EQ(HTTPClient::begin_url, "/tic.php?p=7000&t=ADPS");
+
+    tinfo_init(7200, true, 11);
+    tic_notifs();
+    ASSERT_EQ(HTTPClient::begin_called, 1);
+
+    tinfo_init(4000, true, 0);
+    tic_notifs();
+    ASSERT_EQ(HTTPClient::begin_called, 2);
+    ASSERT_EQ(HTTPClient::begin_url, "/tic.php?p=4000&t=NORM");
+
+    tinfo_init(1000, true, 0);
+    tic_notifs();
+    ASSERT_EQ(HTTPClient::begin_called, 2);
+}
+
+TEST(notifs, jeedom)
+{
+    test_config_notif(false, true, false);
+
+    tinfo_init();
+
+    // notification normale
+    HTTPClient::begin_called = 0;
+    jeedom_notif();
+    ASSERT_EQ(HTTPClient::begin_called, 1);
+    ASSERT_EQ(HTTPClient::begin_port, 80);
+    ASSERT_EQ(HTTPClient::begin_host, "jeedom.home");
+    ASSERT_EQ(HTTPClient::begin_url, "/url.php?api=&ADCO=111111111111&OPTARIF=HC..&ISOUSC=30&HCHC=052890470&HCHP=049126843&PTEC=HP..&IINST=008&IMAX=042&PAPP=01890&HHPHC=D&MOTDETAT=000000");
+
+    // ADCO fixé
+    strcpy(config.jeedom.adco, "12345678");
+    HTTPClient::begin_called = 0;
+    jeedom_notif();
+    ASSERT_EQ(HTTPClient::begin_called, 1);
+    ASSERT_EQ(HTTPClient::begin_port, 80);
+    ASSERT_EQ(HTTPClient::begin_host, "jeedom.home");
+    ASSERT_EQ(HTTPClient::begin_url, "/url.php?api=&ADCO=12345678&OPTARIF=HC..&ISOUSC=30&HCHC=052890470&HCHP=049126843&PTEC=HP..&IINST=008&IMAX=042&PAPP=01890&HHPHC=D&MOTDETAT=000000");
+
+    // pas de jeedom configuré: pas d'envoi http
+    strcpy(config.jeedom.host, "");
+    HTTPClient::begin_called = 0;
+    jeedom_notif();
+    ASSERT_EQ(HTTPClient::begin_called, 0);
+}
+
+TEST(notifs, emoncms)
+{
+    tinfo_init();
+
+    test_config_notif(true, false, false);
+
+    // notification normale
+    HTTPClient::begin_called = 0;
+    emoncms_notif();
+    ASSERT_EQ(HTTPClient::begin_called, 1);
+    ASSERT_EQ(HTTPClient::begin_port, 8080);
+    ASSERT_EQ(HTTPClient::begin_host, "emoncms.home");
+    ASSERT_EQ(HTTPClient::begin_url, "/e.php?node=1&apikey=key&json={ADCO:111111111111,OPTARIF:2,ISOUSC:30,HCHC:52890470,HCHP:49126843,PTEC:3,IINST:8,IMAX:42,PAPP:1890,HHPHC:68,MOTDETAT:0}");
+
+    // pas de emoncms configuré: pas d'envoi http
+    strcpy(config.emoncms.host, "");
+    emoncms_notif();
+    ASSERT_EQ(HTTPClient::begin_called, 1);
+}
+
+TEST(tic, json_empty)
+{
+    String data;
+
+    tinfo.copy_from(empty_tinfo);
 
     // pas de données
-    tinfo.get_frame_array_json(js);
-    ASSERT_EQ(js, "[]");
+    tic_get_json_array(data);
+    ASSERT_EQ(data, "[]");
 
-    tinfo.get_frame_dict_json(js);
-    ASSERT_EQ(js, "{}");
-
-    tinfo.get_frame_ascii(raw, sizeof(raw));
-    ASSERT_STREQ(raw, "");
+    tic_get_json_dict(data);
+    ASSERT_EQ(data, "{}");
 }
 
-TEST(teleinfo, decode_ko)
+TEST(tic, json)
 {
     TeleinfoDecoder tinfo_decode;
-
-    for (auto c : test_trame_ko)
-    {
-        tinfo_decode.put(c);
-    }
-
-    // la trame ne doit pas décodée
-    ASSERT_FALSE(tinfo_decode.ready());
-
-    // trame partielle début
-    for (auto c : test_trame_partielle_debut)
-    {
-        tinfo_decode.put(c);
-    }
-    ASSERT_FALSE(tinfo_decode.ready());
-    ASSERT_TRUE(tinfo_decode.is_empty());
-
-    // la réception d'une trame ok doit réussir
-    for (auto c : trame_teleinfo)
-    {
-        tinfo_decode.put(c);
-    }
-    ASSERT_TRUE(tinfo_decode.ready());
-
-    // trame partielle fin
-    for (auto c : test_trame_partielle_fin)
-    {
-        tinfo_decode.put(c);
-    }
-    ASSERT_FALSE(tinfo_decode.ready());
-
-    // la réception d'une trame ok doit réussir
-    for (auto c : trame_teleinfo)
-    {
-        tinfo_decode.put(c);
-    }
-    ASSERT_TRUE(tinfo_decode.ready());
-
-    // la réception d'une trame incomplète doit échouer
-    for (auto c : test_trame_incomplete)
-    {
-        tinfo_decode.put(c);
-    }
-    ASSERT_FALSE(tinfo_decode.ready());
-
-    // la réception d'une trame incomplète doit échouer
-    for (auto c : test_trame_trop_longue)
-    {
-        tinfo_decode.put(c);
-    }
-    ASSERT_FALSE(tinfo_decode.ready());
-
-    // tout et n'importe quoi
-    for (int c = 0; c <= 127; ++c)
-    {
-        tinfo_decode.put(c);
-    }
-    ASSERT_FALSE(tinfo_decode.ready());
-
-    // pas de place pour le crc dans un groupe
-    for (auto c : test_trame_mauvais_groupe)
-    {
-        tinfo_decode.put(c);
-    }
-    ASSERT_FALSE(tinfo_decode.ready());
-
-    // test_trame_groupe_trop_long
-    for (auto c : test_trame_groupe_trop_long)
-    {
-        tinfo_decode.put(c);
-    }
-    ASSERT_FALSE(tinfo_decode.ready());
-
-    // la réception d'une trame ok doit réussir après tous ces échecs
-    for (auto c : trame_teleinfo)
-    {
-        tinfo_decode.put(c);
-    }
-    ASSERT_TRUE(tinfo_decode.ready());
-}
-
-TEST(teleinfo, copy)
-{
-    TeleinfoDecoder tinfo_decode;
-    Teleinfo tinfo;
-
-    for (auto c : trame_teleinfo)
-    {
-        tinfo_decode.put(c);
-    }
-
-    tinfo.copy_from(tinfo_decode);
-
-    // la trame ne doit pas décodée
-    ASSERT_STREQ(tinfo.get_value("PAPP"), "01890");
-
-    // le timestamp est celui par défaut
-    ASSERT_EQ(tinfo.get_timestamp_iso8601(), test_time_marker());
-}
-
-TEST(teleinfo, json)
-{
-    TeleinfoDecoder tinfo_decode;
-    Teleinfo tinfo;
 
     for (auto c : trame_teleinfo)
     {
@@ -305,68 +412,19 @@ TEST(teleinfo, json)
 
     String output;
 
-    tinfo.get_frame_array_json(output);
-    //std::cout << output << std::endl;
+    tic_get_json_array(output);
+    // std::cout << output << std::endl;
     auto j1 = json::parse(output.s);
     ASSERT_TRUE(j1.is_array());
     ASSERT_EQ(j1.size(), 12);
     ASSERT_EQ(j1[1]["va"], "111111111111");
 
-    tinfo.get_frame_dict_json(output);
-    //std::cout << output << std::endl;
+    tic_get_json_dict(output);
+    // std::cout << output << std::endl;
     auto j2 = json::parse(output.s);
     ASSERT_EQ(j2["OPTARIF"], "HC..");
     ASSERT_EQ(j2["HCHC"], 52890470);
     ASSERT_EQ(j2["HCHP"], 49126843);
     ASSERT_EQ(j2["PTEC"], "HP..");
     ASSERT_EQ(j2["MOTDETAT"], 0);
-}
-
-TEST(teleinfo, ascii)
-{
-    TeleinfoDecoder tinfo_decode;
-    Teleinfo tinfo;
-
-    for (auto c : trame_teleinfo)
-    {
-        tinfo_decode.put(c);
-    }
-
-    tinfo.copy_from(tinfo_decode);
-
-    char output[Teleinfo::MAX_FRAME_SIZE];
-    size_t sz = tinfo.get_frame_ascii(output, sizeof(output));
-    //std::cout << sz << std::endl;
-    //std::cout << output << std::endl;
-    ASSERT_NE(sz, 0);
-}
-
-TEST(teleinfo, iterate)
-{
-    TeleinfoDecoder tinfo_decode;
-    Teleinfo tinfo;
-
-    for (auto c : trame_teleinfo)
-    {
-        tinfo_decode.put(c);
-    }
-
-    tinfo.copy_from(tinfo_decode);
-
-    const char *label;
-    const char *value;
-    const char *state = nullptr;
-    size_t nb = 0;
-    while (tinfo.get_value_next(label, value, &state))
-    {
-        // std::cout << label << " : " << value << std::endl;
-        if (strcmp(label, "PAPP") == 0)
-        {
-            ASSERT_STREQ(value, "01890");
-        }
-        ++nb;
-    }
-
-    // 11 valeurs dans la trame de téléinformation
-    ASSERT_EQ(nb, 11);
 }

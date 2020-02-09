@@ -1,1 +1,0 @@
-docker run -ti --rm -v /Users/renedevichi/Projects/Arduino/wifinfo/data_src:/usr/share/nginx/html -v /Users/renedevichi/Projects/Arduino/wifinfo/default.conf://etc/nginx/conf.d/default.conf -p 8080:80 --name nginx nginx

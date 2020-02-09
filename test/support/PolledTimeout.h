@@ -8,8 +8,8 @@ namespace polledTimeout
 class periodicMs
 {
 public:
-    void trigger() { periodicMs_reset = true; }
-    bool periodicMs_reset = false;
+    void trigger() { periodicMs_activate = true; }
+    bool periodicMs_activate = false;
 
 public:
     static const int neverExpires = 0;
@@ -20,13 +20,14 @@ public:
 
     operator bool()
     {
-        bool v = periodicMs_reset;
-        periodicMs_reset = false;
+        bool v = periodicMs_activate;
+        periodicMs_activate = false;
         return v;
     }
 
     void resetToNeverExpires()
     {
+        periodicMs_activate = false;
     }
 
     void reset(int)

@@ -4,6 +4,7 @@
 #include <ESP8266WiFi.h>
 #include <ArduinoOTA.h>
 #include <ESP8266WebServer.h>
+#include <user_interface.h>
 #include <sys/time.h>
 
 extern "C" int clock_gettime(clockid_t unused, struct timespec *tp);
@@ -39,7 +40,7 @@ String sys_format_size(size_t bytes)
 String sys_uptime()
 {
     struct timespec tp;
-    clock_gettime(0, &tp);
+    clock_gettime((clockid_t)0, &tp);
 
     char buff[64];
     int sec = tp.tv_sec;

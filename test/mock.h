@@ -14,4 +14,4 @@ const char *test_time_marker();
 extern const std::string trame_teleinfo;
 
 void tinfo_init();
-void tinfo_init(uint32_t papp, bool heures_creuses);
+void tinfo_init(uint32_t papp, bool heures_creuses, uint32_t adps = 0);

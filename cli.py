@@ -430,6 +430,7 @@ class Miniterm(object):
                     break
 
                 else:
+                    if ord(c) < 32: print("<%02x>"%ord(c))
                     text = c
                     for transformation in self.tx_transformations:
                         text = transformation.tx(text)

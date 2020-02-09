@@ -55,8 +55,6 @@
 // Port pour l'OTA
 #define DEFAULT_OTA_PORT 8266
 #define DEFAULT_OTA_AUTH "OTA_WifInfo"
-//#define DEFAULT_OTA_AUTH     ""
-#define DEFAULT_SYSLOG_PORT 514
 
 // Bit definition for different configuration modes
 #define CFG_LCD 0x0001     // Enable display
@@ -71,8 +69,6 @@
 #define CFG_FORM_AP_PSK FPSTR("ap_psk")
 #define CFG_FORM_OTA_AUTH FPSTR("ota_auth")
 #define CFG_FORM_OTA_PORT FPSTR("ota_port")
-#define CFG_FORM_SYSLOG_HOST FPSTR("syslog_host")
-#define CFG_FORM_SYSLOG_PORT FPSTR("syslog_port")
 
 #define CFG_FORM_EMON_HOST FPSTR("emon_host")
 #define CFG_FORM_EMON_PORT FPSTR("emon_port")
@@ -92,16 +88,12 @@
 #define CFG_FORM_HTTPREQ_PORT FPSTR("httpreq_port")
 #define CFG_FORM_HTTPREQ_PATH FPSTR("httpreq_path")
 #define CFG_FORM_HTTPREQ_FREQ FPSTR("httpreq_freq")
-#define CFG_FORM_HTTPREQ_FREQ FPSTR("cfg_trigger_hp")
-#define CFG_FORM_HTTPREQ_FREQ FPSTR("cfg_trigger_hc")
-#define CFG_FORM_HTTPREQ_FREQ FPSTR("cfg_trigger_adps")
-#define CFG_FORM_HTTPREQ_FREQ FPSTR("cfg_trigger_seuils")
-#define CFG_FORM_HTTPREQ_FREQ FPSTR("cfg_threshold_high")
-#define CFG_FORM_HTTPREQ_FREQ FPSTR("cfg_threshold_low")
 
-#define CFG_FORM_IP FPSTR("wifi_ip");
-#define CFG_FORM_GW FPSTR("wifi_gw");
-#define CFG_FORM_MSK FPSTR("wifi_msk");
+#define CFG_FORM_HTTPREQ_TRIGGER_PTEC FPSTR("httpreq_trigger_ptec")
+#define CFG_FORM_HTTPREQ_TRIGGER_ADPS FPSTR("httpreq_trigger_adps")
+#define CFG_FORM_HTTPREQ_TRIGGER_SEUILS FPSTR("httpreq_trigger_seuils")
+#define CFG_FORM_HTTPREQ_SEUIL_HAUT FPSTR("httpreq_seuil_haut")
+#define CFG_FORM_HTTPREQ_SEUIL_BAS FPSTR("httpreq_seuil_bas")
 
 #pragma pack(push) // push current alignment to stack
 #pragma pack(1)    // set alignment to 1 byte boundary
@@ -141,7 +133,7 @@ struct _httpRequest
     uint16_t port;                        // Protocol port (HTTP/HTTPS)
     uint32_t freq;                        // refresh rate
     uint8_t trigger_adps : 1;
-    uint8_t trigger_hchp : 1;
+    uint8_t trigger_ptec : 1;
     uint8_t trigger_seuils : 1;
     uint16_t seuil_haut;
     uint16_t seuil_bas;
@@ -159,7 +151,7 @@ struct _Config
     char ota_auth[CFG_PSK_SIZE + 1];  // OTA Authentication password
     uint32_t config;                  // Bit field register
     uint16_t ota_port;                // OTA port
-    uint8_t filler[131];               // in case adding data in config avoiding loosing current conf by bad crc
+    uint8_t filler[131];              // in case adding data in config avoiding loosing current conf by bad crc
     _emoncms emoncms;                 // Emoncms configuration
     _jeedom jeedom;                   // jeedom configuration
     _httpRequest httpReq;             // HTTP request

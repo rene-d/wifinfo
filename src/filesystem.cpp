@@ -3,7 +3,6 @@
 #include <FS.h>
 #include <user_interface.h>
 
-
 void fs_setup()
 {
     // Init SPIFFS filesystem, to use web server static files
@@ -14,32 +13,24 @@ void fs_setup()
     }
     else
     {
-        Serial.println(F("SPIFFS Mount succesfull"));
+        Serial.println(F("SPIFFS Mount succesful"));
 
         Dir dir = SPIFFS.openDir("/");
         while (dir.next())
         {
-            const String& fileName = dir.fileName();
+            const String &fileName = dir.fileName();
             size_t fileSize = dir.fileSize();
             Serial.printf("FS File: %s, size: %zu\n", fileName.c_str(), fileSize);
         }
     }
 }
 
-
-
-/* ======================================================================
-Function: fs_get_spiffs_json
-Purpose : Return JSON string containing list of SPIFFS files
-Input   : Response String
-Output  : -
-Comments: -
-====================================================================== */
+// Return JSON string containing list of SPIFFS files
 void fs_get_spiffs_json(String &response)
 {
     bool first_item = true;
 
-    response.reserve(512);  // about 400 bytes
+    response.reserve(512); // about 400 bytes
 
     // Files Array
     response = F("{\"files\":[");

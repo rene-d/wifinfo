@@ -4,6 +4,7 @@
  */
 #pragma once
 
+#include "jsonbuilder.h"
 #include <Arduino.h>
 #include <sys/time.h>
 #include <time.h>
@@ -147,86 +148,6 @@ public:
         char buf[32];
         strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S%z", tm);
         return buf;
-    }
-
-    void get_frame_array_json(String &data) const
-    {
-        if (size_ == 0)
-        {
-            data = "[]";
-            return;
-        }
-
-        data = "[{\"na\":\"timestamp\",\"va\":\"";
-        data += get_timestamp_iso8601();
-        data += "\", \"fl\":8,\"ck\":0}";
-
-        const char *p = frame_;
-        const char *end = frame_ + size_;
-        while (p < end)
-        {
-            data += ",{\"na\":\"";
-
-            data += p;
-            p += strlen(p) + 1;
-            data += "\",\"va\":\"";
-
-            if (p >= end)
-            {
-                data += "ERROR\"}]";
-                break;
-            }
-            data += p;
-            data += "\",\"ck\":\"\",\"fl\":8}";
-            p += strlen(p) + 1;
-        }
-        data += "]";
-    }
-
-    void get_frame_dict_json(String &data) const
-    {
-        if (size_ == 0)
-        {
-            data = "{}";
-            return;
-        }
-
-        data = "{\"_UPTIME\":";
-        data += millis() / 1000;
-        data += ",\"timestamp\":\"";
-        data += get_timestamp_iso8601();
-        data += "\"";
-
-        const char *p = frame_;
-        const char *end = frame_ + size_;
-        while (p < end)
-        {
-            data += ",\"";
-            data += p;
-
-            p += strlen(p) + 1;
-            data += "\":";
-
-            if (p >= end)
-            {
-                data += "\"ERROR\"";
-                break;
-            }
-
-            if (get_integer(p))
-            {
-                data += p;
-            }
-            else
-            {
-                data += "\"";
-                data += p;
-                data += "\"";
-            }
-
-            p += strlen(p) + 1;
-        }
-        data += "}";
     }
 
     size_t get_frame_ascii(char *frame, size_t size) const

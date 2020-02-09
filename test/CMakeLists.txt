@@ -7,6 +7,10 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 
+# find_package(gtest REQUIRED)
+# include_directories(/usr/local/include)
+# link_directories(/usr/local/lib)
+
 # Code Coverage Configuration
 add_library(coverage_config INTERFACE)
 
@@ -30,8 +34,11 @@ enable_testing()
 
 
 add_executable(tic
-    test_tic.cpp test_config.cpp test_notifs.cpp test_support.cpp
-    mock_time.cpp mock.cpp)
+    test_teleinfo.cpp
+    test_config.cpp
+    test_tic.cpp
+    test_sys.cpp
+    test_support.cpp mock_time.cpp mock.cpp mock_support.cpp)
 
 target_include_directories(tic
     PRIVATE src

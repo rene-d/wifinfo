@@ -21,7 +21,9 @@
 // **********************************************************************************
 #include "config.h"
 #include "tic.h"
+#include "jsonbuilder.h"
 #include <EEPROM.h>
+#include <user_interface.h>
 
 // Configuration structure for whole program
 _Config config;
@@ -29,8 +31,7 @@ _Config config;
 void config_setup()
 {
     // Our configuration is stored into EEPROM
-    //EEPROM.begin(sizeof(_Config));
-    EEPROM.begin(1024);
+    EEPROM.begin(sizeof(_Config));
 
     // Read Configuration from EEP
     if (config_read())
@@ -249,7 +250,7 @@ void config_show()
     Serial.println(F("===== Advanced"));
     Serial.print("ap_psk   :");
     Serial.println(config.ap_psk);
-    Serial.print("OTA auth :");
+    Serial.print(F("OTA auth :"));
     Serial.println(config.ota_auth);
     Serial.print("OTA port :");
     Serial.println(config.ota_port);
@@ -302,113 +303,43 @@ void config_show()
     Serial.flush();
 }
 
-const char FP_QCQ[] PROGMEM = "\":\"";
-const char FP_QCNL[] PROGMEM = "\",\"";
-
-/* ======================================================================
-Function: getConfigJSONData
-Purpose : Return JSON string containing configuration data
-Input   : Response String
-Output  : -
-Comments: -
-====================================================================== */
+// Return JSON string containing configuration data
 void config_get_json(String &r)
 {
-    // Json start
-    r = FPSTR("{");
+    JSONBuilder js(r, 1024);
 
-    r += FPSTR("\"");
-    r += CFG_FORM_SSID;
-    r += FPSTR(FP_QCQ);
-    r += config.ssid;
-    r += FPSTR(FP_QCNL);
-    r += CFG_FORM_PSK;
-    r += FPSTR(FP_QCQ);
-    r += config.psk;
-    r += FPSTR(FP_QCNL);
-    r += CFG_FORM_HOST;
-    r += FPSTR(FP_QCQ);
-    r += config.host;
-    r += FPSTR(FP_QCNL);
-    r += CFG_FORM_AP_PSK;
-    r += FPSTR(FP_QCQ);
-    r += config.ap_psk;
-    r += FPSTR(FP_QCNL);
-    r += CFG_FORM_EMON_HOST;
-    r += FPSTR(FP_QCQ);
-    r += config.emoncms.host;
-    r += FPSTR(FP_QCNL);
-    r += CFG_FORM_EMON_PORT;
-    r += FPSTR(FP_QCQ);
-    r += config.emoncms.port;
-    r += FPSTR(FP_QCNL);
-    r += CFG_FORM_EMON_URL;
-    r += FPSTR(FP_QCQ);
-    r += config.emoncms.url;
-    r += FPSTR(FP_QCNL);
-    r += CFG_FORM_EMON_KEY;
-    r += FPSTR(FP_QCQ);
-    r += config.emoncms.apikey;
-    r += FPSTR(FP_QCNL);
-    r += CFG_FORM_EMON_NODE;
-    r += FPSTR(FP_QCQ);
-    r += config.emoncms.node;
-    r += FPSTR(FP_QCNL);
-    r += CFG_FORM_EMON_FREQ;
-    r += FPSTR(FP_QCQ);
-    r += config.emoncms.freq;
-    r += FPSTR(FP_QCNL);
-    r += CFG_FORM_OTA_AUTH;
-    r += FPSTR(FP_QCQ);
-    r += config.ota_auth;
-    r += FPSTR(FP_QCNL);
-    r += CFG_FORM_OTA_PORT;
-    r += FPSTR(FP_QCQ);
-    r += config.ota_port;
-    r += FPSTR(FP_QCNL);
-    r += CFG_FORM_JDOM_HOST;
-    r += FPSTR(FP_QCQ);
-    r += config.jeedom.host;
-    r += FPSTR(FP_QCNL);
-    r += CFG_FORM_JDOM_PORT;
-    r += FPSTR(FP_QCQ);
-    r += config.jeedom.port;
-    r += FPSTR(FP_QCNL);
-    r += CFG_FORM_JDOM_URL;
-    r += FPSTR(FP_QCQ);
-    r += config.jeedom.url;
-    r += FPSTR(FP_QCNL);
-    r += CFG_FORM_JDOM_KEY;
-    r += FPSTR(FP_QCQ);
-    r += config.jeedom.apikey;
-    r += FPSTR(FP_QCNL);
-    r += CFG_FORM_JDOM_ADCO;
-    r += FPSTR(FP_QCQ);
-    r += config.jeedom.adco;
-    r += FPSTR(FP_QCNL);
-    r += CFG_FORM_JDOM_FREQ;
-    r += FPSTR(FP_QCQ);
-    r += config.jeedom.freq;
-    r += FPSTR(FP_QCNL);
-    r += CFG_FORM_HTTPREQ_HOST;
-    r += FPSTR(FP_QCQ);
-    r += config.httpReq.host;
-    r += FPSTR(FP_QCNL);
-    r += CFG_FORM_HTTPREQ_PORT;
-    r += FPSTR(FP_QCQ);
-    r += config.httpReq.port;
-    r += FPSTR(FP_QCNL);
-    r += CFG_FORM_HTTPREQ_PATH;
-    r += FPSTR(FP_QCQ);
-    r += config.httpReq.path;
-    r += FPSTR(FP_QCNL);
-    r += CFG_FORM_HTTPREQ_FREQ;
-    r += FPSTR(FP_QCQ);
-    r += config.httpReq.freq;
-    r += F("\"");
+    js.append(CFG_FORM_SSID, config.ssid);
+    js.append(CFG_FORM_PSK, config.psk);
+    js.append(CFG_FORM_HOST, config.host);
+    js.append(CFG_FORM_AP_PSK, config.ap_psk);
 
-    // Json end
-    r += FPSTR("}");
+    js.append(CFG_FORM_OTA_AUTH, config.ota_auth);
+    js.append(CFG_FORM_OTA_PORT, config.ota_port);
+
+    js.append(CFG_FORM_EMON_HOST, config.emoncms.host);
+    js.append(CFG_FORM_EMON_PORT, config.emoncms.port);
+    js.append(CFG_FORM_EMON_URL, config.emoncms.url);
+    js.append(CFG_FORM_EMON_KEY, config.emoncms.apikey);
+    js.append(CFG_FORM_EMON_NODE, config.emoncms.node);
+    js.append(CFG_FORM_EMON_FREQ, config.emoncms.freq);
+
+    js.append(CFG_FORM_JDOM_HOST, config.jeedom.host);
+    js.append(CFG_FORM_JDOM_PORT, config.jeedom.port);
+    js.append(CFG_FORM_JDOM_URL, config.jeedom.url);
+    js.append(CFG_FORM_JDOM_KEY, config.jeedom.apikey);
+    js.append(CFG_FORM_JDOM_ADCO, config.jeedom.adco);
+    js.append(CFG_FORM_JDOM_FREQ, config.jeedom.freq);
+
+    js.append(CFG_FORM_HTTPREQ_HOST, config.httpReq.host);
+    js.append(CFG_FORM_HTTPREQ_PORT, config.httpReq.port);
+    js.append(CFG_FORM_HTTPREQ_PATH, config.httpReq.path);
+    js.append(CFG_FORM_HTTPREQ_FREQ, config.httpReq.freq);
+
+    js.append(CFG_FORM_HTTPREQ_TRIGGER_PTEC, config.httpReq.trigger_ptec);
+    js.append(CFG_FORM_HTTPREQ_TRIGGER_ADPS, config.httpReq.trigger_adps);
+    js.append(CFG_FORM_HTTPREQ_TRIGGER_SEUILS, config.httpReq.trigger_seuils);
+    js.append(CFG_FORM_HTTPREQ_SEUIL_BAS, config.httpReq.seuil_bas);
+    js.append(CFG_FORM_HTTPREQ_SEUIL_HAUT, config.httpReq.seuil_haut, true);
 }
 
 static int validate_int(const String &value, int a, int b, int d)
@@ -430,34 +361,40 @@ void config_handle_form(ESP8266WebServer &server)
         Serial.println("===== Posted configuration");
 
         // WifInfo
-        strncpy(config.ssid, server.arg("ssid").c_str(), CFG_SSID_SIZE);
-        strncpy(config.psk, server.arg("psk").c_str(), CFG_PSK_SIZE);
-        strncpy(config.host, server.arg("host").c_str(), CFG_HOSTNAME_SIZE);
-        strncpy(config.ap_psk, server.arg("ap_psk").c_str(), CFG_PSK_SIZE);
-        strncpy(config.ota_auth, server.arg("ota_auth").c_str(), CFG_PSK_SIZE);
+        strncpy(config.ssid, server.arg(CFG_FORM_SSID).c_str(), CFG_SSID_SIZE - 1);
+        strncpy(config.psk, server.arg("psk").c_str(), CFG_PSK_SIZE - 1);
+        strncpy(config.host, server.arg("host").c_str(), CFG_HOSTNAME_SIZE - 1);
+        strncpy(config.ap_psk, server.arg("ap_psk").c_str(), CFG_PSK_SIZE - 1);
+        strncpy(config.ota_auth, server.arg("ota_auth").c_str(), CFG_PSK_SIZE - 1);
         config.ota_port = validate_int(server.arg("ota_port"), 0, 65535, DEFAULT_OTA_PORT);
 
         // Emoncms
-        strncpy(config.emoncms.host, server.arg("emon_host").c_str(), CFG_EMON_HOST_SIZE);
-        strncpy(config.emoncms.url, server.arg("emon_url").c_str(), CFG_EMON_URL_SIZE);
-        strncpy(config.emoncms.apikey, server.arg("emon_apikey").c_str(), CFG_EMON_APIKEY_SIZE);
+        strncpy(config.emoncms.host, server.arg("emon_host").c_str(), CFG_EMON_HOST_SIZE - 1);
+        strncpy(config.emoncms.url, server.arg("emon_url").c_str(), CFG_EMON_URL_SIZE - 1);
+        strncpy(config.emoncms.apikey, server.arg("emon_apikey").c_str(), CFG_EMON_APIKEY_SIZE - 1);
         config.emoncms.node = validate_int(server.arg("emon_node"), 0, 255, 0);
         config.emoncms.port = validate_int(server.arg("emon_port"), 0, 65535, CFG_EMON_DEFAULT_PORT);
         config.emoncms.freq = validate_int(server.arg("emon_freq"), 0, 86400, 0);
 
         // jeedom
-        strncpy(config.jeedom.host, server.arg("jdom_host").c_str(), CFG_JDOM_HOST_SIZE);
-        strncpy(config.jeedom.url, server.arg("jdom_url").c_str(), CFG_JDOM_URL_SIZE);
-        strncpy(config.jeedom.apikey, server.arg("jdom_apikey").c_str(), CFG_JDOM_APIKEY_SIZE);
-        strncpy(config.jeedom.adco, server.arg("jdom_adco").c_str(), CFG_JDOM_ADCO_SIZE);
+        strncpy(config.jeedom.host, server.arg("jdom_host").c_str(), CFG_JDOM_HOST_SIZE - 1);
+        strncpy(config.jeedom.url, server.arg("jdom_url").c_str(), CFG_JDOM_URL_SIZE - 1);
+        strncpy(config.jeedom.apikey, server.arg("jdom_apikey").c_str(), CFG_JDOM_APIKEY_SIZE - 1);
+        strncpy(config.jeedom.adco, server.arg("jdom_adco").c_str(), CFG_JDOM_ADCO_SIZE - 1);
         config.jeedom.port = validate_int(server.arg("jdom_port"), 0, 65535, CFG_JDOM_DEFAULT_PORT);
         config.jeedom.freq = validate_int(server.arg("jdom_freq"), 0, 86400, 0);
 
         // HTTP Request
-        strncpy(config.httpReq.host, server.arg("httpreq_host").c_str(), CFG_HTTPREQ_HOST_SIZE);
-        strncpy(config.httpReq.path, server.arg("httpreq_path").c_str(), CFG_HTTPREQ_PATH_SIZE);
+        strncpy(config.httpReq.host, server.arg("httpreq_host").c_str(), CFG_HTTPREQ_HOST_SIZE - 1);
+        strncpy(config.httpReq.path, server.arg("httpreq_path").c_str(), CFG_HTTPREQ_PATH_SIZE - 1);
         config.httpReq.port = validate_int(server.arg("httpreq_port"), 0, 65535, CFG_HTTPREQ_DEFAULT_PORT);
         config.httpReq.freq = validate_int(server.arg("httpreq_freq"), 0, 86400, 0);
+
+        config.httpReq.trigger_seuils = validate_int(server.arg(CFG_FORM_HTTPREQ_TRIGGER_PTEC), 0, 1, 0);
+        config.httpReq.trigger_seuils = validate_int(server.arg(CFG_FORM_HTTPREQ_TRIGGER_ADPS), 0, 1, 0);
+        config.httpReq.trigger_seuils = validate_int(server.arg(CFG_FORM_HTTPREQ_TRIGGER_SEUILS), 0, 1, 0);
+        config.httpReq.seuil_bas = validate_int(server.arg(CFG_FORM_HTTPREQ_SEUIL_BAS), 0, 20000, 0);
+        config.httpReq.seuil_haut = validate_int(server.arg(CFG_FORM_HTTPREQ_SEUIL_HAUT), 0, 20000, 0);
 
         if (config_save())
         {

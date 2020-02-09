@@ -69,7 +69,7 @@ void webserver_handle_notfound()
 void webserver_setup()
 {
     //Server Sent Events will be handled from this URI
-    sse_clients.on("/ssedata", server);
+    sse_clients.on("/sse/tinfo.json", server);
 
     server.on("/config_form.json", [] { config_handle_form(server); });
     server.on("/json", server_send_json<tic_get_json_dict>);
