@@ -178,7 +178,7 @@ TEST(notifs, http_timer)
     timer_http.trigger();
     tic_notifs();
     ASSERT_EQ(HTTPClient::begin_called, 1);
-    ASSERT_EQ(HTTPClient::begin_url, "/tinfo.php?p=1234&t=");
+    ASSERT_EQ(HTTPClient::begin_url, "/tinfo.php?p=1234&t=MAJ");
 
     // pas d'échéance timer: pas de requête
     tic_notifs();
@@ -189,7 +189,7 @@ TEST(notifs, http_timer)
     timer_http.trigger();
     tic_notifs();
     ASSERT_EQ(HTTPClient::begin_called, 2);
-    ASSERT_EQ(HTTPClient::begin_url, "/tinfo.php?p=4321&t=");
+    ASSERT_EQ(HTTPClient::begin_url, "/tinfo.php?p=4321&t=MAJ");
 
     // pas de requête http même si le timer se déclenche
     strcpy(config.httpReq.host, "");

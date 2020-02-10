@@ -144,6 +144,7 @@ public:
 
     String get_timestamp_iso8601() const
     {
+        printf("get_timestamp_iso8601 %ld\n",timestamp_.tv_sec);
         struct tm *tm = localtime(&timestamp_.tv_sec);
         char buf[32];
         strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S%z", tm);
@@ -233,7 +234,6 @@ public:
             // début de trame, on réinitialise et on attend un LF (ou un ETX à la rigueur...)
             offset_ = 0;
             state_ = wait_lf_or_etx;
-            // ready_ = false;
             gettimeofday(&timestamp_, nullptr);
         }
         else if (c == LF)
@@ -316,7 +316,6 @@ public:
         {
             if (state_ == wait_lf_or_etx)
             {
-                // ready_ = true;
                 size_ = offset_;
                 state_ = wait_stx;
                 //validate_frame();

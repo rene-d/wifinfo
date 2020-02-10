@@ -3,6 +3,7 @@
 //
 
 #include "mock.h"
+#include "mock_time.h"
 
 #include "teleinfo.h"
 
@@ -282,7 +283,7 @@ TEST(teleinfo, copy)
     ASSERT_STREQ(tinfo.get_value("PAPP"), "01890");
 
     // le timestamp est celui par défaut
-    ASSERT_EQ(tinfo.get_timestamp_iso8601(), test_time_marker());
+    ASSERT_EQ(tinfo.get_timestamp_iso8601(), mock_time_marker());
 }
 
 TEST(teleinfo, ascii)

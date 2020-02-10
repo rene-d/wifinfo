@@ -14,12 +14,12 @@ static enum { BAS,
               HAUT } seuil_en_cours = BAS;
 static bool etat_adps = false;
 
-esp8266::polledTimeout::periodicMs timer_http(esp8266::polledTimeout::periodicMs::neverExpires);
-esp8266::polledTimeout::periodicMs timer_emoncms(esp8266::polledTimeout::periodicMs::neverExpires);
-esp8266::polledTimeout::periodicMs timer_jeedom(esp8266::polledTimeout::periodicMs::neverExpires);
+static esp8266::polledTimeout::periodicMs timer_http(esp8266::polledTimeout::periodicMs::neverExpires);
+static esp8266::polledTimeout::periodicMs timer_emoncms(esp8266::polledTimeout::periodicMs::neverExpires);
+static esp8266::polledTimeout::periodicMs timer_jeedom(esp8266::polledTimeout::periodicMs::neverExpires);
 
 Teleinfo tinfo;
-TeleinfoDecoder tinfo_decoder;
+static TeleinfoDecoder tinfo_decoder;
 
 static void http_notif(const char *notif);
 static void http_notif_periode_en_cours();
@@ -75,7 +75,7 @@ void tic_notifs()
 
         if (timer_http)
         {
-            http_notif("");
+            http_notif("MAJ");
         }
     }
 

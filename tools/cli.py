@@ -15,8 +15,8 @@ import atexit
 import termios
 import fcntl
 import serial
+from serial.tools.list_ports import comports
 from serial.tools import hexlify_codec
-import os.path
 from simutic import tic
 
 # pylint: disable=wrong-import-order,wrong-import-position
@@ -407,21 +407,45 @@ class Miniterm(object):
         self.serial.write(tic.trame())
 
 
+def ask_for_port():
+    """\
+    Show a list of ports and ask the user for a choice. To make selection
+    easier on systems with long device names, also allow the input of an
+    index.
+    """
+
+    ports = sorted(comports())
+    if len(ports) == 1:
+        return ports[0][0]
+
+    sys.stderr.write('\n--- Available ports:\n')
+    for n, (port, desc, hwid) in enumerate(ports, 1):
+        sys.stderr.write('--- {:2}: {:20} {!r}\n'.format(n, port, desc))
+
+    while True:
+        port = input('--- Enter port index or full name: ')
+        try:
+            index = int(port) - 1
+            if not 0 <= index < len(ports):
+                sys.stderr.write('--- Invalid index!\n')
+                continue
+        except ValueError:
+            pass
+        else:
+            port = ports[index][0]
+        return port
+
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # default args can be used to override when calling main() from an other script
 # e.g to create a miniterm-my-device.py
 def main():
     """Command line tool, entry point"""
 
-    port = ""
     if len(sys.argv) >= 2:
         port = sys.argv[1]
-
-    if port == "" or not os.path.exists(port):
-        port = "/dev/tty.usbserial-1410"
-
-    if not os.path.exists(port):
-        port = "/dev/tty.usbserial-1420"
+    else:
+        port = ask_for_port()
 
     try:
         serial_instance = serial.serial_for_url(port, 115200, do_not_open=True)

@@ -6,12 +6,12 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# find_library(GTEST NAMES gtest)
+ find_library(GTEST NAMES gtest)
 
 # if(GTEST-NOTFOUND)
-     find_package(gtest REQUIRED)
+#     find_package(gtest REQUIRED)
 # else()
-#     set(GTEST_BOTH_LIBRARIES gtest gtest_main)
+     set(GTEST_BOTH_LIBRARIES gtest gtest_main)
 # endif()
 
 # Code Coverage Configuration
@@ -51,10 +51,10 @@ target_include_directories(tic
     PRIVATE test/support)
 
 target_link_libraries(tic
-    PRIVATE ${GTEST_BOTH_LIBRARIES}
+    PRIVATE ${GTEST_BOTH_LIBRARIES} pthread
     #PRIVATE nlohmann_json::nlohmann_json
 )
-target_compile_options(tic PUBLIC -Wall -pedantic)
+target_compile_options(tic PUBLIC -Wall -pedantic -Wno-psabi)
 target_link_libraries(tic PUBLIC coverage_config)
 
 add_test(NAME tic_test COMMAND tic)
