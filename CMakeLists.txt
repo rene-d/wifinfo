@@ -53,7 +53,7 @@ target_include_directories(tic
 
 target_compile_options(tic PUBLIC -Wall -pedantic)
 
-if(CMAKE_LIBRARY_ARCHITECTURE STREQUAL arm-linux-gnueabihf)
+if(CMAKE_SYSTEM_PROCESSOR STREQUAL armv7l)
     # https://github.com/nlohmann/json/issues/658
     target_compile_options(tic PUBLIC -Wno-psabi)
 endif()
