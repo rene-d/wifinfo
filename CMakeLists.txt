@@ -6,13 +6,15 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
- find_library(GTEST NAMES gtest)
 
-# if(GTEST-NOTFOUND)
-#     find_package(gtest REQUIRED)
-# else()
-     set(GTEST_BOTH_LIBRARIES gtest gtest_main)
-# endif()
+option(FIND_GTEST "use find_package for gtest" OFF)
+
+if(FIND_GTEST)
+    find_package(gtest REQUIRED)
+else()
+    set(GTEST_BOTH_LIBRARIES gtest gtest_main)
+endif()
+
 
 # Code Coverage Configuration
 add_library(coverage_config INTERFACE)
@@ -32,7 +34,6 @@ if(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   endif()
 endif()
 
-enable_testing()
 
 add_executable(tic
     test/test_teleinfo.cpp
@@ -50,11 +51,28 @@ target_include_directories(tic
     PRIVATE src
     PRIVATE test/support)
 
+target_compile_options(tic PUBLIC -Wall -pedantic)
+
+if(CMAKE_LIBRARY_ARCHITECTURE STREQUAL arm-linux-gnueabihf)
+    # https://github.com/nlohmann/json/issues/658
+    target_compile_options(tic PUBLIC -Wno-psabi)
+endif()
+
 target_link_libraries(tic
-    PRIVATE ${GTEST_BOTH_LIBRARIES} pthread
-    #PRIVATE nlohmann_json::nlohmann_json
-)
-target_compile_options(tic PUBLIC -Wall -pedantic -Wno-psabi)
+    PRIVATE ${GTEST_BOTH_LIBRARIES} pthread)
+
 target_link_libraries(tic PUBLIC coverage_config)
 
+
+enable_testing()
 add_test(NAME tic_test COMMAND tic)
+
+
+function(dump_cmake_variables)
+    get_cmake_property(_variableNames VARIABLES)
+    list(SORT _variableNames)
+    foreach (_variableName ${_variableNames})
+        message(STATUS "${_variableName}=${${_variableName}}")
+    endforeach()
+endfunction()
+# dump_cmake_variables()
