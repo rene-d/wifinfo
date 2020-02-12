@@ -45,6 +45,8 @@
 
 #include <sntp.h> // sntp_servermode_dhcp()
 
+#include "emptyserial.h"
+
 // for testing purpose:
 extern "C" int clock_gettime(clockid_t unused, struct timespec *tp);
 

@@ -8,6 +8,8 @@
 #include <Arduino.h>
 #include <ESP8266WebServer.h>
 
+#include "emptyserial.h"
+
 ESP8266WebServer server(80);
 SseClients sse_clients;
 

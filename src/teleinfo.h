@@ -1,6 +1,6 @@
 /*
  * librairie Teleinfo
- * Copyright (c) 2015-2020 rene-d. All right reserved.
+ * Copyright (c) 2014-2020 rene-d. All right reserved.
  */
 #pragma once
 
@@ -144,7 +144,6 @@ public:
 
     String get_timestamp_iso8601() const
     {
-        printf("get_timestamp_iso8601 %ld\n",timestamp_.tv_sec);
         struct tm *tm = localtime(&timestamp_.tv_sec);
         char buf[32];
         strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S%z", tm);

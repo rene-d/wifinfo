@@ -34,6 +34,7 @@ struct EmptySerialClass
     void flush() {}
 };
 
+#ifndef DEBUG
 extern EmptySerialClass EmptySerial;
-
 #define Serial EmptySerial
+#endif

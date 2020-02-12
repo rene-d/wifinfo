@@ -23,10 +23,11 @@ void setup()
     Serial.begin(115200);
 #else
     // sinon, RX est utilisé pour la téléinfo. TX peut toujours envoyer des diags
-    Serial.begin(1200, SERIAL_7E1);
+    Serial.begin(1200, SERIAL_7E1, SERIAL_RX_ONLY);
 #endif
     Serial.flush();
     delay(100);
+    led_on();
 
     Serial.println(R"(
 __      ___  __ ___       __
@@ -34,8 +35,8 @@ __      ___  __ ___       __
  \ \/\/ /| |  _|| || ' \|  _/ _ \
   \_/\_/ |_|_| |___|_||_|_| \___/
 )");
+    Serial.flush();
 
-    led_on();
     delay(100);
 
     // chargement de la conf depuis l'EEPROM

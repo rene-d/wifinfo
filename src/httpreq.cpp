@@ -2,6 +2,8 @@
 
 #include <ESP8266HTTPClient.h>
 
+#include "emptyserial.h"
+
 void http_request(const char *host, uint16_t port, const String &url)
 {
     WiFiClient client;

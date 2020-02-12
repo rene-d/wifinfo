@@ -1,3 +1,6 @@
+// module téléinformation client
+// rene-d 2020
+
 // **********************************************************************************
 // ESP8266 Teleinfo WEB Server configuration Include file
 // **********************************************************************************
@@ -19,11 +22,14 @@
 // All text above must be included in any redistribution.
 //
 // **********************************************************************************
+
 #include "config.h"
 #include "tic.h"
 #include "jsonbuilder.h"
 #include <EEPROM.h>
 #include <user_interface.h>
+
+#include "emptyserial.h"
 
 // Configuration structure for whole program
 Config config;

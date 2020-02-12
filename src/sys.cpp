@@ -9,6 +9,8 @@
 #include <user_interface.h>
 #include <sys/time.h>
 
+#include "emptyserial.h"
+
 extern "C" int clock_gettime(clockid_t unused, struct timespec *tp);
 
 #ifndef WIFINFO_VERSION
@@ -57,6 +59,15 @@ String sys_uptime()
     return buff;
 }
 
+String sys_time_now()
+{
+    time_t now = time(nullptr);
+    struct tm *tm = localtime(&now);
+    char buf[32];
+    strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S%z", tm);
+    return buf;
+}
+
 // Return JSON string containing system data
 void sys_get_info_json(String &response)
 {
@@ -65,6 +76,7 @@ void sys_get_info_json(String &response)
     JSONTableBuilder js(response, 1024);
 
     js.append(F("Uptime"), sys_uptime());
+    js.append(F("Timestamp"), sys_time_now());
 
     if (WiFi.status() == WL_CONNECTED)
     {
@@ -77,6 +89,22 @@ void sys_get_info_json(String &response)
     js.append(F("Nb reconnexions Wi-Fi"), nb_reconnect);
     js.append(F("WifInfo Version"), WIFINFO_VERSION);
     js.append(F("Compilé le"), __DATE__ " " __TIME__);
+
+    String flags;
+#ifdef DEBUG
+    flags += F(" DEBUG");
+#endif
+#ifdef ENABLE_CLI
+    flags += F(" ENABLE_CLI");
+#endif
+#ifdef DISABLE_LED
+    flags += F(" DISABLE_LED");
+#endif
+#ifdef ENABLE_OTA
+    flags += F(" ENABLE_OTA");
+#endif
+    js.append(F("Options"), flags);
+
     js.append(F("SDK Version"), system_get_sdk_version());
 
     sprintf_P(buffer, PSTR("0x%0X"), system_get_chip_id());

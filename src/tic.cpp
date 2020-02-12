@@ -175,7 +175,6 @@ void tic_get_json_dict(String &data)
     const char *value;
     const char *state = nullptr;
 
-    js.append(FPSTR("_UPTIME"), millis() / 1000);
     js.append(FPSTR("timestamp"), tinfo.get_timestamp_iso8601().c_str());
 
     while (tinfo.get_value_next(label, value, &state))
