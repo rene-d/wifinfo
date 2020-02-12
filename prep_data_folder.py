@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
+# Copyright (c) 2020 rene-d. All right reserved.
 
-# https://github.com/kangax/html-minifier
+# requires: https://github.com/kangax/html-minifier
 
 
-import os
-import gzip
 import shutil
 import pathlib
 import subprocess
@@ -32,12 +31,26 @@ def trace(*args):
     print("\033[0m", end="")
 
 
+def get_version():
+    """
+    read the git version
+    """
+
+    wifinfo_version = subprocess.check_output("git describe --long --always --tags --all", shell=True).decode().strip()
+    wifinfo_version = wifinfo_version[wifinfo_version.index("/") + 1 :]
+
+    trace(f"  WIFINFO_VERSION = {wifinfo_version}")
+    return wifinfo_version
+
+
 def prepare_www_files(source, target, env):
-    # WARNING -  this script will DELETE your 'data' dir and recreate an empty one to copy/gzip files from 'data_src'
-    #           so make sure to edit your files in 'data_src' folder as changes madt to files in 'data' woll be LOST
-    #
-    #           If 'data_src' dir doesn't exist, and 'data' dir is found, the script will autimatically
-    #           rename 'data' to 'data_src
+    """"
+     WARNING -  this script will DELETE your 'data' dir and recreate an empty one to copy/gzip files from 'data_src'
+                so make sure to edit your files in 'data_src' folder as changes madt to files in 'data' woll be LOST
+
+                If 'data_src' dir doesn't exist, and 'data' dir is found, the script will autimatically
+                rename 'data' to 'data_src
+    """
 
     trace("[PREPARE DATA FILES]")
 
@@ -100,11 +113,14 @@ def prepare_www_files(source, target, env):
             shutil.copy2(src_file, dest_file)
             trace(f"  copied:     {dest_file.relative_to(data_dir)}")
 
+    (data_dir / "version").write_text(get_version())
+
     trace("[/PREPARE DATA FILES]\033[0m")
 
 
 if __name__ != "__main__":
     Import("env", "projenv")
     env.AddPreAction("$BUILD_DIR/spiffs.bin", prepare_www_files)
+    projenv.Append(CPPDEFINES=[("WIFINFO_VERSION", '\\"' + get_version() + '\\"')])
 else:
     prepare_www_files(None, None, {"PROJECTDATA_DIR": "data", "PROJECT_DIR": "."})

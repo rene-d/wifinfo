@@ -3,6 +3,7 @@
 #include "config.h"
 #include "httpreq.h"
 #include "sse.h"
+#include "led.h"
 #include <PolledTimeout.h>
 
 extern SseClients sse_clients;
@@ -11,17 +12,19 @@ static char periode_en_cours[8] = {0};
 static bool init_periode_en_cours = true;
 static enum { BAS,
               HAUT } seuil_en_cours = BAS;
+static bool etat_adps = false;
 
-esp8266::polledTimeout::periodicMs timer_http(esp8266::polledTimeout::periodicMs::neverExpires);
-esp8266::polledTimeout::periodicMs timer_emoncms(esp8266::polledTimeout::periodicMs::neverExpires);
-esp8266::polledTimeout::periodicMs timer_jeedom(esp8266::polledTimeout::periodicMs::neverExpires);
+static esp8266::polledTimeout::periodicMs timer_http(esp8266::polledTimeout::periodicMs::neverExpires);
+static esp8266::polledTimeout::periodicMs timer_emoncms(esp8266::polledTimeout::periodicMs::neverExpires);
+static esp8266::polledTimeout::periodicMs timer_jeedom(esp8266::polledTimeout::periodicMs::neverExpires);
 
 Teleinfo tinfo;
-TeleinfoDecoder tinfo_decoder;
+static TeleinfoDecoder tinfo_decoder;
 
 static void http_notif(const char *notif);
 static void http_notif_periode_en_cours();
 static void http_notif_seuils();
+static void http_notif_adps();
 static void jeedom_notif();
 static void emoncms_notif();
 
@@ -31,6 +34,9 @@ void tic_decode(int c)
 
     if (tinfo_decoder.ready())
     {
+        if (config.config & CONFIG_LED_TINFO)
+            led_on();
+
         tinfo.copy_from(tinfo_decoder);
 
         Serial.printf("teleinfo: [%lu] %s  %s  %s  %s\n",
@@ -41,6 +47,9 @@ void tic_decode(int c)
                       tinfo.get_value("PAPP", "?"));
 
         tic_notifs();
+
+        if (config.config & CONFIG_LED_TINFO)
+            led_off();
     }
 }
 
@@ -49,7 +58,7 @@ void tic_notifs()
 {
     if (config.httpReq.host[0] != 0)
     {
-        if (config.httpReq.trigger_hchp)
+        if (config.httpReq.trigger_ptec)
         {
             http_notif_periode_en_cours();
         }
@@ -59,9 +68,14 @@ void tic_notifs()
             http_notif_seuils();
         }
 
+        if (config.httpReq.trigger_adps)
+        {
+            http_notif_adps();
+        }
+
         if (timer_http)
         {
-            http_notif("GEN");
+            http_notif("MAJ");
         }
     }
 
@@ -85,7 +99,8 @@ void tic_notifs()
 
 void tic_make_timers()
 {
-    if (config.httpReq.freq == 0)
+    // http
+    if (config.httpReq.freq == 0 || config.httpReq.host[0] == 0 || config.httpReq.port == 0)
     {
         timer_http.resetToNeverExpires();
         Serial.println("timer_http disabled");
@@ -96,18 +111,20 @@ void tic_make_timers()
         Serial.printf("timer_http enabled, freq=%d s\n", config.httpReq.freq);
     }
 
-    if (config.jeedom.freq == 0)
+    // jeedom
+    if (config.jeedom.freq == 0 || config.jeedom.host[0] == 0 || config.jeedom.port == 0)
     {
         timer_jeedom.resetToNeverExpires();
         Serial.println("timer_jeedom disabled");
     }
     else
     {
-        timer_http.reset(config.jeedom.freq * 1000);
-        Serial.printf("httpReq enabled, freq=%d s\n", config.jeedom.freq);
+        timer_jeedom.reset(config.jeedom.freq * 1000);
+        Serial.printf("timer_jeedom enabled, freq=%d s\n", config.jeedom.freq);
     }
 
-    if (config.emoncms.freq == 0)
+    // emoncms
+    if (config.emoncms.freq == 0 || config.emoncms.host[0] == 0 || config.emoncms.port == 0)
     {
         timer_emoncms.resetToNeverExpires();
         Serial.println("timer_emoncms disabled");
@@ -119,14 +136,58 @@ void tic_make_timers()
     }
 }
 
-void tic_get_json_array(String &html)
+void tic_get_json_array(String &data)
 {
-    tinfo.get_frame_array_json(html);
+    if (tinfo.is_empty())
+    {
+        data = "[]";
+        return;
+    }
+
+    // la trame en JSON fait environ 360 à 373 octets selon ADPS pour un abo HC/HP
+    JSONTableBuilder js(data, 400);
+    const char *label;
+    const char *value;
+    const char *state = nullptr;
+
+    js.append("timestamp", tinfo.get_timestamp_iso8601());
+
+    while (tinfo.get_value_next(label, value, &state))
+    {
+        js.append(label, value);
+    }
+
+    js.finalize();
 }
 
-void tic_get_json_dict(String &html)
+void tic_get_json_dict(String &data)
 {
-    tinfo.get_frame_dict_json(html);
+
+    if (tinfo.is_empty())
+    {
+        data = "{}";
+        return;
+    }
+
+    // la trame fait 217 à 230 selon ADPS pour un abo HC/HP
+    JSONBuilder js(data, 256);
+    const char *label;
+    const char *value;
+    const char *state = nullptr;
+
+    js.append(FPSTR("timestamp"), tinfo.get_timestamp_iso8601().c_str());
+
+    while (tinfo.get_value_next(label, value, &state))
+    {
+        bool is_number = tinfo.get_integer(value);
+
+        if (is_number)
+            js.append_without_quote(label, value);
+        else
+            js.append(label, value);
+    }
+
+    js.finalize();
 }
 
 const char *tic_get_value(const char *label)
@@ -137,18 +198,17 @@ const char *tic_get_value(const char *label)
 void http_notif(const char *notif)
 {
     String uri;
-    uri.reserve(strlen(config.httpReq.path) + 32);
+    uri.reserve(strlen(config.httpReq.url) + 32);
 
     char label[16];
 
-    for (const char *p = config.httpReq.path; *p; ++p)
+    for (const char *p = config.httpReq.url; *p; ++p)
     {
-        /*
-        if (*p == '%')
+        if (*p == '~')
         {
             ++p;
             size_t i = 0;
-            while (*p && *p != '%' && i < sizeof(label) - 1)
+            while (*p && *p != '~' && i < sizeof(label) - 1)
             {
                 label[i++] = *p++;
             }
@@ -156,16 +216,21 @@ void http_notif(const char *notif)
 
             if (i == 0)
             {
-                uri += "%";
+                uri += "~";
             }
             else
             {
-                uri += tinfo.get_value(label, "null", true);
+                if (strcmp(label, "_type") == 0)
+                {
+                    uri += notif;
+                }
+                else
+                {
+                    uri += tinfo.get_value(label, "null", true);
+                }
             }
         }
-        else
-        */
-        if (*p == '$')
+        else if (*p == '$')
         {
             ++p;
             if (*p == '$')
@@ -198,6 +263,7 @@ void http_notif(const char *notif)
         }
     }
 
+    Serial.printf("http_notif: %s\n", notif);
     http_request(config.httpReq.host, config.httpReq.port, uri);
 }
 
@@ -218,10 +284,31 @@ void http_notif_periode_en_cours()
         }
         else
         {
-            if (strcmp(PTEC, "HP..") == 0)
-                http_notif("HP");
-            if (strcmp(PTEC, "HC..") == 0)
-                http_notif("HC");
+            http_notif("PTEC");
+        }
+    }
+}
+
+void http_notif_adps()
+{
+    const char *ADPS = tinfo.get_value("ADPS");
+
+    if (ADPS == NULL)
+    {
+        if (etat_adps == true)
+        {
+            // on était en ADPS: on signale et on rebascule en état normal
+            etat_adps = false;
+            http_notif("NORM");
+        }
+    }
+    else
+    {
+        if (etat_adps == false)
+        {
+            // on vient de passer en ADPS: on signale et on bascule en mode AsDPS
+            etat_adps = true;
+            http_notif("ADPS");
         }
     }
 }
@@ -286,13 +373,7 @@ void jeedom_notif()
     http_request(config.jeedom.host, config.jeedom.port, url);
 }
 
-/* ======================================================================
-Function: build_emoncms_json string (usable by webserver.cpp)
-Purpose : construct the json part of emoncms url
-Input   : -
-Output  : String if some Teleinfo data available
-Comments: -
-====================================================================== */
+// construct the JSON (without " ???) part of emoncms url
 void tic_emoncms_data(String &url)
 {
     const char *label;
@@ -426,4 +507,12 @@ void emoncms_notif()
 
     // And submit all to emoncms
     http_request(config.emoncms.host, config.emoncms.port, url);
+}
+
+void tic_dump()
+{
+    char raw[Teleinfo::MAX_FRAME_SIZE];
+    tinfo.get_frame_ascii(raw, sizeof(raw));
+    Serial.println(tinfo.get_timestamp_iso8601());
+    Serial.println(raw);
 }

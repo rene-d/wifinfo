@@ -8,9 +8,10 @@
 #include <Arduino.h>
 #include <ESP8266WebServer.h>
 
+#include "emptyserial.h"
+
 ESP8266WebServer server(80);
 SseClients sse_clients;
-
 
 template <void (*get_json)(String &)>
 void server_send_json()
@@ -70,7 +71,8 @@ void webserver_handle_notfound()
 void webserver_setup()
 {
     //Server Sent Events will be handled from this URI
-    sse_clients.on("/ssedata", server);
+    sse_clients.on("/sse/tinfo.json", server);
+    sse_clients.on("/tic", server);
 
     server.on("/config_form.json", [] { config_handle_form(server); });
     server.on("/json", server_send_json<tic_get_json_dict>);
@@ -96,6 +98,11 @@ void webserver_setup()
     server.serveStatic("/js", SPIFFS, "/js", "max-age=86400");
     server.serveStatic("/css", SPIFFS, "/css", "max-age=86400");
     server.serveStatic("/version", SPIFFS, "/version", "max-age=86400");
+
+#ifdef ENABLE_OTA
+    // enregistre le handler de /update
+    sys_ota_register(server);
+#endif
 
     server.onNotFound(webserver_handle_notfound);
 

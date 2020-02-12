@@ -1,9 +1,9 @@
 #include "filesystem.h"
-#include "debug.h"
+#include "jsonbuilder.h"
+
 #include <Arduino.h>
 #include <FS.h>
 #include <user_interface.h>
-
 
 void fs_setup()
 {
@@ -11,73 +11,59 @@ void fs_setup()
     if (!SPIFFS.begin())
     {
         // Serious problem
-        Debugln(F("SPIFFS Mount failed !"));
+        Serial.println(F("SPIFFS Mount failed !"));
     }
     else
     {
-        Debugln(F("SPIFFS Mount succesfull"));
-
-        Dir dir = SPIFFS.openDir("/");
-        while (dir.next())
-        {
-            const String& fileName = dir.fileName();
-            size_t fileSize = dir.fileSize();
-            Debugf("FS File: %s, size: %zu\n", fileName.c_str(), fileSize);
-        }
+        Serial.println(F("SPIFFS Mount succesful"));
     }
 }
 
-
-
-/* ======================================================================
-Function: fs_get_spiffs_json
-Purpose : Return JSON string containing list of SPIFFS files
-Input   : Response String
-Output  : -
-Comments: -
-====================================================================== */
-void fs_get_spiffs_json(String &response)
+void fs_ls()
 {
-    bool first_item = true;
-
-    response.reserve(512);  // about 400 bytes
-
-    // Files Array
-    response = F("{\"files\":[");
-
-    // Loop trough all files
     Dir dir = SPIFFS.openDir("/");
     while (dir.next())
     {
-        String fileName = dir.fileName();
+        const String &fileName = dir.fileName();
         size_t fileSize = dir.fileSize();
-
-        if (first_item)
-            first_item = false;
-        else
-            response += F(",");
-        response += F("{\"na\":\"");
-        response += fileName.c_str();
-        response += F("\",\"va\":");
-        response += fileSize;
-        response += F("}");
+        Serial.printf("FS File: %s, size: %zu\n", fileName.c_str(), fileSize);
     }
-    response += F("],");
+}
+
+// Return JSON string containing list of SPIFFS files
+void fs_get_spiffs_json(String &response)
+{
+    response.reserve(512); // about 400 bytes
+
+    response = F("{\"files\":");
 
     // SPIFFS File system array
-    response += F("\"spiffs\":[{");
+    {
+        JSONTableBuilder js(response);
 
-    // Get SPIFFS File system informations
-    FSInfo info;
-    SPIFFS.info(info);
-    response += F("\"Total\":");
-    response += info.totalBytes;
-    response += F(", \"Used\":");
-    response += info.usedBytes;
-    response += F(", \"ram\":");
-    response += system_get_free_heap_size();
-    response += F("}]");
+        // Loop trough all files
+        Dir dir = SPIFFS.openDir("/");
+        while (dir.next())
+        {
+            js.append(dir.fileName().c_str(), dir.fileSize());
+        }
 
-    // Json end
-    response += F("}");
+        js.finalize();
+    }
+
+    response += F(",\"spiffs\":[");
+
+    // SPIFFS File system informations
+    {
+        JSONBuilder js(response);
+
+        FSInfo info;
+        SPIFFS.info(info);
+
+        js.append(F("Total"), info.totalBytes);
+        js.append(F("Used"), info.usedBytes);
+        js.append(F("RAM"), system_get_free_heap_size(), true);
+    }
+
+    response += F("]}");
 }

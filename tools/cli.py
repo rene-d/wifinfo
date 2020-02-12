@@ -15,64 +15,14 @@ import atexit
 import termios
 import fcntl
 import serial
+from serial.tools.list_ports import comports
 from serial.tools import hexlify_codec
-import os.path
-import time
+from simutic import tic
+import click
 
 # pylint: disable=wrong-import-order,wrong-import-position
 
 codecs.register(lambda c: hexlify_codec.getregentry() if c == "hexlify" else None)
-
-
-hchc = 52890470
-hchp = 49126843
-iinst = 670 / 230
-tic_time = time.time()
-heures_pleines = True
-
-
-def group(label, value):
-    sum = 0
-    for c in label:
-        sum += ord(c)
-    sum += ord(" ")
-    for c in value:
-        sum += ord(c)
-    sum = (sum & 63) + 32
-    return "\x0A" + label + " " + str(value) + " " + chr(sum) + "\x0D"
-
-
-def tic():
-    global tic_time, hchp, hchc
-
-    now = time.time()
-    delta = (now - tic_time) * iinst * 230 / 3600
-    tic_time = now
-
-    papp = int(iinst * 230)
-
-    if heures_pleines:
-        ptec = "HP.."
-        hchp += delta
-    else:
-        ptec = "HC.."
-        hchc += delta
-
-    frame = "\x02"
-    frame += group("ADCO", "040522079986")
-    frame += group("OPTARIF", "HC..")
-    frame += group("ISOUSC", "30")
-    frame += group("HCHC", f"{int(hchc):09d}")
-    frame += group("HCHP", f"{int(hchp):09d}")
-    frame += group("PTEC", ptec)
-    frame += group("IINST", f"{int(iinst):03d}")
-    frame += group("IMAX", "042")
-    frame += group("PAPP", f"{papp:05d}")
-    frame += group("HHPHC", "D")
-    frame += group("MOTDETAT", "000000")
-    frame += "\x03"
-
-    return frame.encode("ascii")
 
 
 class Periodic(threading.Thread):
@@ -212,7 +162,9 @@ class LF(Transform):
 class NoTerminal(Transform):
     """remove typical terminal control codes from input"""
 
-    REPLACEMENT_MAP = dict((x, 0x2400 + x) for x in range(32) if chr(x) not in "\r\n\b\t")
+    REPLACEMENT_MAP = dict(
+        (x, 0x2400 + x) for x in range(32) if chr(x) not in "\r\n\b\t"
+    )
     REPLACEMENT_MAP.update(
         {0x7F: 0x2421, 0x9B: 0x2425,}  # DEL  # CSI
     )
@@ -255,8 +207,8 @@ class Colorize(Transform):
 
     def __init__(self):
         # XXX make it configurable, use colorama?
-        self.input_color = "\x1b[36m"
-        self.echo_color = "\x1b[31m"
+        self.input_color = "\033[36m"
+        self.echo_color = "\033[31m"
 
     def rx(self, text):
         return self.input_color + text
@@ -341,7 +293,7 @@ class Miniterm(object):
         self.alive = True
         self._start_reader()
 
-        self.tic_thread = Periodic(3.5, self.send_tic_periodic)
+        self.tic_thread = Periodic(self.frequence_trames, self.send_tic_periodic)
         self.tic_thread.daemon = True
         self.tic_thread.start()
 
@@ -370,7 +322,9 @@ class Miniterm(object):
 
     def update_transformations(self):
         """take list of transformation classes and instantiate them for rx and tx"""
-        transformations = [EOL_TRANSFORMATIONS[self.eol]] + [TRANSFORMATIONS[f] for f in self.filters]
+        transformations = [EOL_TRANSFORMATIONS[self.eol]] + [
+            TRANSFORMATIONS[f] for f in self.filters
+        ]
         self.tx_transformations = [t() for t in transformations]
         self.rx_transformations = list(reversed(self.tx_transformations))
 
@@ -422,14 +376,15 @@ class Miniterm(object):
                     self.pause_tic = not self.pause_tic
 
                 elif c == chr(0x10):  # Ctrl-P
-                    global heures_pleines
-                    heures_pleines = not heures_pleines
+                    tic.bascule()
 
                 elif c == chr(0x03):  # Ctrl-C
                     self.stop()  # exit app
                     break
 
                 else:
+                    if ord(c) < 32:
+                        print("\033[36;2m<%02x>\033[0m" % ord(c))
                     text = c
                     for transformation in self.tx_transformations:
                         text = transformation.tx(text)
@@ -449,23 +404,72 @@ class Miniterm(object):
 
     def send_tic(self):
         time = datetime.datetime.now().strftime("%H:%M:%S.%f")
-        echo_text = f"{time} frame TIC\n"
+        echo_text = f"{time} trame TIC\n"
         for transformation in self.tx_transformations:
             echo_text = transformation.echo(echo_text)
         self.console.write(echo_text)
 
-        self.serial.write(tic())
+        self.serial.write(tic.trame())
+
+
+def ask_for_port():
+    """\
+    Show a list of ports and ask the user for a choice. To make selection
+    easier on systems with long device names, also allow the input of an
+    index.
+    """
+
+    # filtre les ports impossibles
+    ports = []
+    for comport in sorted(comports()):
+        if comport[0].startswith("/dev/cu.") and not comport[0].startswith(
+            "/dev/cu.usb"
+        ):
+            continue
+        ports.append(comport)
+
+    if len(ports) == 1:
+        return ports[0][0]
+
+    sys.stderr.write("\n--- Available ports:\n")
+    for n, (port, desc, hwid) in enumerate(ports, 1):
+        sys.stderr.write("--- {:2}: {:20} {!r}\n".format(n, port, desc))
+
+    while True:
+        port = input("--- Enter port index or full name: ")
+        try:
+            index = int(port) - 1
+            if not 0 <= index < len(ports):
+                sys.stderr.write("--- Invalid index!\n")
+                continue
+        except ValueError:
+            pass
+        else:
+            port = ports[index][0]
+        return port
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# default args can be used to override when calling main() from an other script
-# e.g to create a miniterm-my-device.py
-def main(default_port=None):
+
+
+@click.command(help="Terminal série modifié pour Téléinformation")
+@click.help_option("-h", "--help", help="affiche l'aide")
+@click.argument("port", envvar="COMPORT", default="")
+@click.option("-e", "tinfo_baudrate", help="utilise 1200,7E1 (téléinfo)", is_flag=True)
+@click.option(
+    "-f",
+    "--freq",
+    "frequence_trames",
+    help="fréquence d'envoi des trames",
+    default=3.3,
+    show_default=True,
+    type=click.FloatRange(1, 3600),
+)
+def main(port, tinfo_baudrate, frequence_trames):
     """Command line tool, entry point"""
 
-    port = "/dev/tty.usbserial-1410"
-    if not os.path.exists(port):
-        port = "/dev/tty.usbserial-1420"
+    if port == "":
+        port = ask_for_port()
 
     try:
         serial_instance = serial.serial_for_url(port, 115200, do_not_open=True)
@@ -474,22 +478,29 @@ def main(default_port=None):
             # enable timeout for alive flag polling if cancel_read is not available
             serial_instance.timeout = 1
 
+        if tinfo_baudrate:
+            serial_instance.baudrate = 1200
+            serial_instance.bytesize = serial.SEVENBITS
+            serial_instance.parity = serial.PARITY_EVEN
+
         serial_instance.open()
     except serial.SerialException as e:
         sys.stderr.write("could not open port {}: {}\n".format(port, e))
         sys.exit(1)
 
-    miniterm = Miniterm(serial_instance, echo=False, eol="crlf", filters=["colorize"])
-    miniterm.set_rx_encoding("ascii")
-    miniterm.set_tx_encoding("ascii")
+    tinfo_term = Miniterm(serial_instance, echo=False, eol="crlf", filters=["colorize"])
+    tinfo_term.set_rx_encoding("ascii")
+    tinfo_term.set_tx_encoding("ascii")
 
-    miniterm.start()
+    tinfo_term.frequence_trames = frequence_trames
+
+    tinfo_term.start()
     try:
-        miniterm.join(True)
+        tinfo_term.join(True)
     except KeyboardInterrupt:
         pass
-    miniterm.join()
-    miniterm.close()
+    tinfo_term.join()
+    tinfo_term.close()
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

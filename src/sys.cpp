@@ -1,22 +1,30 @@
 #include "sys.h"
 #include "config.h"
-#include "debug.h"
+#include "led.h"
+#include "jsonbuilder.h"
 #include <ESP8266WiFi.h>
+#include <ArduinoOTA.h>
+#include <ESP8266WebServer.h>
+#include <FS.h>
+#include <user_interface.h>
 #include <sys/time.h>
+
+#include "emptyserial.h"
 
 extern "C" int clock_gettime(clockid_t unused, struct timespec *tp);
 
-static int nb_reconnect = 0;
+#ifndef WIFINFO_VERSION
 #define WIFINFO_VERSION "develop"
+#endif
 
-/* ======================================================================
-Function: formatSize
-Purpose : format a asize to human readable format
-Input   : size
-Output  : formated string
-Comments: -
-====================================================================== */
-String formatSize(size_t bytes)
+static int nb_reconnect = 0;
+
+#ifdef ENABLE_OTA
+static bool ota_blink = false;
+#endif
+
+// format a size to human readable format
+String sys_format_size(size_t bytes)
 {
     if (bytes < 1024)
     {
@@ -39,7 +47,7 @@ String formatSize(size_t bytes)
 String sys_uptime()
 {
     struct timespec tp;
-    clock_gettime(0, &tp);
+    clock_gettime((clockid_t)0, &tp);
 
     char buff[64];
     int sec = tp.tv_sec;
@@ -51,118 +59,76 @@ String sys_uptime()
     return buff;
 }
 
-/* ======================================================================
-Function: sys_get_info_json
-Purpose : Return JSON string containing system data
-Input   : Response String
-Output  : -
-Comments: -
-====================================================================== */
+String sys_time_now()
+{
+    time_t now = time(nullptr);
+    struct tm *tm = localtime(&now);
+    char buf[32];
+    strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S%z", tm);
+    return buf;
+}
+
+// Return JSON string containing system data
 void sys_get_info_json(String &response)
 {
-    response.reserve(512);
-
     char buffer[32];
-    int32_t adc = (1000 * analogRead(A0) / 1024);
 
-    // Json start
-    response += F("[");
+    JSONTableBuilder js(response, 1024);
 
-    response += "{\"na\":\"Uptime\",\"va\":\"";
-    response += sys_uptime();
-    response += "\"},";
+    js.append(F("Uptime"), sys_uptime());
+    js.append(F("Timestamp"), sys_time_now());
 
     if (WiFi.status() == WL_CONNECTED)
     {
-        response += "{\"na\":\"Wifi RSSI\",\"va\":\"";
-        response += WiFi.RSSI();
-        response += " dB\"},";
-        response += "{\"na\":\"Wifi network\",\"va\":\"";
-        response += config.ssid;
-        response += "\"},";
-        uint8_t mac[] = {0, 0, 0, 0, 0, 0};
-        uint8_t *macread = WiFi.macAddress(mac);
-        char macaddress[20];
-        sprintf_P(macaddress, PSTR("%02x:%02x:%02x:%02x:%02x:%02x"), macread[0], macread[1], macread[2], macread[3], macread[4], macread[5]);
-        response += "{\"na\":\"Adresse MAC station\",\"va\":\"";
-        response += macaddress;
-        response += "\"},";
+        sprintf_P(buffer, PSTR("%d dB"), WiFi.RSSI());
+        js.append(F("Wi-Fi RSSI"), buffer);
+        js.append(F("Wi-Fi network"), config.ssid);
+        js.append(F("Adresse MAC station"), WiFi.macAddress());
     }
-    response += "{\"na\":\"Nb reconnexions Wi-Fi\",\"va\":\"";
-    response += nb_reconnect;
-    response += "\"},";
 
-    /*
-    response += "{\"na\":\"Altérations Data détectées\",\"va\":\"";
-    response += nb_reinit;
-    response += "\"},";
-    */
+    js.append(F("Nb reconnexions Wi-Fi"), nb_reconnect);
+    js.append(F("WifInfo Version"), WIFINFO_VERSION);
+    js.append(F("Compilé le"), __DATE__ " " __TIME__);
 
-    response += "{\"na\":\"WifInfo Version\",\"va\":\"" WIFINFO_VERSION "\"},";
+    String flags;
+#ifdef DEBUG
+    flags += F(" DEBUG");
+#endif
+#ifdef ENABLE_CLI
+    flags += F(" ENABLE_CLI");
+#endif
+#ifdef DISABLE_LED
+    flags += F(" DISABLE_LED");
+#endif
+#ifdef ENABLE_OTA
+    flags += F(" ENABLE_OTA");
+#endif
+    js.append(F("Options"), flags);
 
-    response += "{\"na\":\"Compilé le\",\"va\":\"" __DATE__ " " __TIME__ "\"},";
+    js.append(F("SDK Version"), system_get_sdk_version());
 
-    /*
-    response += "{\"na\":\"Options de compilation\",\"va\":\"";
-    response += optval;
-    response += "\"},";
-    */
+    sprintf_P(buffer, PSTR("0x%0X"), system_get_chip_id());
+    js.append(F("Chip ID"), buffer);
 
-    response += "{\"na\":\"SDK Version\",\"va\":\"";
-    response += system_get_sdk_version();
-    response += "\"},";
+    sprintf_P(buffer, PSTR("0x%0X"), system_get_boot_version());
+    js.append(F("Boot Version"), buffer);
 
-    response += "{\"na\":\"Chip ID\",\"va\":\"";
-    sprintf_P(buffer, "0x%0X", system_get_chip_id());
-    response += buffer;
-    response += "\"},";
-
-    response += "{\"na\":\"Boot Version\",\"va\":\"";
-    sprintf_P(buffer, "0x%0X", system_get_boot_version());
-    response += buffer;
-    response += "\"},";
-
-    response += "{\"na\":\"Flash Real Size\",\"va\":\"";
-    response += formatSize(ESP.getFlashChipRealSize());
-    response += "\"},";
-
-    response += "{\"na\":\"Firmware Size\",\"va\":\"";
-    response += formatSize(ESP.getSketchSize());
-    response += "\"},";
-
-    response += "{\"na\":\"Free Size\",\"va\":\"";
-    response += formatSize(ESP.getFreeSketchSpace());
-    response += "\"},";
-
-    response += "{\"na\":\"Analog\",\"va\":\"";
-    adc = ((1000 * analogRead(A0)) / 1024);
-    sprintf_P(buffer, PSTR("%d mV"), adc);
-    response += buffer;
-    response += "\"},";
+    js.append(F("Flash Real Size"), sys_format_size(ESP.getFlashChipRealSize()));
+    js.append(F("Firmware Size"), sys_format_size(ESP.getSketchSize()));
+    js.append(F("Free Size"), sys_format_size(ESP.getFreeSketchSpace()));
 
     FSInfo info;
     SPIFFS.info(info);
 
-    response += "{\"na\":\"SPIFFS Total\",\"va\":\"";
-    response += formatSize(info.totalBytes);
-    response += "\"},";
+    js.append(F("SPIFFS Total"), sys_format_size(info.totalBytes));
+    js.append(F("SPIFFS Used"), sys_format_size(info.usedBytes));
 
-    response += "{\"na\":\"SPIFFS Used\",\"va\":\"";
-    response += formatSize(info.usedBytes);
-    response += "\"},";
+    sprintf_P(buffer, PSTR("%zd %%"), 100 * info.usedBytes / info.totalBytes);
+    js.append(F("SPIFFS Occupation"), buffer);
 
-    response += "{\"na\":\"SPIFFS Occupation\",\"va\":\"";
-    sprintf_P(buffer, "%d%%", 100 * info.usedBytes / info.totalBytes);
-    response += buffer;
-    response += "\"},";
+    js.append(F("Free RAM"), sys_format_size(system_get_free_heap_size()));
 
-    // Free mem should be last one
-    response += "{\"na\":\"Free RAM\",\"va\":\"";
-    response += formatSize(system_get_free_heap_size());
-    response += "\"}"; // Last don't have comma at end
-
-    // JSON end
-    response += F("]");
+    js.finalize();
 }
 
 // Purpose : scan Wifi Access Point and return JSON code
@@ -202,216 +168,314 @@ void sys_wifi_scan_json(String &response)
     response += FPSTR("]");
 }
 
-/* ======================================================================
-Function: sys_wifi_connect
-Purpose : Handle Wifi connection / reconnection and OTA updates
-Input   : setup true if we're called 1st Time from setup
-Output  : state of the wifi status
-Comments: -
-====================================================================== */
-int sys_wifi_connect(bool setup)
+// Handle Wifi connection / reconnection and OTA updates
+int sys_wifi_connect()
 {
     int ret = WiFi.status();
-    char toprint[20];
-    IPAddress ad;
 
-    if (setup)
+    // #ifdef DEBUG
+    //     Serial.println("========== WiFi diags start");
+    //     WiFi.printDiag(Serial);
+    //     Serial.println("========== WiFi diags end");
+    //     Serial.flush();
+    // #endif
+
+    // no correct SSID
+    if (!*config.ssid)
     {
-        //#ifdef DEBUG
-        DebuglnF("========== WiFi diags start");
-        WiFi.printDiag(Serial);
-        DebuglnF("========== WiFi diags end");
-        Serial.flush();
-        //#endif
+        Serial.print(F("no Wifi SSID in config, trying to get SDK ones..."));
 
-        // no correct SSID
-        if (!*config.ssid)
+        // Let's see of SDK one is okay
+        if (WiFi.SSID() == "")
         {
-            DebugF("no Wifi SSID in config, trying to get SDK ones...");
-
-            // Let's see of SDK one is okay
-            if (WiFi.SSID() == "")
-            {
-                DebuglnF("Not found may be blank chip!");
-            }
-            else
-            {
-                *config.psk = '\0';
-
-                // Copy SDK SSID
-                strcpy(config.ssid, WiFi.SSID().c_str());
-
-                // Copy SDK password if any
-                if (WiFi.psk() != "")
-                    strcpy(config.psk, WiFi.psk().c_str());
-
-                DebuglnF("found one!");
-
-                // save back new config
-                config_save();
-            }
-        }
-
-        // correct SSID
-        if (*config.ssid)
-        {
-            uint8_t timeout;
-
-            DebugF("Connecting to: ");
-            Debugln(config.ssid);
-            Serial.flush();
-
-            // Do wa have a PSK ?
-            if (*config.psk)
-            {
-                // protected network
-                Debug(F(" with key '"));
-                Debug(config.psk);
-                Debug(F("'..."));
-                Serial.flush();
-                WiFi.begin(config.ssid, config.psk);
-            }
-            else
-            {
-                // Open network
-                Debug(F("unsecure AP"));
-                Serial.flush();
-                WiFi.begin(config.ssid);
-            }
-
-            timeout = 50; // 50 * 200 ms = 5 sec time out
-            // 200 ms loop
-            while (((ret = WiFi.status()) != WL_CONNECTED) && timeout)
-            {
-                // Orange LED
-                led_rgb_on(COLOR_ORANGE);
-                delay(50);
-                led_rgb_off();
-                delay(150);
-                --timeout;
-            }
-        }
-
-        // connected ? disable AP, client mode only
-        if (ret == WL_CONNECTED)
-        {
-            nb_reconnect++; // increase reconnections count
-            DebuglnF("connected!");
-            WiFi.mode(WIFI_STA);
-            ad = WiFi.localIP();
-            sprintf(toprint, "%d.%d.%d.%d", ad[0], ad[1], ad[2], ad[3]);
-            DebugF("IP address   : ");
-            Debugln(toprint);
-            DebugF("MAC address  : ");
-            Debugln(WiFi.macAddress());
-
-            // not connected ? start AP
+            Serial.println(F("Not found may be blank chip!"));
         }
         else
         {
-            char ap_ssid[32];
-            DebuglnF("Error!");
-            Serial.flush();
 
-            // STA+AP Mode without connected to STA, autoconnect will search
-            // other frequencies while trying to connect, this is causing issue
-            // to AP mode, so disconnect will avoid this
+            // Copy SDK SSID
+            strncpy(config.ssid, WiFi.SSID().c_str(), CFG_SSID_LENGTH);
 
-            // Disable auto retry search channel
-            WiFi.disconnect();
-
-            // SSID = hostname
-            strcpy(ap_ssid, config.host);
-            DebugF("Switching to AP ");
-            Debugln(ap_ssid);
-            Serial.flush();
-
-            // protected network
-            if (*config.ap_psk)
-            {
-                DebugF(" with key '");
-                Debug(config.ap_psk);
-                DebuglnF("'");
-                WiFi.softAP(ap_ssid, config.ap_psk);
-                // Open network
-            }
+            // Copy SDK password if any
+            if (WiFi.psk() != "")
+                strncpy(config.psk, WiFi.psk().c_str(), CFG_SSID_LENGTH);
             else
-            {
-                DebuglnF(" with no password");
-                WiFi.softAP(ap_ssid);
-            }
-            WiFi.mode(WIFI_AP_STA);
+                *config.psk = '\0';
 
-            DebugF("IP address   : ");
-            Debugln(WiFi.softAPIP());
-            DebugF("MAC address  : ");
-            Debugln(WiFi.softAPmacAddress());
+            Serial.println("found one!");
+
+            // save back new config
+            config_save();
         }
-        // Version 1.0.7 : Use auto reconnect Wifi
-        WiFi.setAutoConnect(true);
-        WiFi.setAutoReconnect(true);
-        DebuglnF("auto-reconnect armed !");
+    }
 
-        // // Set OTA parameters
-        // ArduinoOTA.setPort(config.ota_port);
-        // ArduinoOTA.setHostname(config.host);
-        // ArduinoOTA.setPassword(config.ota_auth);
-        // ArduinoOTA.begin();
-        // // just in case your sketch sucks, keep update OTA Available
-        // // Trust me, when coding and testing it happens, this could save
-        // // the need to connect FTDI to reflash
-        // // Usefull just after 1st connexion when called from setup() before
-        // // launching potentially buggy main()
-        // for (uint8_t i = 0; i <= 10; i++)
-        // {
-        //     LedRGBON(COLOR_MAGENTA);
-        //     delay(100);
-        //     LedRGBOFF();
-        //     delay(200);
-        //     ArduinoOTA.handle();
-        // }
+    // correct SSID
+    if (*config.ssid)
+    {
+        uint8_t timeout;
 
-    } // if setup
+        Serial.print(F("Connecting to: "));
+        Serial.println(config.ssid);
+        Serial.flush();
+
+        // Do wa have a PSK ?
+        if (*config.psk)
+        {
+            // protected network
+            Serial.print(F(" with key '"));
+            Serial.print(config.psk);
+            Serial.print(F("'..."));
+            Serial.flush();
+
+            WiFi.begin(config.ssid, config.psk);
+        }
+        else
+        {
+            // Open network
+            Serial.print(F("unsecure AP"));
+            Serial.flush();
+            WiFi.begin(config.ssid);
+        }
+
+        timeout = 50; // 50 * 200 ms = 5 sec time out
+        // 200 ms loop
+        while (((ret = WiFi.status()) != WL_CONNECTED) && timeout)
+        {
+            // Orange LED
+            led_rgb_on(COLOR_ORANGE);
+            delay(50);
+            led_rgb_off();
+            delay(150);
+            --timeout;
+        }
+    }
+
+    // connected ? disable AP, client mode only
+    if (ret == WL_CONNECTED)
+    {
+        nb_reconnect++; // increase reconnections count
+        Serial.println(F("connected!"));
+        WiFi.mode(WIFI_STA);
+        Serial.print(F("IP address   : "));
+        Serial.println(WiFi.localIP());
+        Serial.print(F("MAC address  : "));
+        Serial.println(WiFi.macAddress());
+
+        // not connected ? start AP
+    }
+    else
+    {
+        char ap_ssid[32];
+        Serial.println("Error!");
+        Serial.flush();
+
+        // STA+AP Mode without connected to STA, autoconnect will search
+        // other frequencies while trying to connect, this is causing issue
+        // to AP mode, so disconnect will avoid this
+
+        // Disable auto retry search channel
+        WiFi.disconnect();
+
+        // SSID = hostname
+        strncpy(ap_ssid, config.host, sizeof(ap_ssid) - 1);
+        ap_ssid[31] = 0;
+        Serial.print(F("Switching to AP "));
+        Serial.println(ap_ssid);
+        Serial.flush();
+
+        // protected network
+        if (*config.ap_psk)
+        {
+            Serial.print(F(" with key '"));
+            Serial.print(config.ap_psk);
+            Serial.println(F("'"));
+            WiFi.softAP(ap_ssid, config.ap_psk);
+            // Open network
+        }
+        else
+        {
+            Serial.println(F(" with no password"));
+            WiFi.softAP(ap_ssid);
+        }
+        WiFi.mode(WIFI_AP_STA);
+
+        Serial.print(F("IP address   : "));
+        Serial.println(WiFi.softAPIP());
+        Serial.print(F("MAC address  : "));
+        Serial.println(WiFi.softAPmacAddress());
+    }
+    // Version 1.0.7 : Use auto reconnect Wifi
+    WiFi.setAutoConnect(true);
+    WiFi.setAutoReconnect(true);
+    Serial.println(F("auto-reconnect armed !"));
+
+#ifdef ENABLE_OTA
+    // // Set OTA parameters
+    ArduinoOTA.setPort(config.ota_port);
+    ArduinoOTA.setHostname(config.host);
+    ArduinoOTA.setPassword(config.ota_auth);
+    ArduinoOTA.begin();
+
+    // just in case your sketch sucks, keep update OTA Available
+    // Trust me, when coding and testing it happens, this could save
+    // the need to connect FTDI to reflash
+    // Useful just after 1st connection when called from setup() before
+    // launching potentially buggy main()
+    for (uint8_t i = 0; i <= 10; i++)
+    {
+        led_rgb_on(COLOR_MAGENTA);
+        delay(100);
+        led_rgb_off();
+        delay(200);
+        ArduinoOTA.handle();
+    }
+#endif
 
     return WiFi.status();
 }
 
-/* ======================================================================
-Function: handleFactoryReset
-Purpose : reset the module to factory settingd
-Input   : -
-Output  : -
-Comments: -
-====================================================================== */
+// reset the module to factory settingd
 void sys_handle_factory_reset(ESP8266WebServer &server)
 {
     // Just to debug where we are
-    Debugln(F("Serving /factory_reset page..."));
+    Serial.println(F("Serving /factory_reset page..."));
     config_reset();
     ESP.eraseConfig();
-    server.send(200, "text/plain", FPSTR("Reset"));
-    Debugln(F("Ok!"));
+    server.send(200, "text/plain", "Reset");
+    Serial.println(F("Ok!"));
     delay(1000);
     ESP.restart();
     while (true)
         delay(1);
 }
 
-/* ======================================================================
-Function: handleReset
-Purpose : reset the module
-Input   : -
-Output  : -
-Comments: -
-====================================================================== */
+// reset the module
 void sys_handle_reset(ESP8266WebServer &server)
 {
     // Just to debug where we are
-    Debugln(F("Serving /reset page..."));
-    server.send(200, "text/plain", FPSTR("Restart"));
-    Debugln(F("Ok!"));
+    Serial.println(F("Serving /reset page..."));
+    server.send(200, "text/plain", "Restart");
+    Serial.println(F("Ok!"));
     delay(1000);
     ESP.restart();
     while (true)
         delay(1);
 }
+
+#ifdef ENABLE_OTA
+
+void sys_ota_setup()
+{
+    // OTA callbacks
+    ArduinoOTA.onStart([]() {
+        led_rgb_on(COLOR_MAGENTA);
+        Serial.println(F("Update Started"));
+        ota_blink = true;
+    });
+
+    ArduinoOTA.onEnd([]() {
+        led_rgb_off();
+        Serial.println(F("Update finished : restarting"));
+    });
+
+    ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+        if (ota_blink)
+        {
+            led_rgb_on(COLOR_MAGENTA);
+        }
+        else
+        {
+            led_rgb_off();
+        }
+        ota_blink = !ota_blink;
+        //Serial.printf("Progress: %u%%\n", (progress / (total / 100)));
+    });
+
+    ArduinoOTA.onError([](ota_error_t error) {
+        led_rgb_on(COLOR_RED);
+#ifdef DEBUG
+        Serial.printf("Update Error[%u]: ", error);
+        if (error == OTA_AUTH_ERROR)
+            Serial.println("Auth Failed");
+        else if (error == OTA_BEGIN_ERROR)
+            Serial.println("Begin Failed");
+        else if (error == OTA_CONNECT_ERROR)
+            Serial.println("Connect Failed");
+        else if (error == OTA_RECEIVE_ERROR)
+            Serial.println("Receive Failed");
+        else if (error == OTA_END_ERROR)
+            Serial.println("End Failed");
+#endif
+        ESP.restart();
+    });
+}
+
+void sys_ota_register(ESP8266WebServer &server)
+{
+    // handler for the /update form POST (once file upload finishes)
+    server.on(
+        "/update",
+        HTTP_POST,
+        // handler once file upload finishes
+        [&]() {
+            server.sendHeader("Connection", "close");
+            server.sendHeader("Access-Control-Allow-Origin", "*");
+            server.send(200, "text/plain", (Update.hasError()) ? "FAIL" : "OK");
+            ESP.restart();
+        },
+        // handler for upload, get's the sketch bytes,
+        // and writes them through the Update object
+        [&]() {
+            HTTPUpload &upload = server.upload();
+
+            if (upload.status == UPLOAD_FILE_START)
+            {
+                uint32_t maxSketchSpace = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
+                WiFiUDP::stopAll();
+                Serial.printf("Update: %s\n", upload.filename.c_str());
+                led_rgb_on(COLOR_MAGENTA);
+                ota_blink = true;
+
+                //start with max available size
+                if (!Update.begin(maxSketchSpace))
+                    Update.printError(Serial1);
+            }
+            else if (upload.status == UPLOAD_FILE_WRITE)
+            {
+                if (ota_blink)
+                {
+                    led_rgb_on(COLOR_MAGENTA);
+                }
+                else
+                {
+                    led_rgb_off();
+                }
+                ota_blink = !ota_blink;
+                Serial.print(".");
+                if (Update.write(upload.buf, upload.currentSize) != upload.currentSize)
+                    Update.printError(Serial1);
+            }
+            else if (upload.status == UPLOAD_FILE_END)
+            {
+                //true to set the size to the current progress
+                if (Update.end(true))
+                {
+                    Serial.printf("Update Success: %u\nRebooting...\n", upload.totalSize);
+                }
+                else
+                {
+                    Update.printError(Serial1);
+                }
+                led_rgb_off();
+            }
+            else if (upload.status == UPLOAD_FILE_ABORTED)
+            {
+                Update.end();
+                led_rgb_off();
+                Serial.println(F("Update was aborted"));
+            }
+            delay(0);
+        });
+}
+
+#endif // ENABLE_OTA

@@ -1,8 +1,14 @@
-#!/bin/sh
+#!/usr/bin/env bash
+
+set -euo pipefail
 
 platformio run -t size
+platformio run -t buildfs
 
-mkdir -p test/build
-cd test/build
-cmake .. -DCMAKE_BUILD_TYPE=Debug
-make
+docker buildx build -t test .
+docker run --rm -ti \
+    -v $(pwd):/tic:ro \
+    -v $(pwd)/build:/build \
+    -v $(pwd)/coverage:/coverage \
+    test \
+    /tic/runtest.sh
