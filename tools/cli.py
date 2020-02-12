@@ -18,6 +18,7 @@ import serial
 from serial.tools.list_ports import comports
 from serial.tools import hexlify_codec
 from simutic import tic
+import click
 
 # pylint: disable=wrong-import-order,wrong-import-position
 
@@ -290,7 +291,7 @@ class Miniterm(object):
         self.alive = True
         self._start_reader()
 
-        self.tic_thread = Periodic(3.5, self.send_tic_periodic)
+        self.tic_thread = Periodic(self.frequence_trames, self.send_tic_periodic)
         self.tic_thread.daemon = True
         self.tic_thread.start()
 
@@ -414,20 +415,26 @@ def ask_for_port():
     index.
     """
 
-    ports = sorted(comports())
+    # filtre les ports impossibles
+    ports = []
+    for comport in sorted(comports()):
+        if comport[0].startswith("/dev/cu.") and not comport[0].startswith("/dev/cu.usb"):
+            continue
+        ports.append(comport)
+
     if len(ports) == 1:
         return ports[0][0]
 
-    sys.stderr.write('\n--- Available ports:\n')
+    sys.stderr.write("\n--- Available ports:\n")
     for n, (port, desc, hwid) in enumerate(ports, 1):
-        sys.stderr.write('--- {:2}: {:20} {!r}\n'.format(n, port, desc))
+        sys.stderr.write("--- {:2}: {:20} {!r}\n".format(n, port, desc))
 
     while True:
-        port = input('--- Enter port index or full name: ')
+        port = input("--- Enter port index or full name: ")
         try:
             index = int(port) - 1
             if not 0 <= index < len(ports):
-                sys.stderr.write('--- Invalid index!\n')
+                sys.stderr.write("--- Invalid index!\n")
                 continue
         except ValueError:
             pass
@@ -437,14 +444,25 @@ def ask_for_port():
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# default args can be used to override when calling main() from an other script
-# e.g to create a miniterm-my-device.py
-def main():
+
+
+@click.command(help="Terminal série modifié pour Téléinformation")
+@click.help_option("-h", "--help", help="affiche l'aide")
+@click.argument("port", envvar="COMPORT", default="")
+@click.option("-e", "tinfo_baudrate", help="utilise 1200,7E1 (téléinfo)", is_flag=True)
+@click.option(
+    "-f",
+    "--freq",
+    "frequence_trames",
+    help="fréquence d'envoi des trames",
+    default=3.3,
+    show_default=True,
+    type=click.FloatRange(1, 3600),
+)
+def main(port, tinfo_baudrate, frequence_trames):
     """Command line tool, entry point"""
 
-    if len(sys.argv) >= 2:
-        port = sys.argv[1]
-    else:
+    if port == "":
         port = ask_for_port()
 
     try:
@@ -454,22 +472,29 @@ def main():
             # enable timeout for alive flag polling if cancel_read is not available
             serial_instance.timeout = 1
 
+        if tinfo_baudrate:
+            serial.baudrate = 1200
+            serial_instance.bytesize = serial.SEVENBITS
+            serial_instance.parity = serial.PARITY_EVEN
+
         serial_instance.open()
     except serial.SerialException as e:
         sys.stderr.write("could not open port {}: {}\n".format(port, e))
         sys.exit(1)
 
-    miniterm = Miniterm(serial_instance, echo=False, eol="crlf", filters=["colorize"])
-    miniterm.set_rx_encoding("ascii")
-    miniterm.set_tx_encoding("ascii")
+    tinfo_term = Miniterm(serial_instance, echo=False, eol="crlf", filters=["colorize"])
+    tinfo_term.set_rx_encoding("ascii")
+    tinfo_term.set_tx_encoding("ascii")
 
-    miniterm.start()
+    tinfo_term.frequence_trames = frequence_trames
+
+    tinfo_term.start()
     try:
-        miniterm.join(True)
+        tinfo_term.join(True)
     except KeyboardInterrupt:
         pass
-    miniterm.join()
-    miniterm.close()
+    tinfo_term.join()
+    tinfo_term.close()
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
