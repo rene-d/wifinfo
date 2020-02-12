@@ -7,12 +7,14 @@ static inline unsigned long millis() { return 1000; }
 static inline unsigned long micros() { return 1000000; }
 static inline void delay(unsigned) {}
 
-static inline void digitalWrite(int, int) {}
-static inline int digitalRead(int) { return 0; }
+static inline void pinMode(uint8_t pin, uint8_t mode) {}
+static inline void digitalWrite(uint8_t pin, uint8_t val) {}
+static inline int digitalRead(uint8_t pin) { return 0; }
 
 #define LED_BUILTIN 2
 #define LOW 0
 #define HIGH 1
+#define OUTPUT 0x01
 
 #define F(x) x
 #define FPSTR(x) x
@@ -152,7 +154,7 @@ public:
         return s.at(p);
     }
 
-    char& operator[](size_t p)
+    char &operator[](size_t p)
     {
         return s.at(p);
     }

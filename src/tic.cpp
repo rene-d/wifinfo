@@ -509,3 +509,11 @@ void emoncms_notif()
     // And submit all to emoncms
     http_request(config.emoncms.host, config.emoncms.port, url);
 }
+
+void tic_dump()
+{
+    char raw[Teleinfo::MAX_FRAME_SIZE];
+    tinfo.get_frame_ascii(raw, sizeof(raw));
+    Serial.println(tinfo.get_timestamp_iso8601());
+    Serial.println(raw);
+}

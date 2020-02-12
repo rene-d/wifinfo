@@ -4,6 +4,7 @@
 #include "config.h"
 #include "filesystem.h"
 #include "tic.h"
+#include "sys.h"
 
 #include <Arduino.h>
 #include <SimpleCLI.h>
@@ -49,7 +50,7 @@ void cli_setup()
     });
 
     cli.addSingleArgCmd("time", [](cmd *) {
-        showTime();
+        time_show();
     });
 
     cli.addSingleArgCmd("config", [](cmd *) {
@@ -64,13 +65,58 @@ void cli_setup()
         cli_eeprom_dump(16, 1024);
     });
 
-    cli.addSingleArgCmd("set", [](cmd *cmdPtr) {
-        Command cmd(cmdPtr);
-        String arg = cmd.getArgument().getValue();
+    cli.addSingleArgCmd("tic", [](cmd *) {
+        tic_dump();
+    });
 
-        if (arg == "timers")
+    cli.addBoundlessCmd(("set"), [](cmd *cmdPtr) {
+        Command cmd(cmdPtr);
+
+        if (cmd.countArgs() == 0)
+        {
+            Serial.println(F("nothing to set"));
+            return;
+        }
+
+        String arg = cmd.getArgument(0).getValue();
+
+        if (arg == F("timers"))
         {
             tic_make_timers();
+        }
+
+        else if ((arg == F("wifi")) && (cmd.countArgs() >= 1))
+        {
+            strncpy(config.ssid, cmd.getArg(1).getValue().c_str(), CFG_SSID_LENGTH);
+            strncpy(config.psk, cmd.getArg(2).getValue().c_str(), CFG_PSK_LENGTH);
+            config_save();
+
+            ESP.restart();
+        }
+        else if ((arg == F("ap")) && (cmd.countArgs() >= 1))
+        {
+            strncpy(config.host, cmd.getArg(1).getValue().c_str(), CFG_HOSTNAME_LENGTH);
+            strncpy(config.ap_psk, cmd.getArg(2).getValue().c_str(), CFG_PSK_LENGTH);
+            config_save();
+
+            ESP.restart();
+        }
+
+        else if (arg == F("gpio") && cmd.countArgs() >= 2)
+        {
+            uint8_t pin = cmd.getArg(1).getValue().toInt();
+
+            if (cmd.countArgs() == 2)
+            {
+                uint8_t v = digitalRead(pin);
+                Serial.printf_P(PSTR("gpio %d read %d\n"), pin, v);
+            }
+            else
+            {
+                uint8_t v = cmd.getArg(2).getValue().toInt();
+                Serial.printf_P(PSTR("gpio %d write %d\n"), pin, v);
+                digitalWrite(pin, v);
+            }
         }
     });
 
@@ -80,7 +126,7 @@ void cli_setup()
 
         if (arg == "restart")
         {
-            Serial.println(F("restarting ESP..."));
+            Serial.println(F("restart..."));
             Serial.flush();
 
             ESP.restart();
@@ -90,38 +136,64 @@ void cli_setup()
             }
         }
 
-        Serial.print("ChipId            : 0x");
-        Serial.println(ESP.getChipId(), HEX);
-        Serial.print("CpuFreqMHz        : ");
-        Serial.println(ESP.getCpuFreqMHz());
-        // Serial.print("Vcc               : ");
-        // Serial.println(ESP.getVcc());
+        if (arg == "reset")
+        {
+            Serial.println(F("eraseConfig..."));
+            ESP.eraseConfig();
+            Serial.println(F("WiFi.disconnect..."));
+            WiFi.disconnect(true);
 
-        Serial.print("SdkVersion        : ");
-        Serial.println(ESP.getSdkVersion());
-        Serial.print("CoreVersion       : ");
-        Serial.println(ESP.getCoreVersion());
-        Serial.print("FullVersion       : ");
-        Serial.println(ESP.getFullVersion());
+            Serial.println(F("clear EEPROM..."));
+            for (int i = 0; i < 1024; ++i)
+                EEPROM.write(i, 0);
+            EEPROM.commit();
 
-        Serial.print("FreeHeap          : ");
-        Serial.println(ESP.getFreeHeap());
-        Serial.print("MaxFreeBlockSize  : ");
-        Serial.println(ESP.getMaxFreeBlockSize());
-        Serial.print("HeapFragmentation : ");
-        Serial.println(ESP.getHeapFragmentation());
+            delay(500);
 
-        Serial.print(F("WiFi status     : "));
-        Serial.println(WiFi.status());
-        Serial.print(F("WiFi mode       : "));
-        Serial.println(WiFi.getMode());
-        Serial.print(F("localIP         : "));
-        Serial.println(WiFi.localIP());
-        Serial.print(F("hostname        : "));
-        Serial.println(WiFi.hostname());
-        Serial.print(F("softAPIP        : "));
-        Serial.println(WiFi.softAPIP());
-        Serial.flush();
+            Serial.println(F("restart..."));
+            Serial.flush();
+
+            ESP.restart();
+            while (true)
+            {
+                delay(1);
+            }
+        }
+
+        Serial.printf_P(PSTR("ChipId      : 0x%X\n"), ESP.getChipId());
+        Serial.printf_P(PSTR("CpuFreqMHz  : %d MHz\n"), ESP.getCpuFreqMHz());
+        Serial.printf_P(PSTR("Vcc         : %u\n"), ESP.getVcc());
+        Serial.printf_P(PSTR("ResetReason : %s\n"), ESP.getResetReason().c_str());
+        Serial.printf_P(PSTR("ResetInfo   : %s\n"), ESP.getResetInfo().c_str());
+
+        Serial.printf_P(PSTR("SdkVersion  : %s\n"), ESP.getSdkVersion());
+        Serial.printf_P(PSTR("CoreVersion : %s\n"), ESP.getCoreVersion().c_str());
+        Serial.printf_P(PSTR("FullVersion : %s\n"), ESP.getFullVersion().c_str());
+
+        Serial.printf_P(PSTR("FlashChipRealSize : %u\n"), ESP.getFlashChipRealSize());
+        Serial.printf_P(PSTR("SketchSize        : %u\n"), ESP.getSketchSize());
+        Serial.printf_P(PSTR("FreeSketchSpace   : %u\n"), ESP.getFreeSketchSpace());
+        Serial.printf_P(PSTR("checkFlashConfig  : %d\n"), ESP.checkFlashConfig());
+
+        Serial.printf_P(PSTR("FreeHeap          : %u\n"), ESP.getFreeHeap());
+        Serial.printf_P(PSTR("MaxFreeBlockSize  : %u\n"), ESP.getMaxFreeBlockSize());
+        Serial.printf_P(PSTR("HeapFragmentation : %u\n"), ESP.getHeapFragmentation());
+
+        FSInfo info;
+        SPIFFS.info(info);
+        Serial.printf_P(PSTR("SPIFFS totalBytes    : %zu\n"), info.totalBytes);
+        Serial.printf_P(PSTR("SPIFFS usedBytes     : %zu\n"), info.usedBytes);
+        Serial.printf_P(PSTR("SPIFFS blockSize     : %zu\n"), info.blockSize);
+        Serial.printf_P(PSTR("SPIFFS pageSize      : %zu\n"), info.pageSize);
+        Serial.printf_P(PSTR("SPIFFS maxOpenFiles  : %zu\n"), info.maxOpenFiles);
+        Serial.printf_P(PSTR("SPIFFS maxPathLength : %zu\n"), info.maxPathLength);
+
+        Serial.printf_P(PSTR("WiFi status : %d\n"), WiFi.status());
+        Serial.printf_P(PSTR("WiFi mode   : %d\n"), WiFi.getMode());
+        Serial.printf_P(PSTR("localIP     : %s\n"), WiFi.localIP().toString().c_str());
+        Serial.printf_P(PSTR("hostname    : %s\n"), WiFi.hostname().c_str());
+        Serial.printf_P(PSTR("softAPIP    : %s\n"), WiFi.softAPIP().toString().c_str());
+        Serial.printf_P(PSTR("Persistent  : %d\n"), WiFi.getPersistent());
 
         WiFi.printDiag(Serial);
         Serial.flush();
@@ -155,8 +227,8 @@ int cli_loop_read()
     if (Serial.available())
     {
         int c = Serial.read();
-        if ((c == '`') || (c == '~') || (c == 0x09))
-        {
+        if ((c == 0x09) || (c == 0x1B)) // ESC non présent dans une trame de téléinfo
+        {                               // TAB possible en séparateur, mais pas rencontré
             cli_mode = true;
             Serial.print("$ ");
         }
@@ -164,7 +236,7 @@ int cli_loop_read()
         {
             Serial.write(c);
             cli_input += (char)c;
-            if ((c == 0x0A) || (c == 0x0D) || (cli_input.length() >= 64))
+            if ((c == 0x0A) || (c == 0x0D) || (cli_input.length() >= 128))
             {
                 cli.parse(cli_input);
                 cli_input.clear();

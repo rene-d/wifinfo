@@ -39,7 +39,6 @@
 #include <ESP8266WiFi.h>
 #include <coredecls.h> // settimeofday_cb()
 #include <Schedule.h>
-//#include <PolledTimeout.h>
 
 #include <time.h>     // time() ctime()
 #include <sys/time.h> // struct timeval
@@ -51,38 +50,11 @@ extern "C" int clock_gettime(clockid_t unused, struct timespec *tp);
 
 ////////////////////////////////////////////////////////
 
-static timeval tv;
-static timespec tp;
-static time_t now;
-static uint32_t now_ms, now_us;
-
-//static esp8266::polledTimeout::periodicMs showTimeNow(60000);
-static int time_machine_days = 0; // 0 = now
-static bool time_machine_running = false;
-
-// OPTIONAL: change SNTP startup delay
-// a weak function is already defined and returns 0 (RFC violation)
-// it can be redefined:
-//uint32_t sntp_startup_delay_MS_rfc_not_less_than_60000 ()
-//{
-//    //info_sntp_startup_delay_MS_rfc_not_less_than_60000_has_been_called = true;
-//    return 60000; // 60s (or lwIP's original default: (random() % 5000))
-//}
-
-// OPTIONAL: change SNTP update delay
-// a weak function is already defined and returns 1 hour
-// it can be redefined:
-//uint32_t sntp_update_delay_MS_rfc_not_less_than_15000 ()
-//{
-//    //info_sntp_update_delay_MS_rfc_not_less_than_15000_has_been_called = true;
-//    return 15000; // 15s
-//}
-
 #define PTM(w)                \
     Serial.print(" " #w "="); \
     Serial.print(tm->tm_##w);
 
-void printTm(const char *what, const tm *tm)
+static void printTm(const char *what, const tm *tm)
 {
     Serial.print(what);
     PTM(isdst);
@@ -96,8 +68,13 @@ void printTm(const char *what, const tm *tm)
     PTM(sec);
 }
 
-void showTime()
+void time_show()
 {
+    timeval tv;
+    timespec tp;
+    time_t now;
+    uint32_t now_ms, now_us;
+
     gettimeofday(&tv, nullptr);
     clock_gettime(0, &tp);
     now = time(nullptr);
@@ -166,50 +143,15 @@ void showTime()
     Serial.println();
 }
 
-void time_is_set_scheduled()
+static void time_is_set_scheduled()
 {
-    // everything is allowed in this function
-
-    if (time_machine_days == 0)
-    {
-        time_machine_running = !time_machine_running;
-    }
-
-    // time machine demo
-    if (time_machine_running)
-    {
-        if (time_machine_days == 0)
-            Serial.printf("---- settimeofday() has been called - possibly from SNTP\n"
-                          "     (starting time machine demo to show libc's automatic DST handling)\n\n");
-        now = time(nullptr);
-        const tm *tm = localtime(&now);
-        Serial.printf("future=%3ddays: DST=%s - ",
-                      time_machine_days,
-                      tm->tm_isdst ? "true " : "false");
-        Serial.print(ctime(&now));
-        gettimeofday(&tv, nullptr);
-        constexpr int days = 30;
-        time_machine_days += days;
-        if (time_machine_days > 360)
-        {
-            tv.tv_sec -= (time_machine_days - days) * 60 * 60 * 24;
-            time_machine_days = 0;
-        }
-        else
-        {
-            tv.tv_sec += days * 60 * 60 * 24;
-        }
-        settimeofday(&tv, nullptr);
-    }
-    else
-    {
-        showTime();
-    }
+    time_t now = time(nullptr);
+    Serial.print("SNTP updated, time: ");
+    Serial.print(ctime(&now));
 }
 
 void time_setup()
 {
-
     // setup RTC time
     // it will be used until NTP server will send us real current time
     time_t rtc = RTC_UTC_TEST;
@@ -227,17 +169,4 @@ void time_setup()
 
     // OPTIONAL: disable obtaining SNTP servers from DHCP
     //sntp_servermode_dhcp(0); // 0: disable obtaining SNTP servers from DHCP (enabled by default)
-
-    // don't wait for network, observe time changing
-    // when NTP timestamp is received
-    Serial.printf("Time is currently set by a constant:\n");
-    //showTime();
 }
-
-// void time_loop()
-// {
-//     if (showTimeNow)
-//     {
-//         showTime();
-//     }
-// }

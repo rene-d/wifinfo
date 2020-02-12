@@ -1,5 +1,4 @@
 #pragma once
 
 void time_setup();
-void time_loop();
-void showTime();
+void time_show();

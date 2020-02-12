@@ -26,12 +26,12 @@
 #include <user_interface.h>
 
 // Configuration structure for whole program
-_Config config;
+Config config;
 
 void config_setup()
 {
     // Our configuration is stored into EEPROM
-    EEPROM.begin(sizeof(_Config));
+    EEPROM.begin(sizeof(Config));
 
     // Read Configuration from EEP
     if (config_read())
@@ -45,9 +45,6 @@ void config_setup()
 
         // save back
         config_save();
-
-        // Indicate the error in global flags
-        // config.config |= CFG_BAD_CRC;
 
         Serial.println(F("Reset to default"));
     }
@@ -63,11 +60,11 @@ Comments: -
 void config_reset()
 {
     // Start cleaning all that stuff
-    memset(&config, 0, sizeof(_Config));
+    memset(&config, 0, sizeof(Config));
 
     // Set default Hostname
     sprintf_P(config.host, PSTR("WifInfo-%06X"), ESP.getChipId());
-    strcpy_P(config.ota_auth, PSTR(DEFAULT_OTA_AUTH));
+    strcpy_P(config.ota_auth, DEFAULT_OTA_AUTH);
     config.ota_port = DEFAULT_OTA_PORT;
 
     // Add other init default config here
@@ -81,7 +78,7 @@ void config_reset()
     strcpy_P(config.jeedom.host, CFG_JDOM_DEFAULT_HOST);
     config.jeedom.port = CFG_JDOM_DEFAULT_PORT;
     strcpy_P(config.jeedom.url, CFG_JDOM_DEFAULT_URL);
-    //strcpy_P(config.jeedom.adco, CFG_JDOM_DEFAULT_ADCO);
+    strcpy_P(config.jeedom.adco, CFG_JDOM_DEFAULT_ADCO);
 
     // HTTP Request
     strcpy_P(config.httpReq.host, CFG_HTTPREQ_DEFAULT_HOST);
@@ -106,7 +103,6 @@ static uint16_t crc16Update(uint16_t crc, uint8_t a)
     return crc;
 }
 
-
 // fill config structure with data located into eeprom
 bool config_read(bool clear_on_error)
 {
@@ -115,7 +111,7 @@ bool config_read(bool clear_on_error)
     uint8_t data;
 
     // For whole size of config structure
-    for (size_t i = 0; i < sizeof(_Config); ++i)
+    for (size_t i = 0; i < sizeof(Config); ++i)
     {
         // read data
         data = EEPROM.read(i);
@@ -132,7 +128,7 @@ bool config_read(bool clear_on_error)
     {
         // Clear config if wanted
         if (clear_on_error)
-            memset(&config, 0, sizeof(_Config));
+            memset(&config, 0, sizeof(Config));
         return false;
     }
 
@@ -158,14 +154,14 @@ bool config_save(void)
     config.crc = ~0;
 
     // For whole size of config structure, pre-calculate CRC
-    for (size_t i = 0; i < sizeof(_Config) - 2; ++i)
+    for (size_t i = 0; i < sizeof(Config) - 2; ++i)
         config.crc = crc16Update(config.crc, *pconfig++);
 
     // Re init pointer
     pconfig = (const uint8_t *)&config;
 
     // For whole size of config structure, write to EEP
-    for (size_t i = 0; i < sizeof(_Config); ++i)
+    for (size_t i = 0; i < sizeof(Config); ++i)
         EEPROM.write(i, *pconfig++);
 
     // Physically save
@@ -200,7 +196,7 @@ void config_show()
     Serial.print(F("host     :"));
     Serial.println(config.host);
     Serial.println(F("===== Advanced"));
-    Serial.print("ap_psk   :");
+    Serial.print(F("ap_psk   :"));
     Serial.println(config.ap_psk);
     Serial.print(F("OTA auth :"));
     Serial.println(config.ota_auth);
@@ -210,11 +206,6 @@ void config_show()
     Serial.print(F("Config   :"));
     if (config.config & CONFIG_LED_TINFO)
         Serial.print(F(" LED_TINFO"));
-
-    // if (config.config & CFG_RGB_LED)
-    //     Serial.print(F(" RGB"));
-    // if (config.config & CFG_DEBUG)
-    //     Serial.print(F(" DEBUG"));
     Serial.println();
 
     Serial.println(F("===== Emoncms"));
@@ -283,7 +274,7 @@ void config_get_json(String &r)
     js.append(CFG_FORM_OTA_AUTH, config.ota_auth);
     js.append(CFG_FORM_OTA_PORT, config.ota_port);
 
-    js.append("cfg_led_info", (config.config & CONFIG_LED_TINFO) ? 1 : 0);
+    js.append(FPSTR("cfg_led_info"), (config.config & CONFIG_LED_TINFO) ? 1 : 0);
 
     js.append(CFG_FORM_EMON_HOST, config.emoncms.host);
     js.append(CFG_FORM_EMON_PORT, config.emoncms.port);
@@ -335,11 +326,11 @@ void config_handle_form(ESP8266WebServer &server)
 #endif
 
         // WifInfo
-        strncpy(config.ssid, server.arg(CFG_FORM_SSID).c_str(), CFG_SSID_SIZE - 1);
-        strncpy(config.psk, server.arg("psk").c_str(), CFG_PSK_SIZE - 1);
-        strncpy(config.host, server.arg("host").c_str(), CFG_HOSTNAME_SIZE - 1);
-        strncpy(config.ap_psk, server.arg("ap_psk").c_str(), CFG_PSK_SIZE - 1);
-        strncpy(config.ota_auth, server.arg("ota_auth").c_str(), CFG_PSK_SIZE - 1);
+        strncpy(config.ssid, server.arg(CFG_FORM_SSID).c_str(), CFG_SSID_LENGTH);
+        strncpy(config.psk, server.arg("psk").c_str(), CFG_SSID_LENGTH);
+        strncpy(config.host, server.arg("host").c_str(), CFG_HOSTNAME_LENGTH);
+        strncpy(config.ap_psk, server.arg("ap_psk").c_str(), CFG_SSID_LENGTH);
+        strncpy(config.ota_auth, server.arg("ota_auth").c_str(), CFG_SSID_LENGTH);
         config.ota_port = validate_int(server.arg("ota_port"), 0, 65535, DEFAULT_OTA_PORT);
 
         config.config = 0;
@@ -347,24 +338,24 @@ void config_handle_form(ESP8266WebServer &server)
             config.config |= CONFIG_LED_TINFO;
 
         // Emoncms
-        strncpy(config.emoncms.host, server.arg("emon_host").c_str(), CFG_EMON_HOST_SIZE - 1);
-        strncpy(config.emoncms.url, server.arg("emon_url").c_str(), CFG_EMON_URL_SIZE - 1);
-        strncpy(config.emoncms.apikey, server.arg("emon_apikey").c_str(), CFG_EMON_APIKEY_SIZE - 1);
+        strncpy(config.emoncms.host, server.arg("emon_host").c_str(), CFG_EMON_HOST_LENGTH);
+        strncpy(config.emoncms.url, server.arg("emon_url").c_str(), CFG_EMON_URL_LENGTH);
+        strncpy(config.emoncms.apikey, server.arg("emon_apikey").c_str(), CFG_EMON_APIKEY_LENGTH);
         config.emoncms.node = validate_int(server.arg("emon_node"), 0, 255, 0);
         config.emoncms.port = validate_int(server.arg("emon_port"), 0, 65535, CFG_EMON_DEFAULT_PORT);
         config.emoncms.freq = validate_int(server.arg("emon_freq"), 0, 86400, 0);
 
         // jeedom
-        strncpy(config.jeedom.host, server.arg(CFG_FORM_JDOM_HOST).c_str(), CFG_JDOM_HOST_SIZE - 1);
-        strncpy(config.jeedom.url, server.arg(CFG_FORM_JDOM_URL).c_str(), CFG_JDOM_URL_SIZE - 1);
-        strncpy(config.jeedom.apikey, server.arg(CFG_FORM_JDOM_KEY).c_str(), CFG_JDOM_APIKEY_SIZE - 1);
-        strncpy(config.jeedom.adco, server.arg(CFG_FORM_JDOM_ADCO).c_str(), CFG_JDOM_ADCO_SIZE - 1);
+        strncpy(config.jeedom.host, server.arg(CFG_FORM_JDOM_HOST).c_str(), CFG_JDOM_HOST_LENGTH);
+        strncpy(config.jeedom.url, server.arg(CFG_FORM_JDOM_URL).c_str(), CFG_JDOM_URL_LENGTH);
+        strncpy(config.jeedom.apikey, server.arg(CFG_FORM_JDOM_KEY).c_str(), CFG_JDOM_APIKEY_LENGTH);
+        strncpy(config.jeedom.adco, server.arg(CFG_FORM_JDOM_ADCO).c_str(), CFG_JDOM_ADCO_LENGTH);
         config.jeedom.port = validate_int(server.arg(CFG_FORM_JDOM_PORT), 0, 65535, CFG_JDOM_DEFAULT_PORT);
         config.jeedom.freq = validate_int(server.arg(CFG_FORM_JDOM_FREQ), 0, 86400, 0);
 
         // HTTP Request
-        strncpy(config.httpReq.host, server.arg(CFG_FORM_HTTPREQ_HOST).c_str(), CFG_HTTPREQ_HOST_SIZE - 1);
-        strncpy(config.httpReq.url, server.arg(CFG_FORM_HTTPREQ_URL).c_str(), CFG_HTTPREQ_URL_SIZE - 1);
+        strncpy(config.httpReq.host, server.arg(CFG_FORM_HTTPREQ_HOST).c_str(), CFG_HTTPREQ_HOST_LENGTH);
+        strncpy(config.httpReq.url, server.arg(CFG_FORM_HTTPREQ_URL).c_str(), CFG_HTTPREQ_URL_LENGTH);
         config.httpReq.port = validate_int(server.arg(CFG_FORM_HTTPREQ_PORT), 0, 65535, CFG_HTTPREQ_DEFAULT_PORT);
         config.httpReq.freq = validate_int(server.arg(CFG_FORM_HTTPREQ_FREQ), 0, 86400, 0);
 

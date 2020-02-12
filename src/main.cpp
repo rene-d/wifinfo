@@ -16,9 +16,7 @@
 
 void setup()
 {
-    int led = digitalRead(LED_BUILTIN);
-    pinMode(LED_BUILTIN, OUTPUT);
-    digitalWrite(LED_BUILTIN, led);
+    led_setup();
 
 #ifdef DEBUG
     // en debug, on reste à 115200: on ne se branche pas au compteur
@@ -30,7 +28,13 @@ void setup()
     Serial.flush();
     delay(100);
 
-    Serial.println("WifInfo starting...");
+    Serial.println(R"(
+__      ___  __ ___       __
+\ \    / (_)/ _|_ _|_ _  / _|___
+ \ \/\/ /| |  _|| || ' \|  _/ _ \
+  \_/\_/ |_|_| |___|_||_|_| \___/
+)");
+
     led_on();
     delay(100);
 

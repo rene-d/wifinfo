@@ -164,14 +164,15 @@ int sys_wifi_connect()
         }
         else
         {
-            *config.psk = '\0';
 
             // Copy SDK SSID
-            strcpy(config.ssid, WiFi.SSID().c_str());
+            strncpy(config.ssid, WiFi.SSID().c_str(), CFG_SSID_LENGTH);
 
             // Copy SDK password if any
             if (WiFi.psk() != "")
-                strcpy(config.psk, WiFi.psk().c_str());
+                strncpy(config.psk, WiFi.psk().c_str(), CFG_SSID_LENGTH);
+            else
+                *config.psk = '\0';
 
             Serial.println("found one!");
 
@@ -197,6 +198,7 @@ int sys_wifi_connect()
             Serial.print(config.psk);
             Serial.print(F("'..."));
             Serial.flush();
+
             WiFi.begin(config.ssid, config.psk);
         }
         else
@@ -247,7 +249,8 @@ int sys_wifi_connect()
         WiFi.disconnect();
 
         // SSID = hostname
-        strcpy(ap_ssid, config.host);
+        strncpy(ap_ssid, config.host, sizeof(ap_ssid) - 1);
+        ap_ssid[31] = 0;
         Serial.print(F("Switching to AP "));
         Serial.println(ap_ssid);
         Serial.flush();

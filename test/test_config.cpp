@@ -4,10 +4,10 @@
 
 TEST(config, sizes)
 {
-    ASSERT_EQ(sizeof(_emoncms), 128);
-    ASSERT_EQ(sizeof(_jeedom), 256);
-    ASSERT_EQ(sizeof(_httpRequest), 256);
-    ASSERT_EQ(sizeof(_Config), 1024);
+    ASSERT_EQ(sizeof(EmoncmsConfig), 128);
+    ASSERT_EQ(sizeof(JeedomConfig), 256);
+    ASSERT_EQ(sizeof(HttpreqConfig), 256);
+    ASSERT_EQ(sizeof(Config), 1024);
 }
 
 TEST(config, get_json)
