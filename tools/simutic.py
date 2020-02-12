@@ -208,7 +208,6 @@ class SimuTic:
         """
         intensite = self.iinst_value
         d = {
-            "_UPTIME": int(time.monotonic()),
             "timestamp": self.timestamp,
             "ADCO": self.adco,
             "OPTARIF": "HC..",
