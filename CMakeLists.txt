@@ -63,6 +63,8 @@ target_link_libraries(tic
 
 target_link_libraries(tic PUBLIC coverage_config)
 
+target_compile_definitions(tic PRIVATE ENABLE_CLI DEBUG)
+
 
 enable_testing()
 add_test(NAME tic_test COMMAND tic)

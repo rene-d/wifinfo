@@ -26,9 +26,22 @@ public:
     {
         return "arg";
     }
-
+    String arg(int) const
+    {
+        return "arg";
+    }
     bool hasArg(const String &) const
     {
         return true;
+    }
+
+    int args() const
+    {
+        return 1;
+    }
+
+    String argName(int i) const
+    {
+        return "argName";
     }
 };
