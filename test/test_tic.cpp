@@ -161,7 +161,7 @@ TEST(notifs, http_notif)
 TEST(notifs, http_timer)
 {
     test_config_notif(false, false, true);
-    strcpy(config.httpReq.url, "/tinfo.php?p=$PAPP&t=$_type");
+    strcpy(config.httpReq.url, "/tinfo.php?p=$PAPP&t=$type");
 
     tinfo_init(1234, false);
 
@@ -204,7 +204,7 @@ TEST(notifs, http_timer)
 TEST(notifs, http_ptec)
 {
     test_config_notif(false, false, true);
-    strcpy(config.httpReq.url, "/tinfo.php?p=$PAPP&ptec=$PTEC&t=$_type");
+    strcpy(config.httpReq.url, "/tinfo.php?p=$PAPP&ptec=$PTEC&t=$type");
     config.httpReq.trigger_ptec = 1; // active les notifs de PTEC
 
     tinfo_init();
@@ -255,7 +255,7 @@ TEST(notifs, http_seuils)
     tinfo_init();
 
     // active les notifs de seuils
-    strcpy(config.httpReq.url, "/tinfo.php?p=$PAPP&t=$_type");
+    strcpy(config.httpReq.url, "/tinfo.php?p=$PAPP&t=$type");
     config.httpReq.trigger_seuils = 1;
 
     HTTPClient::begin_called = 0;
@@ -300,7 +300,7 @@ TEST(notifs, http_adps)
     test_config_notif(false, false, true);
 
     // active les notifications de dépassement
-    strcpy(config.httpReq.url, "/tinfo.php?p=$PAPP&t=$_type");
+    strcpy(config.httpReq.url, "/tinfo.php?p=$PAPP&t=$type");
     config.httpReq.trigger_adps = 1;
 
     HTTPClient::begin_called = 0;

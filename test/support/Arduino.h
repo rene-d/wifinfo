@@ -16,12 +16,20 @@ static inline int digitalRead(uint8_t pin) { return 0; }
 #define HIGH 1
 #define OUTPUT 0x01
 
+#define DEC 10
+#define HEX 16
+#define OCT 8
+#define BIN 2
+
+typedef const char *PGM_P;
 #define F(x) x
 #define FPSTR(x) x
 #define PSTR(x) x
 #define PROGMEM
 #define sprintf_P sprintf
 #define strcpy_P strcpy
+
+class Printable;
 
 struct __FlashStringHelper
 {

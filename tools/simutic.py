@@ -54,15 +54,6 @@ class SimuTic:
         self.heures_creuses = not self.heures_creuses
 
     @property
-    def uptime(self):
-        """
-        retourne le temps depuis le lancement du programme
-        """
-        # "0 days 00 h 13 m 17 sec"
-        now = int(time.monotonic())
-        return f"{now // 86400} days {(now // 3600) % 24} h {(now // 60) % 60:02d} m {now % 60} sec"
-
-    @property
     def timestamp(self):
         """
         retourne l'heure courante au format ISO8601
@@ -229,7 +220,7 @@ class SimuTic:
         """
         retourne les valeurs sous forme de tableau JSON
         """
-        i = self.iinst(True)
+        intensite = self.iinst
         d = [
             {"na": "timestamp", "va": tic.timestamp},
             {"na": "ADCO", "va": self.adco},
@@ -238,13 +229,13 @@ class SimuTic:
             {"na": "HCHC", "va": tic.hchc},
             {"na": "HCHP", "va": tic.hchp},
             {"na": "PTEC", "va": tic.ptec},
-            {"na": "IINST", "va": i},
+            {"na": "IINST", "va": intensite},
             {"na": "IMAX", "va": "042"},
             {"na": "PAPP", "va": tic.papp},
             {"na": "HHPHC", "va": "D"},
             {"na": "MOTDETAT", "va": "000000"},
         ]
-        if self.is_adps:
+        if self.adps:
             d.append({"na": "ADPS", "va": self.adps})
         return json.dumps(d, indent=4)
 
