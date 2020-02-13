@@ -1,0 +1,47 @@
+---
+version: "3"
+
+services:
+
+  influxdb:
+    image: influxdb:latest
+    container_name: influxdb
+    ports:
+      - "8083:8083"
+      - "8086:8086"
+      - "8090:8090"
+    volumes:
+      # Data persistency
+      # sudo mkdir -p /srv/docker/influxdb/data
+      - ./influxdb-data:/var/lib/influxdb
+    environment:
+      - INFLUXDB_DB=teleinfo
+      - INFLUXDB_ADMIN_USER=admin
+      - INFLUXDB_ADMIN_PASSWORD=admin
+        #command: --reporting-disabled
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    links:
+      - influxdb
+    depends_on:
+      - influxdb
+    volumes:
+      # Data persistency
+      # sudo mkdir -p //grafana-data; chown 472:472 /srv/docker/grafana/data
+      - ./grafana-data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+
+  wifinfo_sse:
+     build: wifinfo_sse/
+     container_name: wifinfo_sse
+     links:
+       - influxdb
+     depends_on:
+       - influxdb
+
