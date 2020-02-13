@@ -3,9 +3,12 @@
 
 static const char A_SMALL_STEP_FOR_MAN[] = "1969-07-21T02:56:00Z";
 
+static const time_t MOCK_SECOND = 1951835;
+static const int MOCK_YEAR = 215500;
+
 int mock_gettimeofday(struct timeval *tv, void * /*tzv*/)
 {
-    tv->tv_sec = 1951835;
+    tv->tv_sec = MOCK_SECOND;
     tv->tv_usec = 0;
     return 0;
 }
@@ -13,9 +16,9 @@ int mock_gettimeofday(struct timeval *tv, void * /*tzv*/)
 struct tm *mock_localtime(const time_t *t)
 {
     static struct tm tm;
-    if (*t == 1951835)
+    if (*t == MOCK_SECOND)
     {
-        tm.tm_year = 2155;
+        tm.tm_year = MOCK_YEAR;
         return &tm;
     }
     else
@@ -26,7 +29,7 @@ struct tm *mock_localtime(const time_t *t)
 
 size_t mock_strftime(char *dest, size_t sz, const char *__restrict, const struct tm *tm)
 {
-    if (tm != nullptr && tm->tm_year == 2155)
+    if (tm != nullptr && tm->tm_year == MOCK_YEAR)
     {
         strncpy(dest, A_SMALL_STEP_FOR_MAN, sz);
     }
@@ -40,4 +43,9 @@ size_t mock_strftime(char *dest, size_t sz, const char *__restrict, const struct
 const char *mock_time_marker()
 {
     return A_SMALL_STEP_FOR_MAN;
+}
+
+time_t mock_time_timestamp()
+{
+    return MOCK_SECOND;
 }

@@ -48,48 +48,64 @@ public:
     {
         s = std::to_string(n);
     }
+
     String(const char *o)
     {
         s.assign(o);
     }
+
     const char *c_str() const
     {
         return s.c_str();
     }
+
     void reserve(size_t n)
     {
         s.reserve(n);
     }
+
     String &operator+=(const char *o)
     {
         s.append(o);
         return *this;
     }
+
     String &operator+=(const String &o)
     {
         s.append(o.s);
         return *this;
     }
+
     String &operator+=(int n)
     {
         s.append(std::to_string(n));
         return *this;
     }
+
     String &operator+=(unsigned long n)
     {
         s.append(std::to_string(n));
         return *this;
     }
+
     String &operator+=(long n)
     {
         s.append(std::to_string(n));
         return *this;
     }
+
     String &operator+=(unsigned n)
     {
         s.append(std::to_string(n));
         return *this;
     }
+
+    String &operator+=(uint16_t n)
+    {
+        s.append(std::to_string(n));
+        return *this;
+    }
+
     String &operator+=(char c)
     {
         s.append(1, c);
@@ -101,16 +117,19 @@ public:
         s.append(o->ptr);
         return 1;
     }
+
     unsigned char concat(const char *o)
     {
         s.append(o);
         return 1;
     }
+
     unsigned char concat(const String &o)
     {
         s.append(o.s);
         return 1;
     }
+
     unsigned char concat(unsigned o)
     {
         s.append(std::to_string(o));
@@ -178,11 +197,23 @@ public:
     }
 };
 
+inline String operator+(const String &l, const String &r)
+{
+    String s = l;
+    s += r;
+    return s;
+}
+
 inline String operator+(const String &o, const char *s)
 {
     String r = o;
     r += s;
     return r;
+}
+
+inline String operator+(const char *l, const String &r)
+{
+    return String(l) + r;
 }
 
 inline std::ostream &operator<<(std::ostream &o, const String &s)

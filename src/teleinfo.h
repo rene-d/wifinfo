@@ -142,6 +142,11 @@ public:
         return true;
     }
 
+    time_t get_timestamp() const
+    {
+        return timestamp_.tv_sec;
+    }
+
     String get_timestamp_iso8601() const
     {
         struct tm *tm = localtime(&timestamp_.tv_sec);
@@ -262,7 +267,7 @@ public:
                     if (offset_start_group_ < offset_ - 3)
                     {
                         // séparateur après la donnée
-                        int sep = frame_[offset_ - 2];
+                        char sep = frame_[offset_ - 2];
 
                         int checksum = frame_[offset_ - 1];
 
@@ -283,8 +288,16 @@ public:
 
                         if (sum == checksum)
                         {
-                            --offset_;               // supprime le checksum
+                            --offset_; // supprime le checksum
+
+                            // supprime les . qui terminent certaines valeurs (PTEC par exemple)
+                            while ((offset_ >= 2) && (frame_[offset_ - 2] == '.'))
+                            {
+                                --offset_;
+                            }
+
                             frame_[offset_ - 1] = 0; // écrase le dernier séparateur avec 0
+
                             state_ = wait_lf_or_etx;
                         }
                         else
