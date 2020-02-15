@@ -2,7 +2,7 @@
 // rene-d 2020
 
 // **********************************************************************************
-// ESP8266 Teleinfo WEB Server configuration Include file
+// ESP8266 Teleinfo WEB Server
 // **********************************************************************************
 // Creative Commons Attrib Share-Alike License
 // You are free to use/extend this library but please abide with the CC-BY-SA license:
@@ -72,8 +72,6 @@ void config_reset()
     sprintf_P(config.host, PSTR("WifInfo-%06X"), ESP.getChipId());
     strcpy_P(config.ota_auth, DEFAULT_OTA_AUTH);
     config.ota_port = DEFAULT_OTA_PORT;
-
-    // Add other init default config here
 
     // Emoncms
     strcpy_P(config.emoncms.host, CFG_EMON_DEFAULT_HOST);
@@ -203,6 +201,9 @@ void config_show()
     Serial.print(F("OTA port :"));
     Serial.println(config.ota_port);
 
+    Serial.print(F("SSE freq :"));
+    Serial.println(config.sse_freq);
+
     Serial.print(F("Config   :"));
     if (config.options & OPTION_LED_TINFO)
         Serial.print(F(" LED_TINFO"));
@@ -274,6 +275,7 @@ void config_get_json(String &r)
     js.append(CFG_FORM_OTA_AUTH, config.ota_auth);
     js.append(CFG_FORM_OTA_PORT, config.ota_port);
 
+    js.append(CFG_FORM_SSE_FREQ, config.sse_freq);
     js.append(CFG_LED_TINFO, (config.options & OPTION_LED_TINFO) ? 1 : 0);
 
     js.append(CFG_FORM_EMON_HOST, config.emoncms.host);
@@ -332,6 +334,8 @@ void config_handle_form(ESP8266WebServer &server)
         strncpy(config.ap_psk, server.arg(CFG_FORM_AP_PSK).c_str(), CFG_SSID_LENGTH);
         strncpy(config.ota_auth, server.arg(CFG_FORM_OTA_AUTH).c_str(), CFG_SSID_LENGTH);
         config.ota_port = validate_int(server.arg(CFG_FORM_OTA_PORT), 0, 65535, DEFAULT_OTA_PORT);
+
+        config.sse_freq = validate_int(server.arg(CFG_FORM_SSE_FREQ), 0, 360, 0);
 
         config.options = 0;
         if (server.hasArg(CFG_LED_TINFO))

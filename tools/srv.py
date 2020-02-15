@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
+# rene-d 2020
 
 # https://github.com/Mikhus/canvas-gauges/
 # https://www.chartjs.org/
-
 
 import time
 import flask
@@ -93,6 +93,7 @@ def config_json():
         "emon_freq": "0",
         "ota_auth": "OTA_WifInfo",
         "ota_port": "8266",
+        "sse_freq": 0,
         "jdom_host": "jeedom.local",
         "jdom_port": "80",
         "jdom_url": "/plugins/teleinfo/core/php/jeeTeleinfo.php",
