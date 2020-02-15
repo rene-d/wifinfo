@@ -4,7 +4,7 @@ WifInfo est un module de consignation de la téléinformation des compteurs éle
 
 ## Introduction
 
-Ce projet est la fusion de développements réalisés en vue du remplacement d'un [eco-devices](http://gce-electronics.com/fr/111-eco-devices) sur base de [ESP-01](https://fr.wikipedia.org/wiki/ESP8266) et de la une réécriture quasi complète - sauf la partie interface web - du projet homonyme de C-H. Hallard [LibTeleinfo](https://github.com/hallard/LibTeleinfo) avec des modifications notamment de [olileger](https://github.com/olileger/LibTeleinfo) et [Doume](https://github.com/Doume/LibTeleinfo).
+Ce projet est la fusion de développements réalisés en vue du remplacement d'un [eco-devices](http://gce-electronics.com/fr/111-eco-devices) sur base de [ESP-01](https://fr.wikipedia.org/wiki/ESP8266) et de la une réécriture quasi complète - sauf la partie interface web - du projet homonyme de [C-H. Hallard](http://hallard.me) [LibTeleinfo](https://github.com/hallard/LibTeleinfo) avec des modifications notamment de [olileger](https://github.com/olileger/LibTeleinfo) et [Doume](https://github.com/Doume/LibTeleinfo).
 
 * Meilleure séparation des fonctions dans des fichiers sources différents
 * Homogénéisation du nommage, nettoyage du code source
@@ -19,11 +19,67 @@ Ce projet est la fusion de développements réalisés en vue du remplacement d'u
 * Exemple de stack [InfluxDB](https://www.influxdata.com) + [Grafana](https://grafana.com) pour la visualisation des données (avec sonde Python et client SSE)
 * Utilisation de [PlatformIO](https://platformio.org) comme environnement de développement
 
-## Documentation
+La mise à jour OTA et les notifications jeedom/emoncms ne sont pas testées.
+
+## Références
 
 Documentation ERDF sur la [téléinformation client](https://www.enedis.fr/sites/default/files/Enedis-NOI-CPT_02E.pdf) pour les compteurs électroniques et pour les compteurs [Linky](https://www.enedis.fr/sites/default/files/Enedis-NOI-CPT_54E.pdf).
 
 Module [PiTInfo](https://hallard.me/pitinfov12/) et explications pourquoi le montage avec uniquement optocoupleur et résistances ne suffit pas avec un esp8266.
+
+## Interface web
+
+### Affichage dees gauges PAPP et IINST (en temps réel)
+
+![teleinfo](docs/gauges.png)
+
+### Affichage de données de téléinformation
+
+![teleinfo](docs/teleinfo.png)
+
+### Configuration des requêtes HTTP
+
+Les requêtes HTTP sont de type GET.
+
+Il y a 4 déclenchements possibles:
+* périodique
+* lors d'un changement de période tarifaire (exemple passage de HP à HC)
+* lors de dépassement d'un seuil haut ou retour à un seuil bas (en VA, test avec la valeur PAPP)
+* présence de l'étiquette ADPS (Avertissement de Dépassement de Puissance Souscrite)
+
+L'URI est constituée avec les étiquettes de téléinformation (`ADCO`, `HCHC`, `HCHP`, `PTEC`, `PAPP`, `IINST`, etc.) ainsi que des étiquettes internes:
+* date : date au format ISO8601 (ex: 2020-02-02T12:12:00+0100)
+* timestamp : temps en secondes (Unix epoch)
+* chipid : l'identifiant de l'esp8266 sous forme hexadécimale (0x0011AA)
+* type : type de déclenchement (`MAJ`: périodique, `PTEC`: changement tarif, `HAUT`: seuil haut, `BAS`: retour seuil bas, `ADPS`: dépassement, `NORM`: fin dépassement)
+
+La syntaxe pour utiliser les étiquettes est au choix:
+* `$NOM`
+* `~NOM~`
+
+Exemple: `/update.php?ptec=$PTEC&conso=~HCHC~+~HCHP~&id=$chipid` ⇒ `/update.php?ptec=HP&conso=4000+3000&id=0x0011AA`
+
+### Données JSON
+
+* http://wifinfo/json : téléinformation sous forme de dictionnaire JSON
+* http://wifinfo/tinfo.json : téléinformation sous forme de tableau JSON, utilisé par l'onglet Téléinformation de l'interface
+* http://wifinfo/system.json : état du système, utilisé par l'onglet Système de l'interface
+* http://wifinfo/config.json : état du système, utilisé par l'onglet Configuration de l'interface
+* http://wifinfo/wifiscan.json : liste des réseaux Wi-Fi, utilisé par l'onglet Configuration de l'interface
+* http://wifinfo/spiffs.json : liste des fichiers, utilisé par l'onglet Fichiers de l'interface
+
+### Autres requêtes
+
+* http://wifinfo/reset : permet de redémarrer le module
+* http://wifinfo/version : retourne la version (tag git) du système de fichiers
+
+### Client SSE
+
+Le événements SSE sont accessibles via deux URL: http://wifinfo/tic ou http://wifinfo/sse/tinfo.json, avec une limitiation à deux clients simultatnés.
+
+La donnée est la trame de téléinformation au format JSON, comme http://wifinfo/json.
+
+Elle est envoyée à chaque réception de trame depuis le compteur.
 
 ## Compilation
 
@@ -32,6 +88,16 @@ Le projet est prévu pour PlatformIO sous macOS ou Linux, en conjonction avec [V
 L'IDE d'Arduino peut également être utilisé.
 
 La page HTML est compressée avec [html-minifier](https://github.com/kangax/html-minifier) et gzip.
+
+
+### Options de compilation
+
+* `DEBUG` : active la sortie sur le port série TX et vitesse 115200. Non utilisable avec un compteur, il faut utiliser le client de test pour injecter des trames.
+* `ENABLE_CLI` : active les commandes par port série (`TAB` ou `ESC`)
+* `DISABLE_LED` : désactive l'utilisation de LED pour les cartes qui n'en ont pas
+* `ENABLE_OTA` : rajoute le code pour les mises à jour OTA **(non testé)**
+
+Nota: Sans l'option `DEBUG`, le port série est réglé à 1200 7E1 en RX uniquement. Il y a suffisamment d'outils de mise au point pour ne pas à devoir tester avec un compteur ou un autre microcontrôleur qui simule la téléinformation.
 
 ### PlatformtIO
 
@@ -44,7 +110,7 @@ platformio run -t upload
 
 ### IDE Arduino
 
-Cf. les nombreux tutos pour l'utilisation d'esp8266-arduino et l'upload de SPIFFS.
+Cf. les nombreux tutos pour l'utilisation d'esp8266-arduino et l'upload de SPIFFS. Il sera aussi nécessaire de rajouter la librairie SimpleCLI.
 
 Le répertoire `data` est préparé à l'aide du script suivant (nécessite python3, gzip, html-minifier) :
 
@@ -92,7 +158,7 @@ docker build -t tic .
 docker run --rm -ti -v $(pwd):/tic:ro -v $(pwd)/coverage:/coverage tic /tic/runtest.sh
 ```
 
-La couverture est disponible dans `./coverage/index.html`
+La couverture est disponible dans `./coverage/index.html`.
 
 ## Développement web
 
@@ -141,7 +207,7 @@ Le dashboard sera alors accessible à cette adresse: [http://localhost:3000/](ht
 
 Le montage final utilise un ESP-01S avec le module [PiTInfo](http://hallard.me/pitinfov12-light/) - à acheter sur [tindie](https://www.tindie.com/products/Hallard/pitinfo/). L'alimentation est assurée par un module USB.
 
-![teleinfo](docs/teleinfo.jpg)
+![teleinfo](docs/montage.jpg)
 
 ## Technologies utilisées
 
