@@ -110,7 +110,7 @@ void sys_get_info_json(String &response)
 
     js.append(F("SDK Version"), system_get_sdk_version());
 
-    sprintf_P(buffer, PSTR("0x%0X"), system_get_chip_id());
+    sprintf_P(buffer, PSTR("0x%06X"), ESP.getChipId());
     js.append(F("Chip ID"), buffer);
 
     sprintf_P(buffer, PSTR("0x%0X"), system_get_boot_version());

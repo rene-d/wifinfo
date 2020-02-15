@@ -160,7 +160,7 @@ TEST(notifs, http_notif)
     strcpy(config.httpReq.url, "/maj?id=$ChipID&i=$PAPP&y=$TYPE&t=$TimeStamp&d=$Date&r=$rien&blah");
     HTTPClient::begin_called = 0;
     http_notif("XYZ");
-    String url = "/maj?id=0x123ABC&i=1800&y=XYZ&t=" + String(mock_time_timestamp()) + "&d=" + String(mock_time_marker()) + "&r=&blah";
+    String url = "/maj?id=0x0012AB&i=1800&y=XYZ&t=" + String(mock_time_timestamp()) + "&d=" + String(mock_time_marker()) + "&r=&blah";
     ASSERT_EQ(HTTPClient::begin_called, 1);
     ASSERT_EQ(HTTPClient::begin_url, url);
     ASSERT_EQ(HTTPClient::begin_port, 88);

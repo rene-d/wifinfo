@@ -153,27 +153,27 @@ Le montage final utilise un ESP-01S avec le module [PiTInfo](http://hallard.me/p
 * [html-minifier](https://github.com/kangax/html-minifier) : Javascript-based HTML compressor/minifier
 
 ### Tests unitaires
-* [Docker](https://www.docker.com)
+* [Docker](https://www.docker.com) ou [Docker Desktop](https://www.docker.com/products/docker-desktop)
 * [CMake](https://cmake.org)
 * [Google Test](https://github.com/google/googletest) : Google Testing and Mocking Framework
 * [nlohmann json](https://github.com/nlohmann/json) : JSON for Modern C++
 * [lcov](http://ltp.sourceforge.net/coverage/lcov.php) : front-end for GCC's coverage testing tool gcov
 
 ### Client de test/injecteur de téléinfo
-* Python3
+* [Python3.6+](https://www.python.org)
 * [pyserial](https://pypi.org/project/pyserial/) : Python Serial Port Extension
 
 ### Développement web
-* Python3
+* [Python3.6+](https://www.python.org)
 * [Flask](https://pypi.org/project/Flask/) : A simple framework for building complex web applications.
 * [Flask-Cors](https://pypi.org/project/Flask-Cors/) : A Flask extension adding a decorator for CORS support
 
 ### Développement web/vrai module
 * [Docker](https://www.docker.com) ou [Docker Desktop](https://www.docker.com/products/docker-desktop)
-* [nginx]http://nginx.org dans un [conteneur](https://hub.docker.com/_/nginx)
+* [nginx](http://nginx.org) dans un [conteneur](https://hub.docker.com/_/nginx)
 
 ### Client SSE
-* Python3
+* [Python3.6+](https://www.python.org)
 * [sseclient](https://pypi.org/project/sseclient/) : Python client library for reading Server Sent Event streams.
 * [click](https://pypi.org/project/click/) : Composable command line interface toolkit
 
@@ -187,7 +187,6 @@ Le montage final utilise un ESP-01S avec le module [PiTInfo](http://hallard.me/p
     - [sseclient](https://pypi.org/project/sseclient/) : Python client library for reading Server Sent Event streams.
     - [click](https://pypi.org/project/click/) : Composable command line interface toolkit
     - [influxdb](https://pypi.org/project/influxdb/) : InfluxDB client
-
 
 ## Licence
 

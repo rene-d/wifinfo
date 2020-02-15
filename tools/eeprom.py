@@ -24,6 +24,7 @@ def get_eeprom_base():
     print(f"Taille flash détectée: {mem}")
 
     # cf. framework-arduinoespressif8266/tools/sdk/ld/eagle.flash.*.ld
+    # ATTENTION : ceci est valable pour les boards esp12 et esp1_1m configurés dans platformio.ini
     if mem == "4MB":
         base = 0x405FB000
     elif mem == "1MB":
