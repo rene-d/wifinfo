@@ -131,6 +131,10 @@ void sys_get_info_json(String &response)
 #ifdef ENABLE_OTA
     flags += F(" ENABLE_OTA");
 #endif
+#ifdef ENABLE_CPULOAD
+    flags += F(" ENABLE_CPULOAD");
+#endif
+
     js.append(F("Options"), flags);
 
     js.append(F("SDK Version"), system_get_sdk_version());
