@@ -35,21 +35,12 @@ TVA_20 = 1.20  # TVA 20%
 
 @click.command()
 @click.option(
-    "-freq",
-    "frequency",
-    help="fréquence d'écriture dans la base InfluxDb",
-    type=click.IntRange(5, 3600),
-    default=10,
+    "-freq", "frequency", help="fréquence d'écriture dans la base InfluxDb", type=click.IntRange(5, 3600), default=10,
 )
 @click.option(
-    "-module",
-    "wifinfo_addr",
-    help="adresse IP du module WifInfo",
-    default="192.168.4.1",
+    "-module", "wifinfo_addr", help="adresse IP du module WifInfo", default="192.168.4.1",
 )
-@click.option(
-    "-host", "influxdb_addr", help="adresse IP du module WifInfo", default="localhost"
-)
+@click.option("-host", "influxdb_addr", help="adresse IP du module WifInfo", default="localhost")
 def main(frequency, wifinfo_addr, influxdb_addr):
 
     tarif_hc_ttc = (TARIF_HC + TCFE + CSPE) * TVA_20
@@ -65,7 +56,10 @@ def main(frequency, wifinfo_addr, influxdb_addr):
     while True:
         try:
             if not {"name": database} in client.get_list_database():
-                client.create_database(database)
+                # client.create_database(database)
+                client.query(
+                    f'CREATE DATABASE "{database}" WITH DURATION 30d REPLICATION 1 NAME "month"', method="POST"
+                )
             client.switch_database(database)
         except requests.exceptions.ConnectionError:
             logging.info("InfluxDB is not reachable. Waiting 5 seconds to retry.")
