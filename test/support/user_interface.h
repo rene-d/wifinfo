@@ -5,7 +5,7 @@ class ESPClass
 public:
     uint32_t getChipId() const
     {
-        return 0x123ABC;
+        return 0x12AB;
     }
 
     uint32_t getSketchSize() const
