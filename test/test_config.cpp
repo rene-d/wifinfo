@@ -22,5 +22,5 @@ TEST(config, get_json)
 
     ASSERT_EQ(j1["ssid"], config.ssid);
     ASSERT_EQ(j1["host"], config.host);
-    ASSERT_EQ(j1["httpreq_port"], config.httpReq.port);
+    ASSERT_EQ(j1["httpreq_port"], config.httpreq.port);
 }

@@ -77,7 +77,7 @@ def write_eeprom(config):
         config["host"].encode(),
         config["ap_psk"].encode(),
         config["ota_auth"].encode(),
-        config["cfg_led_info"],
+        config["cfg_led_tinfo"],
         config["ota_port"],
         b"",  # filler
         emoncms,
@@ -111,7 +111,7 @@ def read_eeprom(eeprom):
     config["host"] = d[2].rstrip(b"\0").decode()
     config["ap_psk"] = d[3].rstrip(b"\0").decode()
     config["ota_auth"] = d[4].rstrip(b"\0").decode()
-    config["cfg_led_info"] = d[5] & 1
+    config["cfg_led_tinfo"] = d[5] & 1
     config["ota_port"] = d[6]
 
     emoncms = struct.unpack_from("<33s33s33sHBI", d[8])

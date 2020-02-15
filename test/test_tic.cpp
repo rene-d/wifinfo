@@ -49,19 +49,19 @@ static void test_config_notif(bool emoncms, bool jeedom, bool httpreq)
 
     if (httpreq)
     {
-        strcpy(config.httpReq.host, "sql.home");
-        config.httpReq.port = 88;
-        strcpy(config.httpReq.url, "/tinfo.php?hchc=$HCHC&hchp=$HCHP&papp=$PAPP");
-        config.httpReq.freq = 15;
-        config.httpReq.trigger_ptec = 0;
-        config.httpReq.trigger_seuils = 0;
-        config.httpReq.trigger_adps = 0;
-        config.httpReq.seuil_haut = 5900;
-        config.httpReq.seuil_bas = 4200;
+        strcpy(config.httpreq.host, "sql.home");
+        config.httpreq.port = 88;
+        strcpy(config.httpreq.url, "/tinfo.php?hchc=$HCHC&hchp=$HCHP&papp=$PAPP");
+        config.httpreq.freq = 15;
+        config.httpreq.trigger_ptec = 0;
+        config.httpreq.trigger_seuils = 0;
+        config.httpreq.trigger_adps = 0;
+        config.httpreq.seuil_haut = 5900;
+        config.httpreq.seuil_bas = 4200;
     }
     else
     {
-        strcpy(config.httpReq.host, "");
+        strcpy(config.httpreq.host, "");
     }
 }
 
@@ -141,7 +141,7 @@ TEST(notifs, http_notif)
     tinfo_init(1800, false);
 
     // syntaxe 1: ~HCHC~
-    strcpy(config.httpReq.url, "/tinfo.php?hchc=~HCHC~&hchp=~HCHP~&papp=~PAPP~&o=$OPTARIF&tilde=~~");
+    strcpy(config.httpreq.url, "/tinfo.php?hchc=~HCHC~&hchp=~HCHP~&papp=~PAPP~&o=$OPTARIF&tilde=~~");
     HTTPClient::begin_called = 0;
     http_notif("MAJ");
     ASSERT_EQ(HTTPClient::begin_called, 1);
@@ -150,14 +150,14 @@ TEST(notifs, http_notif)
     ASSERT_EQ(HTTPClient::begin_host, "sql.home");
 
     // syntaxe 2: $HCHC
-    strcpy(config.httpReq.url, "/tinfo.php?hchc=$HCHC&hchp=$HCHP&papp=$PAPP&ptec=$PTEC&dollar=$$");
+    strcpy(config.httpreq.url, "/tinfo.php?hchc=$HCHC&hchp=$HCHP&papp=$PAPP&ptec=$PTEC&dollar=$$");
     HTTPClient::begin_called = 0;
     http_notif("MAJ");
     ASSERT_EQ(HTTPClient::begin_called, 1);
     ASSERT_EQ(HTTPClient::begin_url, "/tinfo.php?hchc=52890470&hchp=49126843&papp=1800&ptec=HP&dollar=$");
 
     // les étiquettes spéciales (non case sensitive)
-    strcpy(config.httpReq.url, "/maj?id=$ChipID&i=$PAPP&y=$TYPE&t=$TimeStamp&d=$Date&r=$rien&blah");
+    strcpy(config.httpreq.url, "/maj?id=$ChipID&i=$PAPP&y=$TYPE&t=$TimeStamp&d=$Date&r=$rien&blah");
     HTTPClient::begin_called = 0;
     http_notif("XYZ");
     String url = "/maj?id=0x0012AB&i=1800&y=XYZ&t=" + String(mock_time_timestamp()) + "&d=" + String(mock_time_marker()) + "&r=&blah";
@@ -172,7 +172,7 @@ TEST(notifs, http_notif)
 TEST(notifs, http_timer)
 {
     test_config_notif(false, false, true);
-    strcpy(config.httpReq.url, "/tinfo.php?p=$PAPP&t=$type");
+    strcpy(config.httpreq.url, "/tinfo.php?p=$PAPP&t=$type");
 
     tinfo_init(1234, false);
 
@@ -203,7 +203,7 @@ TEST(notifs, http_timer)
     ASSERT_EQ(HTTPClient::begin_url, "/tinfo.php?p=4321&t=MAJ");
 
     // pas de requête http même si le timer se déclenche
-    strcpy(config.httpReq.host, "");
+    strcpy(config.httpreq.host, "");
     HTTPClient::begin_called = 0;
     timer_http.trigger();
     tic_notifs();
@@ -215,8 +215,8 @@ TEST(notifs, http_timer)
 TEST(notifs, http_ptec)
 {
     test_config_notif(false, false, true);
-    strcpy(config.httpReq.url, "/tinfo.php?p=$PAPP&ptec=$PTEC&t=$type");
-    config.httpReq.trigger_ptec = 1; // active les notifs de PTEC
+    strcpy(config.httpreq.url, "/tinfo.php?p=$PAPP&ptec=$PTEC&t=$type");
+    config.httpreq.trigger_ptec = 1; // active les notifs de PTEC
 
     tinfo_init();
 
@@ -244,7 +244,7 @@ TEST(notifs, http_ptec)
     ASSERT_EQ(HTTPClient::begin_url, "/tinfo.php?p=1000&ptec=HP&t=PTEC");
 
     // désactive les notifs de période en cours
-    config.httpReq.trigger_ptec = 0;
+    config.httpreq.trigger_ptec = 0;
 
     // test passage en heures creuses
     // notifs désactivées: pas de requête
@@ -266,8 +266,8 @@ TEST(notifs, http_seuils)
     tinfo_init();
 
     // active les notifs de seuils
-    strcpy(config.httpReq.url, "/tinfo.php?p=$PAPP&t=$type");
-    config.httpReq.trigger_seuils = 1;
+    strcpy(config.httpreq.url, "/tinfo.php?p=$PAPP&t=$type");
+    config.httpreq.trigger_seuils = 1;
 
     HTTPClient::begin_called = 0;
     tic_notifs();
@@ -311,8 +311,8 @@ TEST(notifs, http_adps)
     test_config_notif(false, false, true);
 
     // active les notifications de dépassement
-    strcpy(config.httpReq.url, "/tinfo.php?p=$PAPP&t=$type");
-    config.httpReq.trigger_adps = 1;
+    strcpy(config.httpreq.url, "/tinfo.php?p=$PAPP&t=$type");
+    config.httpreq.trigger_adps = 1;
 
     HTTPClient::begin_called = 0;
 

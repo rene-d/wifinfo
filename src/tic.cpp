@@ -43,7 +43,7 @@ void tic_decode(int c)
 
     if (tinfo_decoder.ready())
     {
-        if (config.config & CONFIG_LED_TINFO)
+        if (config.options & OPTION_LED_TINFO)
             led_on();
 
         tinfo.copy_from(tinfo_decoder);
@@ -57,7 +57,7 @@ void tic_decode(int c)
 
         tic_notifs();
 
-        if (config.config & CONFIG_LED_TINFO)
+        if (config.options & OPTION_LED_TINFO)
             led_off();
     }
 }
@@ -65,19 +65,19 @@ void tic_decode(int c)
 // appelée chaque fois qu'une trame de teleinfo valide est reçue
 void tic_notifs()
 {
-    if (config.httpReq.host[0] != 0)
+    if (config.httpreq.host[0] != 0)
     {
-        if (config.httpReq.trigger_ptec)
+        if (config.httpreq.trigger_ptec)
         {
             http_notif_periode_en_cours();
         }
 
-        if (config.httpReq.trigger_seuils)
+        if (config.httpreq.trigger_seuils)
         {
             http_notif_seuils();
         }
 
-        if (config.httpReq.trigger_adps)
+        if (config.httpreq.trigger_adps)
         {
             http_notif_adps();
         }
@@ -109,15 +109,15 @@ void tic_notifs()
 void tic_make_timers()
 {
     // http
-    if (config.httpReq.freq == 0 || config.httpReq.host[0] == 0 || config.httpReq.port == 0)
+    if (config.httpreq.freq == 0 || config.httpreq.host[0] == 0 || config.httpreq.port == 0)
     {
         timer_http.resetToNeverExpires();
         Serial.println("timer_http disabled");
     }
     else
     {
-        timer_http.reset(config.httpReq.freq * 1000);
-        Serial.printf("timer_http enabled, freq=%d s\n", config.httpReq.freq);
+        timer_http.reset(config.httpreq.freq * 1000);
+        Serial.printf("timer_http enabled, freq=%d s\n", config.httpreq.freq);
     }
 
     // jeedom
@@ -233,11 +233,11 @@ static void http_add_value_ex(String &uri, const char *label, const char *notif)
 void http_notif(const char *notif)
 {
     String uri;
-    uri.reserve(strlen(config.httpReq.url) + 32);
+    uri.reserve(strlen(config.httpreq.url) + 32);
 
     char label[16];
 
-    for (const char *p = config.httpReq.url; *p; ++p)
+    for (const char *p = config.httpreq.url; *p; ++p)
     {
         if (*p == '~')
         {
@@ -285,7 +285,7 @@ void http_notif(const char *notif)
     }
 
     Serial.printf_P(PSTR("http_notif: %s\n"), notif);
-    http_request(config.httpReq.host, config.httpReq.port, uri);
+    http_request(config.httpreq.host, config.httpreq.port, uri);
 }
 
 void http_notif_periode_en_cours()
@@ -344,12 +344,12 @@ void http_notif_seuils()
     if (papp == 0)
         return;
 
-    if ((papp >= config.httpReq.seuil_haut) && (seuil_en_cours == BAS))
+    if ((papp >= config.httpreq.seuil_haut) && (seuil_en_cours == BAS))
     {
         seuil_en_cours = HAUT;
         http_notif(HTTP_NOTIF_TYPE_HAUT);
     }
-    else if ((papp <= config.httpReq.seuil_bas) && (seuil_en_cours == HAUT))
+    else if ((papp <= config.httpreq.seuil_bas) && (seuil_en_cours == HAUT))
     {
         seuil_en_cours = BAS;
         http_notif(HTTP_NOTIF_TYPE_BAS);

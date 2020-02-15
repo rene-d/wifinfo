@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # rene-d 2020
 
-# dashboard:
+# à utiliser avec un dashboard comme celui-ci:
 #   https://www.kozodo.com/blog/techno/article.php?id=32
 
 """
@@ -17,7 +17,7 @@ import json
 import click
 
 
-# Tarifs EDF réglementés fin 2019
+# Tarifs réglementés EDF fin 2019
 
 # TVA à 5.5%
 ABO = 17.16  # Heures Creuses - 06kVA
@@ -89,14 +89,13 @@ def main(frequency, wifinfo_addr, influxdb_addr):
                 "tags": {"host": data["ADCO"]},
                 "time": data["timestamp"],
                 "fields": {
-                    "COSTHC": data["HCHC"] / 1000 * tarif_hc_ttc,
-                    "COSTHP": data["HCHP"] / 1000 * tarif_hp_ttc,
+                    "COSTHC": round(data["HCHC"] / 1000 * tarif_hc_ttc, 4),
+                    "COSTHP": round(data["HCHP"] / 1000 * tarif_hp_ttc, 4),
                     "HCHC": data["HCHC"],
                     "HCHP": data["HCHP"],
                     "PAPP": data["PAPP"],
                     "IINST": data["IINST"],
-                    "IMAX": data["IMAX"],
-                    "PTEC": data["PTEC"][:2],
+                    "PTEC": data["PTEC"],
                 },
             }
         ]

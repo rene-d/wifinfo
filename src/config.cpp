@@ -87,9 +87,9 @@ void config_reset()
     strcpy_P(config.jeedom.adco, CFG_JDOM_DEFAULT_ADCO);
 
     // HTTP Request
-    strcpy_P(config.httpReq.host, CFG_HTTPREQ_DEFAULT_HOST);
-    config.httpReq.port = CFG_HTTPREQ_DEFAULT_PORT;
-    strcpy_P(config.httpReq.url, CFG_HTTPREQ_DEFAULT_URL);
+    strcpy_P(config.httpreq.host, CFG_HTTPREQ_DEFAULT_HOST);
+    config.httpreq.port = CFG_HTTPREQ_DEFAULT_PORT;
+    strcpy_P(config.httpreq.url, CFG_HTTPREQ_DEFAULT_URL);
 
     // save back
     config_save();
@@ -204,7 +204,7 @@ void config_show()
     Serial.println(config.ota_port);
 
     Serial.print(F("Config   :"));
-    if (config.config & CONFIG_LED_TINFO)
+    if (config.options & OPTION_LED_TINFO)
         Serial.print(F(" LED_TINFO"));
     Serial.println();
 
@@ -238,25 +238,25 @@ void config_show()
 
     Serial.println(F("===== HTTP request"));
     Serial.print(F("host      : "));
-    Serial.println(config.httpReq.host);
+    Serial.println(config.httpreq.host);
     Serial.print(F("port      : "));
-    Serial.println(config.httpReq.port);
+    Serial.println(config.httpreq.port);
     Serial.print(F("url       : "));
-    Serial.println(config.httpReq.url);
+    Serial.println(config.httpreq.url);
     Serial.print(F("freq      : "));
-    Serial.println(config.httpReq.freq);
+    Serial.println(config.httpreq.freq);
     Serial.print(F("notifs    :"));
-    if (config.httpReq.trigger_ptec)
+    if (config.httpreq.trigger_ptec)
         Serial.print(F(" PTEC"));
-    if (config.httpReq.trigger_adps)
+    if (config.httpreq.trigger_adps)
         Serial.print(F(" ADPS"));
-    if (config.httpReq.trigger_seuils)
+    if (config.httpreq.trigger_seuils)
         Serial.print(F(" seuils"));
     Serial.println();
     Serial.print(F("seuil bas : "));
-    Serial.println(config.httpReq.seuil_bas);
+    Serial.println(config.httpreq.seuil_bas);
     Serial.print(F("seuil haut: "));
-    Serial.println(config.httpReq.seuil_haut);
+    Serial.println(config.httpreq.seuil_haut);
 
     Serial.flush();
 }
@@ -274,7 +274,7 @@ void config_get_json(String &r)
     js.append(CFG_FORM_OTA_AUTH, config.ota_auth);
     js.append(CFG_FORM_OTA_PORT, config.ota_port);
 
-    js.append(FPSTR("cfg_led_info"), (config.config & CONFIG_LED_TINFO) ? 1 : 0);
+    js.append(CFG_LED_TINFO, (config.options & OPTION_LED_TINFO) ? 1 : 0);
 
     js.append(CFG_FORM_EMON_HOST, config.emoncms.host);
     js.append(CFG_FORM_EMON_PORT, config.emoncms.port);
@@ -290,16 +290,16 @@ void config_get_json(String &r)
     js.append(CFG_FORM_JDOM_ADCO, config.jeedom.adco);
     js.append(CFG_FORM_JDOM_FREQ, config.jeedom.freq);
 
-    js.append(CFG_FORM_HTTPREQ_HOST, config.httpReq.host);
-    js.append(CFG_FORM_HTTPREQ_PORT, config.httpReq.port);
-    js.append(CFG_FORM_HTTPREQ_URL, config.httpReq.url);
-    js.append(CFG_FORM_HTTPREQ_FREQ, config.httpReq.freq);
+    js.append(CFG_FORM_HTTPREQ_HOST, config.httpreq.host);
+    js.append(CFG_FORM_HTTPREQ_PORT, config.httpreq.port);
+    js.append(CFG_FORM_HTTPREQ_URL, config.httpreq.url);
+    js.append(CFG_FORM_HTTPREQ_FREQ, config.httpreq.freq);
 
-    js.append(CFG_FORM_HTTPREQ_TRIGGER_PTEC, config.httpReq.trigger_ptec);
-    js.append(CFG_FORM_HTTPREQ_TRIGGER_ADPS, config.httpReq.trigger_adps);
-    js.append(CFG_FORM_HTTPREQ_TRIGGER_SEUILS, config.httpReq.trigger_seuils);
-    js.append(CFG_FORM_HTTPREQ_SEUIL_BAS, config.httpReq.seuil_bas);
-    js.append(CFG_FORM_HTTPREQ_SEUIL_HAUT, config.httpReq.seuil_haut, true);
+    js.append(CFG_FORM_HTTPREQ_TRIGGER_PTEC, config.httpreq.trigger_ptec);
+    js.append(CFG_FORM_HTTPREQ_TRIGGER_ADPS, config.httpreq.trigger_adps);
+    js.append(CFG_FORM_HTTPREQ_TRIGGER_SEUILS, config.httpreq.trigger_seuils);
+    js.append(CFG_FORM_HTTPREQ_SEUIL_BAS, config.httpreq.seuil_bas);
+    js.append(CFG_FORM_HTTPREQ_SEUIL_HAUT, config.httpreq.seuil_haut, true);
 }
 
 static int validate_int(const String &value, int a, int b, int d)
@@ -325,45 +325,45 @@ void config_handle_form(ESP8266WebServer &server)
         Serial.println(F("===== Posted configuration"));
 #endif
 
-        // WifInfo
+        // Wi-Fi et avancé
         strncpy(config.ssid, server.arg(CFG_FORM_SSID).c_str(), CFG_SSID_LENGTH);
-        strncpy(config.psk, server.arg("psk").c_str(), CFG_SSID_LENGTH);
-        strncpy(config.host, server.arg("host").c_str(), CFG_HOSTNAME_LENGTH);
-        strncpy(config.ap_psk, server.arg("ap_psk").c_str(), CFG_SSID_LENGTH);
-        strncpy(config.ota_auth, server.arg("ota_auth").c_str(), CFG_SSID_LENGTH);
-        config.ota_port = validate_int(server.arg("ota_port"), 0, 65535, DEFAULT_OTA_PORT);
+        strncpy(config.psk, server.arg(CFG_FORM_PSK).c_str(), CFG_SSID_LENGTH);
+        strncpy(config.host, server.arg(CFG_FORM_HOST).c_str(), CFG_HOSTNAME_LENGTH);
+        strncpy(config.ap_psk, server.arg(CFG_FORM_AP_PSK).c_str(), CFG_SSID_LENGTH);
+        strncpy(config.ota_auth, server.arg(CFG_FORM_OTA_AUTH).c_str(), CFG_SSID_LENGTH);
+        config.ota_port = validate_int(server.arg(CFG_FORM_OTA_PORT), 0, 65535, DEFAULT_OTA_PORT);
 
-        config.config = 0;
-        if (server.hasArg("cfg_led_tinfo"))
-            config.config |= CONFIG_LED_TINFO;
+        config.options = 0;
+        if (server.hasArg(CFG_LED_TINFO))
+            config.options |= OPTION_LED_TINFO;
 
         // Emoncms
-        strncpy(config.emoncms.host, server.arg("emon_host").c_str(), CFG_EMON_HOST_LENGTH);
-        strncpy(config.emoncms.url, server.arg("emon_url").c_str(), CFG_EMON_URL_LENGTH);
-        strncpy(config.emoncms.apikey, server.arg("emon_apikey").c_str(), CFG_EMON_APIKEY_LENGTH);
-        config.emoncms.node = validate_int(server.arg("emon_node"), 0, 255, 0);
-        config.emoncms.port = validate_int(server.arg("emon_port"), 0, 65535, CFG_EMON_DEFAULT_PORT);
-        config.emoncms.freq = validate_int(server.arg("emon_freq"), 0, 86400, 0);
+        strncpy(config.emoncms.host, server.arg(CFG_FORM_EMON_HOST).c_str(), CFG_EMON_HOST_LENGTH);
+        config.emoncms.port = validate_int(server.arg(CFG_FORM_EMON_PORT), 0, 65535, CFG_EMON_DEFAULT_PORT);
+        strncpy(config.emoncms.url, server.arg(CFG_FORM_EMON_URL).c_str(), CFG_EMON_URL_LENGTH);
+        strncpy(config.emoncms.apikey, server.arg(CFG_FORM_EMON_KEY).c_str(), CFG_EMON_KEY_LENGTH);
+        config.emoncms.node = validate_int(server.arg(CFG_FORM_EMON_NODE), 0, 255, 0);
+        config.emoncms.freq = validate_int(server.arg(CFG_FORM_EMON_FREQ), 0, 86400, 0);
 
         // jeedom
         strncpy(config.jeedom.host, server.arg(CFG_FORM_JDOM_HOST).c_str(), CFG_JDOM_HOST_LENGTH);
-        strncpy(config.jeedom.url, server.arg(CFG_FORM_JDOM_URL).c_str(), CFG_JDOM_URL_LENGTH);
-        strncpy(config.jeedom.apikey, server.arg(CFG_FORM_JDOM_KEY).c_str(), CFG_JDOM_APIKEY_LENGTH);
-        strncpy(config.jeedom.adco, server.arg(CFG_FORM_JDOM_ADCO).c_str(), CFG_JDOM_ADCO_LENGTH);
         config.jeedom.port = validate_int(server.arg(CFG_FORM_JDOM_PORT), 0, 65535, CFG_JDOM_DEFAULT_PORT);
+        strncpy(config.jeedom.url, server.arg(CFG_FORM_JDOM_URL).c_str(), CFG_JDOM_URL_LENGTH);
+        strncpy(config.jeedom.apikey, server.arg(CFG_FORM_JDOM_KEY).c_str(), CFG_JDOM_KEY_LENGTH);
+        strncpy(config.jeedom.adco, server.arg(CFG_FORM_JDOM_ADCO).c_str(), CFG_JDOM_ADCO_LENGTH);
         config.jeedom.freq = validate_int(server.arg(CFG_FORM_JDOM_FREQ), 0, 86400, 0);
 
         // HTTP Request
-        strncpy(config.httpReq.host, server.arg(CFG_FORM_HTTPREQ_HOST).c_str(), CFG_HTTPREQ_HOST_LENGTH);
-        strncpy(config.httpReq.url, server.arg(CFG_FORM_HTTPREQ_URL).c_str(), CFG_HTTPREQ_URL_LENGTH);
-        config.httpReq.port = validate_int(server.arg(CFG_FORM_HTTPREQ_PORT), 0, 65535, CFG_HTTPREQ_DEFAULT_PORT);
-        config.httpReq.freq = validate_int(server.arg(CFG_FORM_HTTPREQ_FREQ), 0, 86400, 0);
+        strncpy(config.httpreq.host, server.arg(CFG_FORM_HTTPREQ_HOST).c_str(), CFG_HTTPREQ_HOST_LENGTH);
+        config.httpreq.port = validate_int(server.arg(CFG_FORM_HTTPREQ_PORT), 0, 65535, CFG_HTTPREQ_DEFAULT_PORT);
+        strncpy(config.httpreq.url, server.arg(CFG_FORM_HTTPREQ_URL).c_str(), CFG_HTTPREQ_URL_LENGTH);
+        config.httpreq.freq = validate_int(server.arg(CFG_FORM_HTTPREQ_FREQ), 0, 86400, 0);
 
-        config.httpReq.trigger_ptec = server.hasArg(CFG_FORM_HTTPREQ_TRIGGER_PTEC);
-        config.httpReq.trigger_adps = server.hasArg(CFG_FORM_HTTPREQ_TRIGGER_ADPS);
-        config.httpReq.trigger_seuils = server.hasArg(CFG_FORM_HTTPREQ_TRIGGER_SEUILS);
-        config.httpReq.seuil_bas = validate_int(server.arg(CFG_FORM_HTTPREQ_SEUIL_BAS), 0, 20000, 0);
-        config.httpReq.seuil_haut = validate_int(server.arg(CFG_FORM_HTTPREQ_SEUIL_HAUT), 0, 20000, 0);
+        config.httpreq.trigger_adps = server.hasArg(CFG_FORM_HTTPREQ_TRIGGER_ADPS);
+        config.httpreq.trigger_ptec = server.hasArg(CFG_FORM_HTTPREQ_TRIGGER_PTEC);
+        config.httpreq.trigger_seuils = server.hasArg(CFG_FORM_HTTPREQ_TRIGGER_SEUILS);
+        config.httpreq.seuil_bas = validate_int(server.arg(CFG_FORM_HTTPREQ_SEUIL_BAS), 0, 20000, 0);
+        config.httpreq.seuil_haut = validate_int(server.arg(CFG_FORM_HTTPREQ_SEUIL_HAUT), 0, 20000, 0);
 
         if (config_save())
         {
