@@ -13,9 +13,10 @@ Ce projet est la fusion de développements réalisés en vue du remplacement d'u
 * Notifications HTTP sur changements HC/HP et dépasssement de seuils ou ADPS
 * Client en liaison série pour mise au point avec [SimpleCLI](https://github.com/spacehuhn/SimpleCLI)
 * Tests sur PC avec [Google Test](https://github.com/google/googletest) et couverture avec [lcov](http://ltp.sourceforge.net/coverage/lcov.php)
-* Client Python de simulation [cli.py](./cli.py) sur base de `miniterm.py` de [pySerial](https://pyserial.readthedocs.io/)
+* Client Python de simulation [cli.py](tools/cli.py) sur base de `miniterm.py` de [pyserial](https://pyserial.readthedocs.io/)
 * Compression et minimisation de la partie web avant écriture du filesystem (`data_src` ⇒ `data` au moment du build)
 * Serveur Python [Flask](https://www.palletsprojects.com/p/flask/) pour développement de la partie web
+* Exemple de stack [InfluxDB](https://www.influxdata.com) + [Grafana](https://grafana.com) pour la visualisation des données (avec sonde Python et client SSE)
 * Utilisation de [PlatformIO](https://platformio.org) comme environnement de développement
 
 ## Documentation
@@ -26,12 +27,15 @@ Module [PiTInfo](https://hallard.me/pitinfov12/) et explications pourquoi le mon
 
 ## Compilation
 
-Le projet est prévu pour PlatformIO sous macOS ou Linux, en conjonction avec [Visual Studio Code](https://code.visualstudio.com) et son l'extension [PlatformIO](https://marketplace.visualstudio.com/items?itemName=platformio.platformio-ide).
+Le projet est prévu pour PlatformIO sous macOS ou Linux, en conjonction avec [Visual Studio Code](https://code.visualstudio.com) et son extension [PlatformIO](https://marketplace.visualstudio.com/items?itemName=platformio.platformio-ide).
+
 L'IDE d'Arduino peut également être utilisé.
 
 La page HTML est compressée avec [html-minifier](https://github.com/kangax/html-minifier) et gzip.
 
 ### PlatformtIO
+
+Avec PlatformIO (soit ligne de commandes, soit extension Visual Studio Code):
 
 ```bash
 platformio run -t uploadfs
@@ -50,47 +54,52 @@ python3 prep_data_folder.py
 
 ## Client de test/mise au point
 
+[cli.py](tools/cli.py) est un terminal série qui permet d'injecter de la téléinformation
+
 ```bash
-pip3 install pySerial
-python3 cli.py [port]
+pip3 install pyserial click
+./cli.py
 ```
 
-Pour activer le mode commande, il faut taper <TAB> puis la commande (ls, config, time, esp, ...).
+Pour activer le mode commande (si compilé avec l'option `ENABLE_CLI`), il faut taper <TAB> ou <ESC> puis la commande (ls, config, time, esp, ...).
 
 * `Ctrl-T` envoie une trame de téléinformation
 * `Ctrl-Y` bascule l'envoi automatique de trames
 * `Ctrl-P` bascule entre heures creuses et heures pleines
 * `Ctrl-C` sort du client
 
-## Tests unitaires
+[sse.py][tools/sse.py] est un client SSE. Lorsque WifInfo a un client connecté, il envoie toutes les trames reçues du compteur sur cette socket.
 
-Les tests unitaires et la couverture sont faites dans un conteneur Docker.
-
-Néanmoins, les logiciels et librairies suivants sont nécessaires:
-* [CMake](https://cmake.org)
-* [Google Test](https://github.com/google/googletest)
-* [nlohmann json](https://github.com/nlohmann/json)
-* [lcov](http://ltp.sourceforge.net/coverage/lcov.php)
-
-Préparation de l'image:
 ```bash
-docker build -t tic .
+pip3 install sseclient click
+./sse.py
 ```
 
-Lancement des tests et couverture:
+## Tests unitaires
+
+Sans Docker:
 ```bash
+mkdir -p build && cd build
+cmake .. -DCODE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug
+make
+make test
+```
+L'installation de certains outils et librairies est nécessaire.
+
+Avec Docker (tout est packagé dans l'image Docker):
+```bash
+docker build -t tic .
 docker run --rm -ti -v $(pwd):/tic:ro -v $(pwd)/coverage:/coverage tic /tic/runtest.sh
 ```
 
 La couverture est disponible dans `./coverage/index.html`
-
 
 ## Développement web
 
 ### Avec module simulé (aucun esp8266 requis)
 
 ```bash
-pip3 install flask flask_cors
+pip3 install flask flask-cors
 python3 tools/srv.py
 ```
 L'interface est alors disponible à cette adresse: [http://localhost:5000/](http://localhost:5000/).
@@ -104,11 +113,81 @@ tools/httpdev.sh [adresse IP du module]
 ```
 L'interface alors sera disponible à cette adresse: [http://localhost:5001/](http://localhost:5001/), avec les requêtes dynamiques redirigées vers le module (qui doit donc être opérationnel et joignable).
 
+
+## Dashboard Grafana
+
+La mise en place d'une stack sonde/InfluxDB/Grafana est grandement simplifiée grâce à Docker.
+
+Le fichier [docker-compose.yaml](dashboard/docker-compose.yaml) rassemble les trois services:
+* la sonde, écrite en Python, qui récupère les données en JSON via une connexion SSE avec le module
+* la base de données InfluxDB de type TSBD
+* Grafana pour la visulation des données
+
+Il faudra configurer dans Grafana la source de données (http://influxdb:8086) et la database (teleinfo).
+
+Le dashboard donné en exemple est celui créé par [Antoine Emerit](https://www.kozodo.com/blog/techno/article.php?id=32).
+
+On peut en créer facilement selon ses propres besoins ou envies.
+
+```bash
+docker-compose up -d
+```
+
+Le dashboard sera alors accessible à cette adresse: [http://localhost:3000/](http://localhost:3000/).
+
+![dasboard](docs/dashboard.png)
+
 ## Montage
 
-Le montage final utilise un ESP-01S avec le module [PiTInfo](http://hallard.me/pitinfov12-light/) - à acheter sur [tindie](https://www.tindie.com/products/Hallard/pitinfo/). L'alimentation est assurée par module USB.
+Le montage final utilise un ESP-01S avec le module [PiTInfo](http://hallard.me/pitinfov12-light/) - à acheter sur [tindie](https://www.tindie.com/products/Hallard/pitinfo/). L'alimentation est assurée par un module USB.
 
 ![teleinfo](docs/teleinfo.jpg)
+
+## Technologies utilisées
+
+### Développement
+* [Visual Studio Code](https://code.visualstudio.com)
+* [PlatformIO](https://platformio.org)
+* [PlatformIO IDE](https://marketplace.visualstudio.com/items?itemName=platformio.platformio-ide)
+* [Node.js](https://nodejs.org/en/)
+* [html-minifier](https://github.com/kangax/html-minifier) : Javascript-based HTML compressor/minifier
+
+### Tests unitaires
+* [Docker](https://www.docker.com)
+* [CMake](https://cmake.org)
+* [Google Test](https://github.com/google/googletest) : Google Testing and Mocking Framework
+* [nlohmann json](https://github.com/nlohmann/json) : JSON for Modern C++
+* [lcov](http://ltp.sourceforge.net/coverage/lcov.php) : front-end for GCC's coverage testing tool gcov
+
+### Client de test/injecteur de téléinfo
+* Python3
+* [pyserial](https://pypi.org/project/pyserial/) : Python Serial Port Extension
+
+### Développement web
+* Python3
+* [Flask](https://pypi.org/project/Flask/) : A simple framework for building complex web applications.
+* [Flask-Cors](https://pypi.org/project/Flask-Cors/) : A Flask extension adding a decorator for CORS support
+
+### Développement web/vrai module
+* [Docker](https://www.docker.com) ou [Docker Desktop](https://www.docker.com/products/docker-desktop)
+* [nginx]http://nginx.org dans un [conteneur](https://hub.docker.com/_/nginx)
+
+### Client SSE
+* Python3
+* [sseclient](https://pypi.org/project/sseclient/) : Python client library for reading Server Sent Event streams.
+* [click](https://pypi.org/project/click/) : Composable command line interface toolkit
+
+### Dashboard Grafana+InfluxDB
+* [Docker](https://www.docker.com) ou [Docker Desktop](https://www.docker.com/products/docker-desktop)
+* [Docker Compose](https://docs.docker.com/compose/)
+* [Grafana](https://grafana.com) dans un [conteneur](https://hub.docker.com/r/grafana/grafana) Docker
+* [InfluxDB](https://www.influxdata.com) dans un [conteneur](https://hub.docker.com/_/influxdb) Docker
+* sonde Python
+    - Python3 dans un [conteneur](https://hub.docker.com/_/python) Docker
+    - [sseclient](https://pypi.org/project/sseclient/) : Python client library for reading Server Sent Event streams.
+    - [click](https://pypi.org/project/click/) : Composable command line interface toolkit
+    - [influxdb](https://pypi.org/project/influxdb/) : InfluxDB client
+
 
 ## Licence
 

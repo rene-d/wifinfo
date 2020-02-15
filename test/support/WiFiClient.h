@@ -2,6 +2,15 @@
 
 #include <Arduino.h>
 
+class IPAddress
+{
+public:
+    String toString() const
+    {
+        return "1.1.1.1";
+    }
+};
+
 class WiFiClient
 {
 public:
@@ -18,5 +27,13 @@ public:
     operator bool() const
     {
         return true;
+    }
+    IPAddress remoteIP()
+    {
+        return IPAddress();
+    }
+    uint16_t remotePort()
+    {
+        return 13270;
     }
 };

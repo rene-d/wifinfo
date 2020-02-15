@@ -8,7 +8,7 @@ platformio run -t buildfs
 docker buildx build -t test .
 docker run --rm -ti \
     -v $(pwd):/tic:ro \
-    -v $(pwd)/build:/build \
+    -v $(pwd)/build/docker:/build \
     -v $(pwd)/coverage:/coverage \
     test \
     /tic/runtest.sh

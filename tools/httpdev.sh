@@ -5,7 +5,7 @@ set -euo pipefail
 cwd=$(cd $(dirname $0); pwd)
 
 docker run -ti --rm \
-    -e TINFO_MODULE=${1:-192.168.1.100:80} \
+    -e TINFO_MODULE=${1:-192.168.4.1:80} \
     -v $cwd/../data_src:/usr/share/nginx/html \
     -v $cwd/default.conf:/tmp/default.conf \
     -p 5001:80 --name nginx \

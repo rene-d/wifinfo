@@ -1,5 +1,6 @@
 #include "sys.h"
 #include "config.h"
+#include "sse.h"
 #include "led.h"
 #include "jsonbuilder.h"
 #include <ESP8266WiFi.h>
@@ -16,6 +17,8 @@ extern "C" int clock_gettime(clockid_t unused, struct timespec *tp);
 #ifndef WIFINFO_VERSION
 #define WIFINFO_VERSION "develop"
 #endif
+
+extern SseClients sse_clients;
 
 static int nb_reconnect = 0;
 
@@ -127,6 +130,9 @@ void sys_get_info_json(String &response)
     js.append(F("SPIFFS Occupation"), buffer);
 
     js.append(F("Free RAM"), sys_format_size(system_get_free_heap_size()));
+
+    js.append(F("SSE clients"), sse_clients.count());
+    js.append(F("SSE connexions"), sse_clients.remotes());
 
     js.finalize();
 }

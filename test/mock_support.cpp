@@ -4,6 +4,7 @@
 #include <EEPROM.h>
 #include <ESP8266WiFi.h>
 #include <FS.h>
+#include <Arduino.h>
 
 ESPClass ESP;
 EEPROMClass EEPROM;
@@ -12,9 +13,9 @@ SerialClass Serial;
 SPIFFSClass SPIFFS;
 
 int HTTPClient::begin_called = 0;
-std::string HTTPClient::begin_host;
+String HTTPClient::begin_host;
 uint16_t HTTPClient::begin_port;
-std::string HTTPClient::begin_url;
+String HTTPClient::begin_url;
 
 void HTTPClient::begin(WiFiClient &, const char *host, uint16_t port, const String &url)
 {

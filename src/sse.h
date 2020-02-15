@@ -57,6 +57,15 @@ public:
 
         client_.flush();
     }
+
+    String remote() const
+    {
+        // lack of const specifier in the SDK
+        String s = const_cast<WiFiClient &>(client_).remoteIP().toString();
+        s += ":";
+        s += const_cast<WiFiClient &>(client_).remotePort();
+        return s;
+    }
 };
 
 class SseClients
@@ -86,9 +95,19 @@ public:
         }
     }
 
-    bool has_clients() const
+    size_t count() const
     {
-        return !clients_.empty();
+        return clients_.size();
+    }
+
+    String remotes() const
+    {
+        String s;
+        for (const auto &it : clients_)
+        {
+            s += it->remote() + " ";
+        }
+        return s;
     }
 
     void handle_clients(const String *send_data = nullptr)

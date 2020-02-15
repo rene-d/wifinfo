@@ -184,13 +184,7 @@ bool config_save(void)
     return (ret_code);
 }
 
-/* ======================================================================
-Function: config_show
-Purpose : display configuration
-Input 	: -
-Output	: -
-Comments: -
-====================================================================== */
+// print configuration
 void config_show()
 {
     Serial.println();

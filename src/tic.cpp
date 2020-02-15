@@ -6,6 +6,15 @@
 #include "led.h"
 #include <PolledTimeout.h>
 
+// les différente notifications que httpreq peut envoyer
+//
+#define HTTP_NOTIF_TYPE_MAJ "MAJ"   // mise à jour (notif régulière)
+#define HTTP_NOTIF_TYPE_PTEC "PTEC" // changement de période tarifaire
+#define HTTP_NOTIF_TYPE_HAUT "HAUT" // dépassement seuil haut
+#define HTTP_NOTIF_TYPE_BAS "BAS"   // retour au seuil bas
+#define HTTP_NOTIF_TYPE_ADPS "ADPS" // quand l'étiquette ADPS est présente
+#define HTTP_NOTIF_TYPE_NORM "NORM" // retour d'un ADPS
+
 extern SseClients sse_clients;
 
 static char periode_en_cours[8] = {0};
@@ -75,7 +84,7 @@ void tic_notifs()
 
         if (timer_http)
         {
-            http_notif("MAJ");
+            http_notif(HTTP_NOTIF_TYPE_MAJ);
         }
     }
 
@@ -89,7 +98,7 @@ void tic_notifs()
         emoncms_notif();
     }
 
-    if (sse_clients.has_clients())
+    if (sse_clients.count() != 0)
     {
         String data;
         tic_get_json_dict(data);
@@ -195,6 +204,32 @@ const char *tic_get_value(const char *label)
     return tinfo.get_value(label);
 }
 
+static void http_add_value_ex(String &uri, const char *label, const char *notif)
+{
+    if (strcasecmp_P(label, PSTR("type")) == 0)
+    {
+        uri += notif;
+    }
+    else if (strcasecmp_P(label, PSTR("date")) == 0)
+    {
+        uri += tinfo.get_timestamp_iso8601();
+    }
+    else if (strcasecmp_P(label, PSTR("timestamp")) == 0)
+    {
+        uri += tinfo.get_timestamp();
+    }
+    else if (strcasecmp_P(label, PSTR("chipid")) == 0)
+    {
+        char buf[16];
+        snprintf_P(buf, sizeof(buf), PSTR("0x%06X"), ESP.getChipId());
+        uri += buf;
+    }
+    else
+    {
+        uri += tinfo.get_value(label, "", true);
+    }
+}
+
 void http_notif(const char *notif)
 {
     String uri;
@@ -208,7 +243,7 @@ void http_notif(const char *notif)
         {
             ++p;
             size_t i = 0;
-            while (*p && *p != '~' && i < sizeof(label) - 1)
+            while (*p && (*p != '~') && (i < (sizeof(label) - 1)))
             {
                 label[i++] = *p++;
             }
@@ -220,14 +255,7 @@ void http_notif(const char *notif)
             }
             else
             {
-                if (strcmp(label, "_type") == 0)
-                {
-                    uri += notif;
-                }
-                else
-                {
-                    uri += tinfo.get_value(label, "null", true);
-                }
+                http_add_value_ex(uri, label, notif);
             }
         }
         else if (*p == '$')
@@ -240,21 +268,14 @@ void http_notif(const char *notif)
             else
             {
                 size_t i = 0;
-                while ((isalpha(*p) || *p == '_') && i < sizeof(label) - 1)
+                while ((isalpha(*p) || (*p == '_')) && (i < (sizeof(label) - 1)))
                 {
                     label[i++] = *p++;
                 }
                 label[i] = 0;
                 --p; // revient sur le dernier caractère du label
 
-                if (strcmp(label, "_type") == 0)
-                {
-                    uri += notif;
-                }
-                else
-                {
-                    uri += tinfo.get_value(label, "null", true);
-                }
+                http_add_value_ex(uri, label, notif);
             }
         }
         else
@@ -263,7 +284,7 @@ void http_notif(const char *notif)
         }
     }
 
-    Serial.printf("http_notif: %s\n", notif);
+    Serial.printf_P(PSTR("http_notif: %s\n"), notif);
     http_request(config.httpReq.host, config.httpReq.port, uri);
 }
 
@@ -284,7 +305,7 @@ void http_notif_periode_en_cours()
         }
         else
         {
-            http_notif("PTEC");
+            http_notif(HTTP_NOTIF_TYPE_PTEC);
         }
     }
 }
@@ -299,7 +320,7 @@ void http_notif_adps()
         {
             // on était en ADPS: on signale et on rebascule en état normal
             etat_adps = false;
-            http_notif("NORM");
+            http_notif(HTTP_NOTIF_TYPE_NORM);
         }
     }
     else
@@ -308,7 +329,7 @@ void http_notif_adps()
         {
             // on vient de passer en ADPS: on signale et on bascule en mode AsDPS
             etat_adps = true;
-            http_notif("ADPS");
+            http_notif(HTTP_NOTIF_TYPE_ADPS);
         }
     }
 }
@@ -326,12 +347,12 @@ void http_notif_seuils()
     if ((papp >= config.httpReq.seuil_haut) && (seuil_en_cours == BAS))
     {
         seuil_en_cours = HAUT;
-        http_notif("HAUT");
+        http_notif(HTTP_NOTIF_TYPE_HAUT);
     }
     else if ((papp <= config.httpReq.seuil_bas) && (seuil_en_cours == HAUT))
     {
         seuil_en_cours = BAS;
-        http_notif("BAS");
+        http_notif(HTTP_NOTIF_TYPE_BAS);
     }
 }
 
@@ -411,7 +432,7 @@ void tic_emoncms_data(String &url)
 
             if (*p == 'B' && *(p + 1) == 'A' && *(p + 2) == 'S')
                 url += "1";
-            else if (*p == 'H' && *(p + 1) == 'C' && *(p + 2) == '.')
+            else if (*p == 'H' && *(p + 1) == 'C')
                 url += "2";
             else if (*p == 'E' && *(p + 1) == 'J' && *(p + 2) == 'P')
                 url += "3";
@@ -443,15 +464,15 @@ void tic_emoncms_data(String &url)
                 HPJW => Heures Pleines Jours Blancs (White).
                 HPJR => Heures Pleines Jours Rouges.
                 */
-            if (!strcmp(value, "TH.."))
+            if (!strcmp(value, "TH"))
                 url += "1";
-            else if (!strcmp(value, "HC.."))
+            else if (!strcmp(value, "HC"))
                 url += "2";
-            else if (!strcmp(value, "HP.."))
+            else if (!strcmp(value, "HP"))
                 url += "3";
-            else if (!strcmp(value, "HN.."))
+            else if (!strcmp(value, "HN"))
                 url += "4";
-            else if (!strcmp(value, "PM.."))
+            else if (!strcmp(value, "PM"))
                 url += "5";
             else if (!strcmp(value, "HCJB"))
                 url += "6";
@@ -482,7 +503,7 @@ void tic_emoncms_data(String &url)
 void emoncms_notif()
 {
     // Some basic checking
-    if (config.emoncms.host[0] == 0 || tinfo.is_empty())
+    if (config.emoncms.host[0] == 0)
         return;
 
     String url;

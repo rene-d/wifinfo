@@ -7,6 +7,7 @@
 import time
 import flask
 from flask_cors import CORS, cross_origin
+import datetime
 from simutic import tic
 
 app = flask.Flask(__name__)
@@ -15,6 +16,22 @@ app.config["SECRET_KEY"] = "the quick brown fox jumps over the lazy dog"
 app.config["CORS_HEADERS"] = "Content-Type"
 
 cors = CORS(app, resources={r"/": {"origins": "http://localhost:5000"}})
+
+
+def uptime():
+    """
+    retourne le temps depuis le lancement du programme
+    """
+    # "0 days 00 h 13 m 17 sec"
+    now = int(time.monotonic())
+    return f"{now // 86400} days {(now // 3600) % 24} h {(now // 60) % 60:02d} m {now % 60} sec"
+
+
+def timestamp():
+    """
+    retourne l'heure courante au format ISO8601
+    """
+    return datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def event_stream():
@@ -82,9 +99,9 @@ def config_json():
         "jdom_apikey": "",
         "jdom_adco": "",
         "jdom_freq": "0",
-        "httpreq_host": "192.168.1.23",
+        "httpreq_host": "192.168.4.2",
         "httpreq_port": "8080",
-        "httpreq_url": "/tinfo.php?hchp=$HCHP;hchc=$HCHC;papp=$PAPP;iinst=$IINST;type=$_type",
+        "httpreq_url": "/tinfo.php?hchp=$HCHP;hchc=$HCHC;papp=$PAPP;iinst=$IINST;type=$type",
         "httpreq_freq": "300",
         "httpreq_trigger_ptec": 1,
         "httpreq_trigger_adps": 1,
@@ -98,20 +115,8 @@ def config_json():
 @app.route("/wifiscan.json")
 def wifiscan_json():
     d = [
-        {
-            "ssid": "orange",
-            "rssi": -84,
-            "bssi": "11:22:33:00:00:00",
-            "channel": 1,
-            "encryptionType": 7,
-        },
-        {
-            "ssid": "FreeWifi",
-            "rssi": -74,
-            "bssi": "11:22:33:00:00:00",
-            "channel": 6,
-            "encryptionType": 8,
-        },
+        {"ssid": "orange", "rssi": -84, "bssi": "11:22:33:00:00:00", "channel": 1, "encryptionType": 7,},
+        {"ssid": "FreeWifi", "rssi": -74, "bssi": "11:22:33:00:00:00", "channel": 6, "encryptionType": 8,},
     ]
     return flask.jsonify(d)
 
@@ -119,7 +124,8 @@ def wifiscan_json():
 @app.route("/system.json")
 def system_json():
     d = [
-        {"na": "Uptime", "va": tic.uptime()},
+        {"na": "Uptime", "va": uptime()},
+        {"na": "Timestamp", "va": timestamp()},
         {"na": "Wi-Fi RSSI", "va": "-72 dB"},
         {"na": "Wi-Fi network", "va": "monsuperwifi"},
         {"na": "Adresse MAC station", "va": "cc:dd:ee:11:22:33"},

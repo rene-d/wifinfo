@@ -1,4 +1,5 @@
 #include "mock.h"
+#include "mock_time.h"
 #include <ESP8266HTTPClient.h>
 
 #include "tic.cpp"
@@ -140,18 +141,28 @@ TEST(notifs, http_notif)
     tinfo_init(1800, false);
 
     // syntaxe 1: ~HCHC~
-    strcpy(config.httpReq.url, "/tinfo.php?hchc=~HCHC~&hchp=~HCHP~&papp=~PAPP~&tilde=~~");
+    strcpy(config.httpReq.url, "/tinfo.php?hchc=~HCHC~&hchp=~HCHP~&papp=~PAPP~&o=$OPTARIF&tilde=~~");
     HTTPClient::begin_called = 0;
-    http_notif("");
+    http_notif("MAJ");
     ASSERT_EQ(HTTPClient::begin_called, 1);
-    ASSERT_EQ(HTTPClient::begin_url, "/tinfo.php?hchc=52890470&hchp=49126843&papp=1800&tilde=~");
+    ASSERT_EQ(HTTPClient::begin_url, "/tinfo.php?hchc=52890470&hchp=49126843&papp=1800&o=HC&tilde=~");
+    ASSERT_EQ(HTTPClient::begin_port, 88);
+    ASSERT_EQ(HTTPClient::begin_host, "sql.home");
 
     // syntaxe 2: $HCHC
-    strcpy(config.httpReq.url, "/tinfo.php?hchc=$HCHC&hchp=$HCHP&papp=$PAPP");
+    strcpy(config.httpReq.url, "/tinfo.php?hchc=$HCHC&hchp=$HCHP&papp=$PAPP&ptec=$PTEC&dollar=$$");
     HTTPClient::begin_called = 0;
-    http_notif("");
+    http_notif("MAJ");
     ASSERT_EQ(HTTPClient::begin_called, 1);
-    ASSERT_EQ(HTTPClient::begin_url, "/tinfo.php?hchc=52890470&hchp=49126843&papp=1800");
+    ASSERT_EQ(HTTPClient::begin_url, "/tinfo.php?hchc=52890470&hchp=49126843&papp=1800&ptec=HP&dollar=$");
+
+    // les étiquettes spéciales (non case sensitive)
+    strcpy(config.httpReq.url, "/maj?id=$ChipID&i=$PAPP&y=$TYPE&t=$TimeStamp&d=$Date&r=$rien&blah");
+    HTTPClient::begin_called = 0;
+    http_notif("XYZ");
+    String url = "/maj?id=0x123ABC&i=1800&y=XYZ&t=" + String(mock_time_timestamp()) + "&d=" + String(mock_time_marker()) + "&r=&blah";
+    ASSERT_EQ(HTTPClient::begin_called, 1);
+    ASSERT_EQ(HTTPClient::begin_url, url);
     ASSERT_EQ(HTTPClient::begin_port, 88);
     ASSERT_EQ(HTTPClient::begin_host, "sql.home");
 }
@@ -161,7 +172,7 @@ TEST(notifs, http_notif)
 TEST(notifs, http_timer)
 {
     test_config_notif(false, false, true);
-    strcpy(config.httpReq.url, "/tinfo.php?p=$PAPP&t=$_type");
+    strcpy(config.httpReq.url, "/tinfo.php?p=$PAPP&t=$type");
 
     tinfo_init(1234, false);
 
@@ -204,7 +215,7 @@ TEST(notifs, http_timer)
 TEST(notifs, http_ptec)
 {
     test_config_notif(false, false, true);
-    strcpy(config.httpReq.url, "/tinfo.php?p=$PAPP&ptec=$PTEC&t=$_type");
+    strcpy(config.httpReq.url, "/tinfo.php?p=$PAPP&ptec=$PTEC&t=$type");
     config.httpReq.trigger_ptec = 1; // active les notifs de PTEC
 
     tinfo_init();
@@ -218,7 +229,7 @@ TEST(notifs, http_ptec)
     tinfo_init(1800, true);
     tic_notifs();
     ASSERT_EQ(HTTPClient::begin_called, 1);
-    ASSERT_EQ(HTTPClient::begin_url, "/tinfo.php?p=1800&ptec=HC..&t=PTEC");
+    ASSERT_EQ(HTTPClient::begin_url, "/tinfo.php?p=1800&ptec=HC&t=PTEC");
 
     // pas de changement: pas de notif supplémentaire
     tinfo_init(2800, true);
@@ -230,7 +241,7 @@ TEST(notifs, http_ptec)
     tinfo_init(1000, false);
     tic_notifs();
     ASSERT_EQ(HTTPClient::begin_called, 2);
-    ASSERT_EQ(HTTPClient::begin_url, "/tinfo.php?p=1000&ptec=HP..&t=PTEC");
+    ASSERT_EQ(HTTPClient::begin_url, "/tinfo.php?p=1000&ptec=HP&t=PTEC");
 
     // désactive les notifs de période en cours
     config.httpReq.trigger_ptec = 0;
@@ -255,7 +266,7 @@ TEST(notifs, http_seuils)
     tinfo_init();
 
     // active les notifs de seuils
-    strcpy(config.httpReq.url, "/tinfo.php?p=$PAPP&t=$_type");
+    strcpy(config.httpReq.url, "/tinfo.php?p=$PAPP&t=$type");
     config.httpReq.trigger_seuils = 1;
 
     HTTPClient::begin_called = 0;
@@ -300,7 +311,7 @@ TEST(notifs, http_adps)
     test_config_notif(false, false, true);
 
     // active les notifications de dépassement
-    strcpy(config.httpReq.url, "/tinfo.php?p=$PAPP&t=$_type");
+    strcpy(config.httpReq.url, "/tinfo.php?p=$PAPP&t=$type");
     config.httpReq.trigger_adps = 1;
 
     HTTPClient::begin_called = 0;
@@ -344,7 +355,7 @@ TEST(notifs, jeedom)
     ASSERT_EQ(HTTPClient::begin_called, 1);
     ASSERT_EQ(HTTPClient::begin_port, 80);
     ASSERT_EQ(HTTPClient::begin_host, "jeedom.home");
-    ASSERT_EQ(HTTPClient::begin_url, "/url.php?api=&ADCO=111111111111&OPTARIF=HC..&ISOUSC=30&HCHC=052890470&HCHP=049126843&PTEC=HP..&IINST=008&IMAX=042&PAPP=01890&HHPHC=D&MOTDETAT=000000");
+    ASSERT_EQ(HTTPClient::begin_url, "/url.php?api=&ADCO=111111111111&OPTARIF=HC&ISOUSC=30&HCHC=052890470&HCHP=049126843&PTEC=HP&IINST=008&IMAX=042&PAPP=01890&HHPHC=D&MOTDETAT=000000");
 
     // ADCO fixé
     strcpy(config.jeedom.adco, "12345678");
@@ -353,7 +364,7 @@ TEST(notifs, jeedom)
     ASSERT_EQ(HTTPClient::begin_called, 1);
     ASSERT_EQ(HTTPClient::begin_port, 80);
     ASSERT_EQ(HTTPClient::begin_host, "jeedom.home");
-    ASSERT_EQ(HTTPClient::begin_url, "/url.php?api=&ADCO=12345678&OPTARIF=HC..&ISOUSC=30&HCHC=052890470&HCHP=049126843&PTEC=HP..&IINST=008&IMAX=042&PAPP=01890&HHPHC=D&MOTDETAT=000000");
+    ASSERT_EQ(HTTPClient::begin_url, "/url.php?api=&ADCO=12345678&OPTARIF=HC&ISOUSC=30&HCHC=052890470&HCHP=049126843&PTEC=HP&IINST=008&IMAX=042&PAPP=01890&HHPHC=D&MOTDETAT=000000");
 
     // pas de jeedom configuré: pas d'envoi http
     strcpy(config.jeedom.host, "");
@@ -422,9 +433,9 @@ TEST(tic, json)
     tic_get_json_dict(output);
     // std::cout << output << std::endl;
     auto j2 = json::parse(output.s);
-    ASSERT_EQ(j2["OPTARIF"], "HC..");
+    ASSERT_EQ(j2["OPTARIF"], "HC");
     ASSERT_EQ(j2["HCHC"], 52890470);
     ASSERT_EQ(j2["HCHP"], 49126843);
-    ASSERT_EQ(j2["PTEC"], "HP..");
+    ASSERT_EQ(j2["PTEC"], "HP");
     ASSERT_EQ(j2["MOTDETAT"], 0);
 }

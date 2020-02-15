@@ -124,14 +124,32 @@ TEST(teleinfo, decode_ok)
 
     // la trame doit être décodée
     ASSERT_TRUE(tinfo_decode.ready());
+    ASSERT_FALSE(tinfo_decode.is_empty());
 
-    // la valeur IINST doit être 008
+    ASSERT_STREQ(tinfo_decode.get_value("ADCO"), "111111111111");
+    ASSERT_STREQ(tinfo_decode.get_value("OPTARIF"), "HC");
+    ASSERT_STREQ(tinfo_decode.get_value("ISOUSC"), "30");
+    ASSERT_STREQ(tinfo_decode.get_value("HCHC"), "052890470");
+    ASSERT_STREQ(tinfo_decode.get_value("HCHP"), "049126843");
+    ASSERT_STREQ(tinfo_decode.get_value("PTEC"), "HP");
     ASSERT_STREQ(tinfo_decode.get_value("IINST"), "008");
+    ASSERT_STREQ(tinfo_decode.get_value("IMAX"), "042");
+    ASSERT_STREQ(tinfo_decode.get_value("PAPP"), "01890");
+    ASSERT_STREQ(tinfo_decode.get_value("HHPHC"), "D");
+    ASSERT_STREQ(tinfo_decode.get_value("MOTDETAT"), "000000");
+
+    // test valeur par défaut non utilisé
     ASSERT_STREQ(tinfo_decode.get_value("IINST", "123"), "008");
 
     // la valeur inexistante peut être remplacée par une valeur par défaut
     ASSERT_STREQ(tinfo_decode.get_value("unknown"), nullptr);
     ASSERT_STREQ(tinfo_decode.get_value("unknown", "123"), "123");
+
+    // le timestamp est celui par défaut de mock_time
+    ASSERT_EQ(tinfo_decode.get_timestamp_iso8601(), mock_time_marker());
+
+    // le timestamp est celui par défaut de mock_time
+    ASSERT_EQ(tinfo_decode.get_timestamp(), mock_time_timestamp());
 }
 
 TEST(teleinfo, decode_int)
@@ -157,7 +175,7 @@ TEST(teleinfo, decode_ko_getters)
     Teleinfo tinfo;
     const char *label;
     const char *value;
-    const char *state;
+    const char *state = nullptr;
     String js;
     char raw[Teleinfo::MAX_FRAME_SIZE];
 
@@ -176,7 +194,6 @@ TEST(teleinfo, decode_ko_getters)
     // pas de valeur
     ASSERT_EQ(tinfo.get_value("ADCO"), nullptr);
 
-    state = nullptr;
     ASSERT_FALSE(tinfo.get_value_next(label, value, &state));
 
     tinfo.get_frame_ascii(raw, sizeof(raw));
@@ -279,11 +296,26 @@ TEST(teleinfo, copy)
 
     tinfo.copy_from(tinfo_decode);
 
-    // la trame ne doit pas décodée
-    ASSERT_STREQ(tinfo.get_value("PAPP"), "01890");
+    // la trame doit être décodée
+    ASSERT_FALSE(tinfo.is_empty());
 
-    // le timestamp est celui par défaut
+    ASSERT_STREQ(tinfo.get_value("ADCO"), "111111111111");
+    ASSERT_STREQ(tinfo.get_value("OPTARIF"), "HC");
+    ASSERT_STREQ(tinfo.get_value("ISOUSC"), "30");
+    ASSERT_STREQ(tinfo.get_value("HCHC"), "052890470");
+    ASSERT_STREQ(tinfo.get_value("HCHP"), "049126843");
+    ASSERT_STREQ(tinfo.get_value("PTEC"), "HP");
+    ASSERT_STREQ(tinfo.get_value("IINST"), "008");
+    ASSERT_STREQ(tinfo.get_value("IMAX"), "042");
+    ASSERT_STREQ(tinfo.get_value("PAPP"), "01890");
+    ASSERT_STREQ(tinfo.get_value("HHPHC"), "D");
+    ASSERT_STREQ(tinfo.get_value("MOTDETAT"), "000000");
+
+    // le timestamp est celui par défaut de mock_time
     ASSERT_EQ(tinfo.get_timestamp_iso8601(), mock_time_marker());
+
+    // le timestamp est celui par défaut de mock_time
+    ASSERT_EQ(tinfo.get_timestamp(), mock_time_timestamp());
 }
 
 TEST(teleinfo, ascii)
@@ -324,10 +356,20 @@ TEST(teleinfo, iterate)
     while (tinfo.get_value_next(label, value, &state))
     {
         // std::cout << label << " : " << value << std::endl;
+
         if (strcmp(label, "PAPP") == 0)
         {
             ASSERT_STREQ(value, "01890");
         }
+        else if (strcmp(label, "OPTARIF") == 0)
+        {
+            ASSERT_STREQ(value, "HC");
+        }
+        else if (strcmp(label, "PTEC") == 0)
+        {
+            ASSERT_STREQ(value, "HP");
+        }
+
         ++nb;
     }
 
