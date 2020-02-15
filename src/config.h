@@ -19,8 +19,7 @@
 // All text above must be included in any redistribution.
 //
 // **********************************************************************************
-#ifndef __CONFIG_H__
-#define __CONFIG_H__
+#pragma once
 
 #include <Arduino.h>
 #include <ESP8266WebServer.h>
@@ -31,14 +30,14 @@
 #define CFG_HOSTNAME_LENGTH 16
 
 #define CFG_EMON_HOST_LENGTH 32
-#define CFG_EMON_APIKEY_LENGTH 32
+#define CFG_EMON_KEY_LENGTH 32
 #define CFG_EMON_URL_LENGTH 32
 #define CFG_EMON_DEFAULT_PORT 80
 #define CFG_EMON_DEFAULT_HOST PSTR("emoncms.org")
 #define CFG_EMON_DEFAULT_URL PSTR("/input/post.json")
 
 #define CFG_JDOM_HOST_LENGTH 32
-#define CFG_JDOM_APIKEY_LENGTH 48
+#define CFG_JDOM_KEY_LENGTH 48
 #define CFG_JDOM_URL_LENGTH 64
 #define CFG_JDOM_ADCO_LENGTH 12
 #define CFG_JDOM_DEFAULT_PORT 80
@@ -56,11 +55,8 @@
 #define DEFAULT_OTA_PORT 8266
 #define DEFAULT_OTA_AUTH PSTR("OTA_WifInfo")
 
-// Bit definition for different configuration modes
-#define CONFIG_LED_TINFO 0x0001 // blink led sur réception téléinfo
-// #define CFG_DEBUG 0x0002   // Enable serial debug
-// #define CFG_RGB_LED 0x0004 // Enable RGB LED
-// #define CFG_BAD_CRC 0x8000 // Bad CRC when reading configuration
+#define CFG_LED_TINFO FPSTR("cfg_led_tinfo")
+#define OPTION_LED_TINFO 0x0001 // blink led sur réception téléinfo
 
 // Web Interface Configuration Form field names
 #define CFG_FORM_SSID FPSTR("ssid")
@@ -95,34 +91,31 @@
 #define CFG_FORM_HTTPREQ_SEUIL_HAUT FPSTR("httpreq_seuil_haut")
 #define CFG_FORM_HTTPREQ_SEUIL_BAS FPSTR("httpreq_seuil_bas")
 
-#pragma pack(push) // push current alignment to stack
-#pragma pack(1)    // set alignment to 1 byte boundary
-
 // Config for emoncms
 // 128 Bytes
 struct EmoncmsConfig
 {
-    char host[CFG_EMON_HOST_LENGTH + 1];     // FQDN
-    char apikey[CFG_EMON_APIKEY_LENGTH + 1]; // Secret
-    char url[CFG_EMON_URL_LENGTH + 1];       // Post URL
-    uint16_t port;                           // Protocol port (HTTP/HTTPS)
-    uint8_t node;                            // optional node
-    uint32_t freq;                           // refresh rate
-    uint8_t filler[22];                      // in case adding data in config avoiding loosing current conf by bad crc*/
-};
+    char host[CFG_EMON_HOST_LENGTH + 1];  // FQDN
+    char apikey[CFG_EMON_KEY_LENGTH + 1]; // Secret
+    char url[CFG_EMON_URL_LENGTH + 1];    // Post URL
+    uint16_t port;                        // Protocol port (HTTP/HTTPS)
+    uint8_t node;                         // optional node
+    uint32_t freq;                        // refresh rate
+    uint8_t filler[22];
+} __attribute__((packed));
 
 // Config for jeedom
 // 256 Bytes
 struct JeedomConfig
 {
-    char host[CFG_JDOM_HOST_LENGTH + 1];     // FQDN
-    char apikey[CFG_JDOM_APIKEY_LENGTH + 1]; // Secret
-    char url[CFG_JDOM_URL_LENGTH + 1];       // Post URL
-    char adco[CFG_JDOM_ADCO_LENGTH + 1];     // Identifiant compteur
-    uint16_t port;                           // Protocol port (HTTP/HTTPS)
-    uint32_t freq;                           // refresh rate
-    uint8_t filler[90];                      // in case adding data in config avoiding loosing current conf by bad crc*/
-};
+    char host[CFG_JDOM_HOST_LENGTH + 1];  // FQDN
+    char apikey[CFG_JDOM_KEY_LENGTH + 1]; // Secret
+    char url[CFG_JDOM_URL_LENGTH + 1];    // Post URL
+    char adco[CFG_JDOM_ADCO_LENGTH + 1];  // Identifiant compteur
+    uint16_t port;                        // Protocol port (HTTP/HTTPS)
+    uint32_t freq;                        // refresh rate
+    uint8_t filler[90];
+} __attribute__((packed));
 
 // Config for http request
 // 256 Bytes
@@ -137,8 +130,8 @@ struct HttpreqConfig
     uint8_t trigger_seuils : 1;
     uint16_t seuil_haut;
     uint16_t seuil_bas;
-    uint8_t filler[61]; // in case adding data in config avoiding loosing current conf by bad crc*/
-};
+    uint8_t filler[61];
+} __attribute__((packed));
 
 // Config saved into eeprom
 // 1024 bytes total including CRC
@@ -149,16 +142,14 @@ struct Config
     char host[CFG_HOSTNAME_LENGTH + 1]; // Hostname
     char ap_psk[CFG_PSK_LENGTH + 1];    // Access Point Pre shared key
     char ota_auth[CFG_PSK_LENGTH + 1];  // OTA Authentication password
-    uint32_t config;                    // Bit field register
+    uint32_t options;                   // Bit field register
     uint16_t ota_port;                  // OTA port
     uint8_t filler[131];                // in case adding data in config avoiding loosing current conf by bad crc
     EmoncmsConfig emoncms;              // Emoncms configuration
     JeedomConfig jeedom;                // jeedom configuration
-    HttpreqConfig httpReq;              // HTTP request
+    HttpreqConfig httpreq;              // HTTP request
     uint16_t crc;
-};
-
-#pragma pack(pop)
+} __attribute__((packed));
 
 // Exported variables/object instancied in main sketch
 // ===================================================
@@ -173,5 +164,3 @@ void config_get_json(String &r);
 void config_handle_form(ESP8266WebServer &server);
 void config_setup();
 void config_reset();
-
-#endif
