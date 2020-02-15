@@ -17,6 +17,8 @@ import json
 import click
 
 
+# Tarifs EDF réglementés fin 2019
+
 # TVA à 5.5%
 ABO = 17.16  # Heures Creuses - 06kVA
 CTA = 3.63  # Contribution Tarifaire d'Acheminement Electricité
@@ -43,7 +45,7 @@ TVA_20 = 1.20  # TVA 20%
     "-module",
     "wifinfo_addr",
     help="adresse IP du module WifInfo",
-    default="192.168.1.96",
+    default="192.168.4.1",
 )
 @click.option(
     "-host", "influxdb_addr", help="adresse IP du module WifInfo", default="localhost"

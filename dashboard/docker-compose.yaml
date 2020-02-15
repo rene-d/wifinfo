@@ -11,9 +11,10 @@ services:
       - "8086:8086"
       - "8090:8090"
     volumes:
-      # Data persistency
-      # sudo mkdir -p /srv/docker/influxdb/data
-      - ./influxdb-data:/var/lib/influxdb
+      # Bind mount:
+      # mkdir -p ./influxdb-data
+      # - ./influxdb-data:/var/lib/influxdb
+      - influxdb-data:/var/lib/influxdb
     environment:
       - INFLUXDB_DB=teleinfo
       - INFLUXDB_ADMIN_USER=admin
@@ -30,9 +31,10 @@ services:
     depends_on:
       - influxdb
     volumes:
-      # Data persistency
-      # sudo mkdir -p //grafana-data; chown 472:472 /srv/docker/grafana/data
-      - ./grafana-data:/var/lib/grafana
+      # Bind mount:
+      # mkdir -p ./grafana-data; sudo chown 472:472 ./grafana-data
+      # - ./grafana-data:/var/lib/grafana
+      - grafana-data:/var/lib/grafana
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
@@ -44,4 +46,3 @@ services:
        - influxdb
      depends_on:
        - influxdb
-
