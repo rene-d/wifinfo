@@ -1,3 +1,6 @@
+// module téléinformation client
+// rene-d 2020
+
 #include <ESP8266HTTPClient.h>
 #include <PolledTimeout.h>
 #include <user_interface.h>

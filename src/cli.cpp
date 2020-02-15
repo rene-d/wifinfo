@@ -1,3 +1,6 @@
+// module téléinformation client
+// rene-d 2020
+
 #include "cli.h"
 #include "timesync.h"
 #include "sse.h"

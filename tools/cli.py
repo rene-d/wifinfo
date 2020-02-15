@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-#
-# Very simple serial terminal
+# rene-d 2020
+
+# modified pyserial terminal for wifinfo
 #
 # This file is part of pySerial. https://github.com/pyserial/pyserial
 # (C)2002-2015 Chris Liechti <cliechti@gmx.net>

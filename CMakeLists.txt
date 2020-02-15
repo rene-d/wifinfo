@@ -1,3 +1,6 @@
+# module téléinformation client
+# rene-d 2020
+
 cmake_minimum_required(VERSION 3.13)
 
 project(tic)

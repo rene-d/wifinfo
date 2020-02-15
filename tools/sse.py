@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# module téléinformation client
+# rene-d 2020
 
 from sseclient import SSEClient
 import click

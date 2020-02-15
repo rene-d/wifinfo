@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020 rene-d. All right reserved.
+# module téléinformation client
+# rene-d 2020
 
 # requires: https://github.com/kangax/html-minifier
-
 
 import shutil
 import pathlib

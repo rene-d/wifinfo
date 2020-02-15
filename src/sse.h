@@ -52,7 +52,6 @@ public:
     {
         client_.print(F("data: "));
         client_.print(data);
-
         client_.print(F("\r\n\r\n"));
 
         client_.flush();

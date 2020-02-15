@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# module téléinformation client
+# rene-d 2020
 
 set -euo pipefail
 

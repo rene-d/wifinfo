@@ -1,4 +1,6 @@
 #!/bin/sh
+# module téléinformation client
+# rene-d 2020
 
 if [ -f /.dockerenv ]; then
     src_dir=/tic
