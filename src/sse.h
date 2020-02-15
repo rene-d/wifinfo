@@ -81,11 +81,11 @@ public:
     {
         if (clients_.size() < 2)
         {
-            if (clients_.size() == 0)
-            {
-                // Set CPU speed to 160MHz
-                system_update_cpu_freq(160);
-            }
+            // if (clients_.size() == 0)
+            // {
+            //     // Set CPU speed to 160MHz
+            //     system_update_cpu_freq(160);
+            // }
             clients_.push_back(new SseClient(server));
         }
         else
@@ -135,11 +135,11 @@ public:
                 delete *it;
                 it = clients_.erase(it);
 
-                if (clients_.size() == 0)
-                {
-                    // back to 80MHz
-                    system_update_cpu_freq(80);
-                }
+                // if (clients_.size() == 0)
+                // {
+                //     // back to 80MHz
+                //     system_update_cpu_freq(80);
+                // }
             }
         }
     }
