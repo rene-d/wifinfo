@@ -92,7 +92,7 @@ public:
 
     String softAPIP() const
     {
-        return "192.168.1.1";
+        return "192.168.4.1";
     }
 
     String localIP() const

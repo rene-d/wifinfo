@@ -99,7 +99,7 @@ def config_json():
         "jdom_apikey": "",
         "jdom_adco": "",
         "jdom_freq": "0",
-        "httpreq_host": "192.168.1.23",
+        "httpreq_host": "192.168.4.2",
         "httpreq_port": "8080",
         "httpreq_url": "/tinfo.php?hchp=$HCHP;hchc=$HCHC;papp=$PAPP;iinst=$IINST;type=$type",
         "httpreq_freq": "300",
