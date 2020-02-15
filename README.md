@@ -29,7 +29,7 @@ Module [PiTInfo](https://hallard.me/pitinfov12/) et explications pourquoi le mon
 
 ## Interface web
 
-### Affichage dees gauges PAPP et IINST (en temps réel)
+### Affichage des jauges PAPP et IINST (en temps réel)
 
 ![teleinfo](docs/gauges.png)
 
