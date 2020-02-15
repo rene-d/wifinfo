@@ -11,6 +11,8 @@
 #include <PolledTimeout.h>
 #include <EEPROM.h>
 
+extern "C" uint32_t _EEPROM_start;
+
 static void cli_eeprom_dump(uint8_t bytesPerRow, size_t size);
 
 extern SseClients sse_clients;
@@ -160,7 +162,7 @@ void cli_setup()
             }
         }
 
-        Serial.printf_P(PSTR("ChipId      : 0x%X\n"), ESP.getChipId());
+        Serial.printf_P(PSTR("ChipId      : 0x%06X\n"), ESP.getChipId());
         Serial.printf_P(PSTR("CpuFreqMHz  : %d MHz\n"), ESP.getCpuFreqMHz());
         Serial.printf_P(PSTR("Vcc         : %u\n"), ESP.getVcc());
         Serial.printf_P(PSTR("ResetReason : %s\n"), ESP.getResetReason().c_str());
@@ -170,10 +172,13 @@ void cli_setup()
         Serial.printf_P(PSTR("CoreVersion : %s\n"), ESP.getCoreVersion().c_str());
         Serial.printf_P(PSTR("FullVersion : %s\n"), ESP.getFullVersion().c_str());
 
-        Serial.printf_P(PSTR("FlashChipRealSize : %u\n"), ESP.getFlashChipRealSize());
         Serial.printf_P(PSTR("SketchSize        : %u\n"), ESP.getSketchSize());
         Serial.printf_P(PSTR("FreeSketchSpace   : %u\n"), ESP.getFreeSketchSpace());
+
+        Serial.printf_P(PSTR("FlashChipRealSize : %u\n"), ESP.getFlashChipRealSize());
         Serial.printf_P(PSTR("checkFlashConfig  : %d\n"), ESP.checkFlashConfig());
+        Serial.printf_P(PSTR("FlashChipVendorId : 0x%x\n"), ESP.getFlashChipVendorId());
+        Serial.printf_P(PSTR("EEPROM_start      : 0x%08x\n"), (uint32_t)&_EEPROM_start - 0x40200000);
 
         Serial.printf_P(PSTR("FreeHeap          : %u\n"), ESP.getFreeHeap());
         Serial.printf_P(PSTR("MaxFreeBlockSize  : %u\n"), ESP.getMaxFreeBlockSize());

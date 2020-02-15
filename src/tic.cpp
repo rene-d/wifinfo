@@ -206,17 +206,23 @@ const char *tic_get_value(const char *label)
 
 static void http_add_value_ex(String &uri, const char *label, const char *notif)
 {
-    if (strcmp(label, "type") == 0)
+    if (strcasecmp_P(label, PSTR("type")) == 0)
     {
         uri += notif;
     }
-    else if (strcmp(label, "date") == 0)
+    else if (strcasecmp_P(label, PSTR("date")) == 0)
     {
         uri += tinfo.get_timestamp_iso8601();
     }
-    else if (strcmp(label, "timestamp") == 0)
+    else if (strcasecmp_P(label, PSTR("timestamp")) == 0)
     {
         uri += tinfo.get_timestamp();
+    }
+    else if (strcasecmp_P(label, PSTR("chipid")) == 0)
+    {
+        char buf[16];
+        snprintf_P(buf, sizeof(buf), PSTR("0x%06X"), ESP.getChipId());
+        uri += buf;
     }
     else
     {

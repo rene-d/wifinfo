@@ -28,6 +28,8 @@ typedef const char *PGM_P;
 #define PROGMEM
 #define sprintf_P sprintf
 #define strcpy_P strcpy
+#define strcasecmp_P strcasecmp
+#define snprintf_P snprintf
 
 class Printable;
 

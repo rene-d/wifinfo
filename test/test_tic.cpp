@@ -156,11 +156,11 @@ TEST(notifs, http_notif)
     ASSERT_EQ(HTTPClient::begin_called, 1);
     ASSERT_EQ(HTTPClient::begin_url, "/tinfo.php?hchc=52890470&hchp=49126843&papp=1800&ptec=HP&dollar=$");
 
-    // les étiquettes spéciales
-    strcpy(config.httpReq.url, "/maj?i=$PAPP&y=$type&t=$timestamp&d=$date&r=$rien&blah");
+    // les étiquettes spéciales (non case sensitive)
+    strcpy(config.httpReq.url, "/maj?id=$ChipID&i=$PAPP&y=$TYPE&t=$TimeStamp&d=$Date&r=$rien&blah");
     HTTPClient::begin_called = 0;
     http_notif("XYZ");
-    String url = "/maj?i=1800&y=XYZ&t=" + String(mock_time_timestamp()) + "&d=" + String(mock_time_marker()) + "&r=&blah";
+    String url = "/maj?id=0x123ABC&i=1800&y=XYZ&t=" + String(mock_time_timestamp()) + "&d=" + String(mock_time_marker()) + "&r=&blah";
     ASSERT_EQ(HTTPClient::begin_called, 1);
     ASSERT_EQ(HTTPClient::begin_url, url);
     ASSERT_EQ(HTTPClient::begin_port, 88);
