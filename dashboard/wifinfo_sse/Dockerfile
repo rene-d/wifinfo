@@ -7,4 +7,4 @@ RUN pip3 install sseclient influxdb click
 
 COPY influx.py /
 
-CMD python3 -u /influx.py -freq 60 -host influxdb
+CMD python3 -u /influx.py
