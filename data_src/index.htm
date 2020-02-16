@@ -913,7 +913,7 @@
 
             } else if (target == '#tab_gauges') {
                 if (!!window.EventSource) {
-                    source = new EventSource('/sse/tinfo.json');
+                    source = new EventSource('/sse/json');
                     console.log("event source created");
                 }
                 source.addEventListener('message', function (e) {

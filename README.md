@@ -75,7 +75,7 @@ Exemple: `/update.php?ptec=$PTEC&conso=~HCHC~+~HCHP~&id=$chipid` ⇒ `/update.ph
 
 ### Client SSE
 
-Le événements SSE sont accessibles via deux URL: http://wifinfo/tic ou http://wifinfo/sse/tinfo.json, avec une limitiation à deux clients simultatnés.
+Le événements SSE sont accessibles via deux URL: http://wifinfo/tic ou http://wifinfo/sse/json, avec une limitiation à deux clients simultatnés.
 
 La donnée est la trame de téléinformation au format JSON, comme http://wifinfo/json.
 

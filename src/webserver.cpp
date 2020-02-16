@@ -75,7 +75,7 @@ void webserver_handle_notfound()
 void webserver_setup()
 {
     //Server Sent Events will be handled from this URI
-    sse_clients.on("/sse/tinfo.json", server);
+    sse_clients.on("/sse/json", server);
     sse_clients.on("/tic", server);
 
 #ifdef ENABLE_CPULOAD
