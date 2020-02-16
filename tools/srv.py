@@ -36,7 +36,7 @@ def timestamp():
 
 def event_stream():
     while True:
-        time.sleep(3)
+        time.sleep(1.424)
         d = tic.json_dict()
         print("send:", d)
         yield f"data: {d}\n\n"
@@ -154,7 +154,8 @@ def config_form():
     return "OK"
 
 
-@app.route("/sse/tinfo.json", methods=["GET", "POST"])
+@app.route("/sse/json", methods=["GET", "POST"])
+@app.route("/tic", methods=["GET", "POST"])
 @cross_origin()
 def stream():
     return flask.Response(event_stream(), mimetype="text/event-stream")
