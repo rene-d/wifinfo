@@ -1,6 +1,6 @@
 # WifInfo
 
-WifInfo est un module de consignation de la téléinformation des compteurs électriques avec serveur web embarqué.
+WifInfo est un module de consignation de la téléinformation des compteurs électriques 🇫🇷 avec serveur web embarqué.
 
 ## Introduction
 
@@ -191,12 +191,12 @@ Le fichier [docker-compose.yaml](dashboard/docker-compose.yaml) rassemble les tr
 
 Il faudra configurer dans Grafana la source de données (http://influxdb:8086) et la database (teleinfo).
 
-Le dashboard donné en exemple est celui créé par [Antoine Emerit](https://www.kozodo.com/blog/techno/article.php?id=32).
+Le dashboard donné en exemple est celui créé par [Antoine Emerit](https://www.kozodo.com/blog/techno/article.php?id=32) et légèrement modifié (calcul du coût dans le dashboard plutôt que dans la database).
 
 On peut en créer facilement selon ses propres besoins ou envies.
 
 ```bash
-docker-compose up -d
+WIFINFO=<adresse IP du module> docker-compose up -d
 ```
 
 Le dashboard sera alors accessible à cette adresse: [http://localhost:3000/](http://localhost:3000/).

@@ -70,8 +70,8 @@ class Sonde:
                 "tags": {"host": data["ADCO"]},
                 "time": data["timestamp"],
                 "fields": {
-                    "COSTHC": round(data["HCHC"] / 1000 * self.tarif_hc_ttc, 4),
-                    "COSTHP": round(data["HCHP"] / 1000 * self.tarif_hp_ttc, 4),
+                    # "COSTHC": round(data["HCHC"] / 1000 * self.tarif_hc_ttc, 4),
+                    # "COSTHP": round(data["HCHP"] / 1000 * self.tarif_hp_ttc, 4),
                     "HCHC": data["HCHC"],
                     "HCHP": data["HCHP"],
                     "PAPP": data["PAPP"],
