@@ -1,6 +1,6 @@
 # WifInfo
 
-WifInfo est un module de consignation de la téléinformation des compteurs électriques avec serveur web embarqué.
+WifInfo est un module de consignation de la téléinformation des compteurs électriques 🇫🇷 avec serveur web embarqué.
 
 ## Introduction
 
@@ -23,7 +23,7 @@ La mise à jour OTA et les notifications jeedom/emoncms ne sont pas testées.
 
 ## Références
 
-Documentation ERDF sur la [téléinformation client](https://www.enedis.fr/sites/default/files/Enedis-NOI-CPT_02E.pdf) pour les compteurs électroniques et pour les compteurs [Linky](https://www.enedis.fr/sites/default/files/Enedis-NOI-CPT_54E.pdf).
+Documentation Enedis sur la [téléinformation client](https://www.enedis.fr/sites/default/files/Enedis-NOI-CPT_02E.pdf) pour les compteurs électroniques et pour les compteurs [Linky](https://www.enedis.fr/sites/default/files/Enedis-NOI-CPT_54E.pdf).
 
 Module [PiTInfo](https://hallard.me/pitinfov12/) et explications pourquoi le montage avec uniquement optocoupleur et résistances ne suffit pas avec un esp8266.
 
@@ -75,7 +75,7 @@ Exemple: `/update.php?ptec=$PTEC&conso=~HCHC~+~HCHP~&id=$chipid` ⇒ `/update.ph
 
 ### Client SSE
 
-Le événements SSE sont accessibles via deux URL: http://wifinfo/tic ou http://wifinfo/sse/tinfo.json, avec une limitiation à deux clients simultatnés.
+Le événements SSE sont accessibles via deux URL: http://wifinfo/tic ou http://wifinfo/sse/json, avec une limitiation à deux clients simultatnés.
 
 La donnée est la trame de téléinformation au format JSON, comme http://wifinfo/json.
 
@@ -191,12 +191,12 @@ Le fichier [docker-compose.yaml](dashboard/docker-compose.yaml) rassemble les tr
 
 Il faudra configurer dans Grafana la source de données (http://influxdb:8086) et la database (teleinfo).
 
-Le dashboard donné en exemple est celui créé par [Antoine Emerit](https://www.kozodo.com/blog/techno/article.php?id=32).
+Le dashboard donné en exemple est celui créé par [Antoine Emerit](https://www.kozodo.com/blog/techno/article.php?id=32) et légèrement modifié (calcul du coût dans le dashboard plutôt que dans la database).
 
 On peut en créer facilement selon ses propres besoins ou envies.
 
 ```bash
-docker-compose up -d
+WIFINFO=<adresse IP du module> docker-compose up -d
 ```
 
 Le dashboard sera alors accessible à cette adresse: [http://localhost:3000/](http://localhost:3000/).
@@ -256,7 +256,7 @@ Le montage final utilise un ESP-01S avec le module [PiTInfo](http://hallard.me/p
 
 ## Licence
 
-Compte-tenu de la diversité d'origine des sources, ce travail est publié avec la licence de [WifInfo](https://github.com/hallard/LibTeleinfo/tree/master/examples/Wifinfo).
+Compte-tenu de la diversité d'origine des sources, ce travail est publié avec la licence de [WifInfo](https://github.com/hallard/LibTeleinfo/tree/master/examples/Wifinfo) sauf mention contraire.
 
 <div align="center">
 
@@ -265,3 +265,5 @@ Compte-tenu de la diversité d'origine des sources, ce travail est publié avec 
 </div>
 
 Ce(tte) œuvre est mise à disposition selon les termes de la [Licence Creative Commons Attribution - Pas d’Utilisation Commerciale - Partage dans les Mêmes Conditions 4.0 International](http://creativecommons.org/licenses/by-nc-sa/4.0/).
+
+This work is licensed under a [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License](http://creativecommons.org/licenses/by-nc-sa/4.0/).

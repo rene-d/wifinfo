@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# module téléinformation client
+# rene-d 2020
 
 import struct
 import pathlib
@@ -71,7 +73,7 @@ def write_eeprom(config):
     )
 
     eeprom = struct.pack(
-        "<33s65s17s65s65sIH131s128s256s256s",
+        "<33s65s17s65s65sIHH129s128s256s256s",
         config["ssid"].encode(),
         config["psk"].encode(),
         config["host"].encode(),
@@ -79,6 +81,7 @@ def write_eeprom(config):
         config["ota_auth"].encode(),
         config["cfg_led_tinfo"],
         config["ota_port"],
+        config["sse_freq"],
         b"",  # filler
         emoncms,
         jeedom,
@@ -105,7 +108,7 @@ def read_eeprom(eeprom):
 
     config = {}
 
-    d = struct.unpack("<33s65s17s65s65sIH131s128s256s256sH", eeprom)
+    d = struct.unpack("<33s65s17s65s65sIHH129s128s256s256sH", eeprom)
     config["ssid"] = d[0].rstrip(b"\0").decode()
     config["psk"] = d[1].rstrip(b"\0").decode()
     config["host"] = d[2].rstrip(b"\0").decode()
@@ -113,8 +116,9 @@ def read_eeprom(eeprom):
     config["ota_auth"] = d[4].rstrip(b"\0").decode()
     config["cfg_led_tinfo"] = d[5] & 1
     config["ota_port"] = d[6]
+    config["sse_freq"] = d[7]
 
-    emoncms = struct.unpack_from("<33s33s33sHBI", d[8])
+    emoncms = struct.unpack_from("<33s33s33sHBI", d[9])
     config["emon_host"] = emoncms[0].rstrip(b"\0").decode()
     config["emon_apikey"] = emoncms[1].rstrip(b"\0").decode()
     config["emon_url"] = emoncms[2].rstrip(b"\0").decode()
@@ -122,7 +126,7 @@ def read_eeprom(eeprom):
     config["emon_node"] = emoncms[4]
     config["emon_freq"] = emoncms[5]
 
-    jeedom = struct.unpack_from("<33s49s65s13sHI", d[9])
+    jeedom = struct.unpack_from("<33s49s65s13sHI", d[10])
     config["jdom_host"] = jeedom[0].rstrip(b"\0").decode()
     config["jdom_apikey"] = jeedom[1].rstrip(b"\0").decode()
     config["jdom_url"] = jeedom[2].rstrip(b"\0").decode()
@@ -130,7 +134,7 @@ def read_eeprom(eeprom):
     config["jdom_port"] = jeedom[4]
     config["jdom_freq"] = jeedom[5]
 
-    httpreq = struct.unpack_from("<33s151sHIBHH", d[10])
+    httpreq = struct.unpack_from("<33s151sHIBHH", d[11])
     config["httpreq_host"] = httpreq[0].rstrip(b"\0").decode()
     config["httpreq_url"] = httpreq[1].rstrip(b"\0").decode()
     config["httpreq_port"] = httpreq[2]
@@ -141,7 +145,7 @@ def read_eeprom(eeprom):
     config["httpreq_seuil_haut"] = httpreq[5]
     config["httpreq_seuil_bas"] = httpreq[6]
 
-    config["crc"] = f"0x{d[11]:04x}"
+    config["crc"] = f"0x{d[12]:04x}"
 
     return config
 
@@ -153,7 +157,8 @@ def cli_write():
 
 @cli_write.command()
 @click.option("-i", "--input", help="fichier source", default="config.yaml", type=click.File("rb"))
-def write(input):
+@click.option("-f", "--force", help="pas de question", is_flag=True)
+def write(input, force):
     """ Charge une configuration en EEPROM """
     suffix = pathlib.Path(input.name).suffix.lower()
 
@@ -182,7 +187,8 @@ def write(input):
     cmd = f"esptool.py --after hard_reset write_flash 0x{base:x} {eeprom_file.name}"
     click.echo(click.style(cmd, fg="bright_black"))
 
-    click.confirm("Voulez-vous contnuer ?", abort=True)
+    if not force:
+        click.confirm("Voulez-vous contnuer ?", abort=True)
     subprocess.run(cmd, shell=True)
 
 

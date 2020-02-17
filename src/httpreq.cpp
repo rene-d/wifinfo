@@ -1,3 +1,6 @@
+// module téléinformation client
+// rene-d 2020
+
 #include "httpreq.h"
 
 #include <ESP8266HTTPClient.h>

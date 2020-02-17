@@ -1,3 +1,6 @@
+// module téléinformation client
+// rene-d 2020
+
 //
 // tests des classes Teleinfo et TeleinfoDecoder
 //

@@ -1,3 +1,6 @@
+# module téléinformation client
+# rene-d 2020
+
 FROM alpine:3.10
 
 RUN apk add --no-cache gcc g++ gdb make cmake musl-dev gtest-dev vim wget curl bash perl \

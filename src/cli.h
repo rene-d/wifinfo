@@ -1,6 +1,5 @@
-/*
- * Copyright (c) 2015-2020 rene-d. All right reserved.
- */
+// module téléinformation client
+// rene-d 2020
 
 #pragma once
 

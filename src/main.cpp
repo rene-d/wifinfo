@@ -1,4 +1,5 @@
-//
+// module téléinformation client
+// rene-d 2020
 
 #include "timesync.h"
 #include "cli.h"
@@ -9,6 +10,7 @@
 #include "teleinfo.h"
 #include "webserver.h"
 #include "tic.h"
+#include "cpuload.h"
 
 #include <Arduino.h>
 #include <ArduinoOTA.h>
@@ -17,6 +19,8 @@
 void setup()
 {
     led_setup();
+    led_on();
+    delay(100);
 
 #ifdef DEBUG
     // en debug, on reste à 115200: on ne se branche pas au compteur
@@ -26,8 +30,6 @@ void setup()
     Serial.begin(1200, SERIAL_7E1, SERIAL_RX_ONLY);
 #endif
     Serial.flush();
-    delay(100);
-    led_on();
 
     Serial.println(R"(
 __      ___  __ ___       __
@@ -36,8 +38,6 @@ __      ___  __ ___       __
   \_/\_/ |_|_| |___|_||_|_| \___/
 )");
     Serial.flush();
-
-    delay(100);
 
     // chargement de la conf depuis l'EEPROM
     config_setup();
@@ -75,13 +75,15 @@ __      ___  __ ___       __
     Serial.flush();
 
     led_off();
-
-    delay(100);
 }
 
 void loop()
 {
     int c;
+
+#ifdef ENABLE_CPULOAD
+    cpuload_loop();
+#endif
 
     webserver_loop();
 

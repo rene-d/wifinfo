@@ -1,9 +1,13 @@
+// module téléinformation client
+// rene-d 2020
+
 #include "webserver.h"
 #include "filesystem.h"
 #include "sys.h"
 #include "config.h"
 #include "sse.h"
 #include "tic.h"
+#include "cpuload.h"
 
 #include <Arduino.h>
 #include <ESP8266WebServer.h>
@@ -71,8 +75,16 @@ void webserver_handle_notfound()
 void webserver_setup()
 {
     //Server Sent Events will be handled from this URI
-    sse_clients.on("/sse/tinfo.json", server);
+    sse_clients.on("/sse/json", server);
     sse_clients.on("/tic", server);
+
+#ifdef ENABLE_CPULOAD
+    server.on("/cpuload", [] {
+        StringPrint message;
+        cpuload_print(message);
+        server.send(200, "text/plain", message);
+    });
+#endif
 
     server.on("/config_form.json", [] { config_handle_form(server); });
     server.on("/json", server_send_json<tic_get_json_dict>);

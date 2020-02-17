@@ -1,5 +1,8 @@
+// module téléinformation client
+// rene-d 2020
+
 // **********************************************************************************
-// ESP8266 Teleinfo WEB Server configuration Include file
+// ESP8266 Teleinfo WEB Server
 // **********************************************************************************
 // Creative Commons Attrib Share-Alike License
 // You are free to use/extend this library but please abide with the CC-BY-SA license:
@@ -65,6 +68,7 @@
 #define CFG_FORM_AP_PSK FPSTR("ap_psk")
 #define CFG_FORM_OTA_AUTH FPSTR("ota_auth")
 #define CFG_FORM_OTA_PORT FPSTR("ota_port")
+#define CFG_FORM_SSE_FREQ FPSTR("sse_freq")
 
 #define CFG_FORM_EMON_HOST FPSTR("emon_host")
 #define CFG_FORM_EMON_PORT FPSTR("emon_port")
@@ -144,7 +148,8 @@ struct Config
     char ota_auth[CFG_PSK_LENGTH + 1];  // OTA Authentication password
     uint32_t options;                   // Bit field register
     uint16_t ota_port;                  // OTA port
-    uint8_t filler[131];                // in case adding data in config avoiding loosing current conf by bad crc
+    uint16_t sse_freq;                  // fréquence mini des mises à jour SSE. 0=dès qu'une trame est dispo
+    uint8_t filler[129];                // in case adding data in config avoiding loosing current conf by bad crc
     EmoncmsConfig emoncms;              // Emoncms configuration
     JeedomConfig jeedom;                // jeedom configuration
     HttpreqConfig httpreq;              // HTTP request

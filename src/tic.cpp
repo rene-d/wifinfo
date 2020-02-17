@@ -1,3 +1,6 @@
+// module téléinformation client
+// rene-d 2020
+
 #include "tic.h"
 #include "teleinfo.h"
 #include "config.h"
@@ -15,17 +18,23 @@
 #define HTTP_NOTIF_TYPE_ADPS "ADPS" // quand l'étiquette ADPS est présente
 #define HTTP_NOTIF_TYPE_NORM "NORM" // retour d'un ADPS
 
+enum Seuil
+{
+    BAS,
+    HAUT
+};
+
 extern SseClients sse_clients;
 
 static char periode_en_cours[8] = {0};
 static bool init_periode_en_cours = true;
-static enum { BAS,
-              HAUT } seuil_en_cours = BAS;
+static Seuil seuil_en_cours = BAS;
 static bool etat_adps = false;
 
 static esp8266::polledTimeout::periodicMs timer_http(esp8266::polledTimeout::periodicMs::neverExpires);
 static esp8266::polledTimeout::periodicMs timer_emoncms(esp8266::polledTimeout::periodicMs::neverExpires);
 static esp8266::polledTimeout::periodicMs timer_jeedom(esp8266::polledTimeout::periodicMs::neverExpires);
+static esp8266::polledTimeout::periodicMs timer_sse(esp8266::polledTimeout::periodicMs::neverExpires);
 
 Teleinfo tinfo;
 static TeleinfoDecoder tinfo_decoder;
@@ -98,7 +107,7 @@ void tic_notifs()
         emoncms_notif();
     }
 
-    if (sse_clients.count() != 0)
+    if (timer_sse && (sse_clients.count() != 0))
     {
         String data;
         tic_get_json_dict(data);
@@ -109,7 +118,7 @@ void tic_notifs()
 void tic_make_timers()
 {
     // http
-    if (config.httpreq.freq == 0 || config.httpreq.host[0] == 0 || config.httpreq.port == 0)
+    if ((config.httpreq.freq == 0) || (config.httpreq.host[0] == 0) || (config.httpreq.port == 0))
     {
         timer_http.resetToNeverExpires();
         Serial.println("timer_http disabled");
@@ -121,7 +130,7 @@ void tic_make_timers()
     }
 
     // jeedom
-    if (config.jeedom.freq == 0 || config.jeedom.host[0] == 0 || config.jeedom.port == 0)
+    if ((config.jeedom.freq == 0) || (config.jeedom.host[0] == 0) || (config.jeedom.port == 0))
     {
         timer_jeedom.resetToNeverExpires();
         Serial.println("timer_jeedom disabled");
@@ -133,7 +142,7 @@ void tic_make_timers()
     }
 
     // emoncms
-    if (config.emoncms.freq == 0 || config.emoncms.host[0] == 0 || config.emoncms.port == 0)
+    if ((config.emoncms.freq == 0) || (config.emoncms.host[0] == 0) || (config.emoncms.port == 0))
     {
         timer_emoncms.resetToNeverExpires();
         Serial.println("timer_emoncms disabled");
@@ -142,6 +151,17 @@ void tic_make_timers()
     {
         timer_emoncms.reset(config.emoncms.freq * 1000);
         Serial.printf("timer_emoncms enabled, freq=%d s\n", config.emoncms.freq);
+    }
+
+    if (config.sse_freq == 0)
+    {
+        timer_sse.reset(esp8266::polledTimeout::periodicMs::alwaysExpired);
+        Serial.println("timer_sse always expired");
+    }
+    else
+    {
+        timer_sse.reset(config.sse_freq * 1000);
+        Serial.printf_P(PSTR("timer_sse enabled, freq=%d s\n"), config.sse_freq);
     }
 }
 

@@ -1,4 +1,5 @@
 // very simple JSON "flat" builder
+// rene-d 2020
 
 #pragma once
 

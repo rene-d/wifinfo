@@ -1,3 +1,6 @@
+// module téléinformation client
+// rene-d 2020
+
 #pragma once
 
 namespace esp8266
@@ -12,7 +15,8 @@ public:
     bool periodicMs_activate = false;
 
 public:
-    static const int neverExpires = 0;
+    static const int neverExpires = -1;
+    static const int alwaysExpired = 0;
 
     periodicMs(int)
     {
