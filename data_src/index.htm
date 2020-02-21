@@ -38,17 +38,18 @@
 
             <!-- tab gauges -->
             <div class="tab-pane fade" id="tab_gauges">
-                <h4>Compteurs</h4>
-
+                <p></p>
                 <style>
                     @font-face {
                         font-family: "Digital-7";
                         src: url("/fonts/digital-7.ttf") format("truetype");
                     }
+
                     @font-face {
                         font-family: "Digital-7 MonoItalic";
                         src: url("/fonts/digital-7.monoitalic.ttf") format("truetype");
                     }
+
                     .enedis div {
                         font-family: "Digital-7";
                         color: #000000;
@@ -56,27 +57,30 @@
                         text-align: left;
                         margin-left: 10px;
                     }
+
                     .enedis div.name {
                         font-size: 18px;
                         color: #666666;
                         width: 236px;
                     }
+
                     .enedis div.centre {
                         text-align: center;
                         color: #232e85;
                         font-size: 14px;
                     }
+
                     .enedis div.index {
                         font-family: "Digital-7 MonoItalic";
-                        font-size: 30px;
+                        font-size: 32px;
                         width: 236px;
                         text-align: right;
                     }
+
                     td.cpt {
                         width: 256px;
                         background-color: #cccccc;
-                        border: 3px solid #888888;
-
+                        border-radius: 20px;
                     }
                 </style>
 
@@ -102,7 +106,9 @@
                     </tr>
                 </table>
                 <div>
-                    <h5>Nota: VA = W / cos &Phi;</h5>
+                    <p>
+                        <small>Rappel: VA = W / cos &Phi;</small>
+                    </p>
                 </div>
             </div>
 
