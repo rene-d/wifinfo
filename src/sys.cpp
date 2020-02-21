@@ -155,7 +155,7 @@ void sys_get_info_json(String &response)
     js.append(F("SPIFFS Total"), sys_format_size(info.totalBytes));
     js.append(F("SPIFFS Used"), sys_format_size(info.usedBytes));
 
-    sprintf_P(buffer, PSTR("%zd %%"), 100 * info.usedBytes / info.totalBytes);
+    sprintf_P(buffer, PSTR("%zu %%"), 100 * info.usedBytes / info.totalBytes);
     js.append(F("SPIFFS Occupation"), buffer);
 
     js.append(F("Free RAM"), sys_format_size(system_get_free_heap_size()));

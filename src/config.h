@@ -52,7 +52,7 @@
 #define CFG_HTTPREQ_URL_LENGTH 150
 #define CFG_HTTPREQ_DEFAULT_PORT 80
 #define CFG_HTTPREQ_DEFAULT_HOST ""
-#define CFG_HTTPREQ_DEFAULT_URL ""
+#define CFG_HTTPREQ_DEFAULT_URL PSTR("/json.htm?type=command&param=udevice&idx=1&nvalue=0&svalue=$HCHP;$HCHC;0;0;$PAPP;0")
 
 // Port pour l'OTA
 #define DEFAULT_OTA_PORT 8266
@@ -101,7 +101,7 @@ struct EmoncmsConfig
 {
     char host[CFG_EMON_HOST_LENGTH + 1];  // FQDN
     char apikey[CFG_EMON_KEY_LENGTH + 1]; // Secret
-    char url[CFG_EMON_URL_LENGTH + 1];    // Post URL
+    char url[CFG_EMON_URL_LENGTH + 1];    // URL
     uint16_t port;                        // Protocol port (HTTP/HTTPS)
     uint8_t node;                         // optional node
     uint32_t freq;                        // refresh rate
@@ -114,11 +114,12 @@ struct JeedomConfig
 {
     char host[CFG_JDOM_HOST_LENGTH + 1];  // FQDN
     char apikey[CFG_JDOM_KEY_LENGTH + 1]; // Secret
-    char url[CFG_JDOM_URL_LENGTH + 1];    // Post URL
+    char url[CFG_JDOM_URL_LENGTH + 1];    // URL
     char adco[CFG_JDOM_ADCO_LENGTH + 1];  // Identifiant compteur
     uint16_t port;                        // Protocol port (HTTP/HTTPS)
     uint32_t freq;                        // refresh rate
-    uint8_t filler[90];
+    uint8_t use_post;                     // POST un dictionnaire JSON
+    uint8_t filler[89];
 } __attribute__((packed));
 
 // Config for http request

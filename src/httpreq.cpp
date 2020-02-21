@@ -7,10 +7,11 @@
 
 #include "emptyserial.h"
 
-void http_request(const char *host, uint16_t port, const String &url)
+void http_request(const char *host, uint16_t port, const String &url, const char *data)
 {
     WiFiClient client;
     HTTPClient http;
+    int http_code;
 
     unsigned long start = micros();
 
@@ -18,7 +19,15 @@ void http_request(const char *host, uint16_t port, const String &url)
 
     Serial.printf("http://%s:%d%s => ", host, port, url.c_str());
 
-    int http_code = http.GET();
+    if (data != nullptr)
+    {
+        http.addHeader("Content-Type", "application/json");
+        http_code = http.POST(data);
+    }
+    else
+    {
+        http_code = http.GET();
+    }
 
     Serial.printf("%d in %lu us\n", http_code, micros() - start);
 }

@@ -134,9 +134,9 @@ class SimuTic:
         retourne la Période Tarifaire En Cours
         """
         if self.heures_creuses:
-            return "HC.."
+            return "HC"
         else:
-            return "HP.."
+            return "HP"
 
     @property
     def adps(self):
