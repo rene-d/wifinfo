@@ -50,7 +50,7 @@ def home():
 @app.route("/hc")
 def bascule_ptec():
     tic.bascule()
-    return tic.ptec()
+    return tic.ptec
 
 
 @app.route("/tinfo.json")

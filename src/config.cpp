@@ -56,13 +56,7 @@ void config_setup()
     }
 }
 
-/* ======================================================================
-Function: ResetConfig
-Purpose : Set configuration to default values
-Input   : -
-Output  : -
-Comments: -
-====================================================================== */
+// Set configuration to default values
 void config_reset()
 {
     // Start cleaning all that stuff
@@ -139,14 +133,8 @@ bool config_read(bool clear_on_error)
     return true;
 }
 
-/* ======================================================================
-Function: config_save
-Purpose : save config structure values into eeprom
-Input 	: -
-Output	: true if saved and readback ok
-Comments: once saved, config is read again to check the CRC
-====================================================================== */
-bool config_save(void)
+// save config structure values into eeprom
+bool config_save()
 {
     const uint8_t *pconfig;
     bool ret_code;
@@ -179,7 +167,7 @@ bool config_save(void)
     Serial.println(F("Write config "));
 
     // return result
-    return (ret_code);
+    return ret_code;
 }
 
 // print configuration
@@ -314,7 +302,7 @@ static int validate_int(const String &value, int a, int b, int d)
 
 void config_handle_form(ESP8266WebServer &server)
 {
-    String response;
+    const char *response;
     int ret;
 
     // We validated config ?
@@ -372,12 +360,12 @@ void config_handle_form(ESP8266WebServer &server)
         if (config_save())
         {
             ret = 200;
-            response = F("OK");
+            response = PSTR("OK");
         }
         else
         {
             ret = 412;
-            response = F("Unable to save configuration");
+            response = PSTR("Unable to save configuration");
         }
 
         config_show();
@@ -385,10 +373,10 @@ void config_handle_form(ESP8266WebServer &server)
     else
     {
         ret = 400;
-        response = F("Missing Form Field");
+        response = PSTR("Missing Form Field");
     }
 
-    Serial.printf_P(PSTR("Sending response %d %s\n"), ret, response.c_str());
+    Serial.printf_P(PSTR("Sending response %d %s\n"), ret, response);
 
     server.send(ret, "text/plain", response);
 

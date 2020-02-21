@@ -20,4 +20,11 @@ public:
     {
         return 0;
     }
+    int POST(const String &)
+    {
+        return 0;
+    }
+    void addHeader(const char *, const char *)
+    {
+    }
 };

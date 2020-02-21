@@ -6,8 +6,11 @@ if [ -f /.dockerenv ]; then
     src_dir=/tic
     cov_dir=/coverage
 else
-    src_dir=$(dirname $0)
-    cov_dir=./coverage
+    cd $(dirname $0)
+    src_dir=..
+    cov_dir=../coverage
+    mkdir -p build
+    cd build
 fi
 
 cmake -DCODE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug ${src_dir}

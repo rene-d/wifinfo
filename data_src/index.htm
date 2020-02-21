@@ -24,7 +24,7 @@
         <!--  Onglets  -->
         <ul class="nav nav-tabs" id="myTab">
             <!-- glyph bootstrap:  https://getbootstrap.com/docs/3.3/components/ -->
-            <li><a href="#tab_gauges" data-toggle="tab"><span class="glyphicon glyphicon-dashboard">&nbsp;</span>Gauges&nbsp;</span></a></li>
+            <li><a href="#tab_gauges" data-toggle="tab"><span class="glyphicon glyphicon-dashboard">&nbsp;</span>Compteur&nbsp;</span></a></li>
             <li><a href="#tab_tinfo" data-toggle="tab"><span class="glyphicon glyphicon-flash">&nbsp;</span>Téléinformation&nbsp;<span class="badge"
                         id="scharge"></span></a></li>
             <li><a href="#tab_sys" data-toggle="tab"><span class="glyphicon glyphicon-cog">&nbsp;</span>Système</a></li>
@@ -38,14 +38,77 @@
 
             <!-- tab gauges -->
             <div class="tab-pane fade" id="tab_gauges">
-                <h4>Compteurs</h4>
+                <p></p>
+                <style>
+                    @font-face {
+                        font-family: "Digital-7";
+                        src: url("/fonts/digital-7.ttf") format("truetype");
+                    }
 
-                <div align="center">
-                    <canvas id="gauge-papp"></canvas>
-                    <canvas id="gauge-iinst"></canvas>
-                </div>
+                    @font-face {
+                        font-family: "Digital-7 MonoItalic";
+                        src: url("/fonts/digital-7.monoitalic.ttf") format("truetype");
+                    }
+
+                    .enedis div {
+                        font-family: "Digital-7";
+                        color: #000000;
+                        letter-spacing: 2px;
+                        text-align: left;
+                        margin-left: 10px;
+                    }
+
+                    .enedis div.name {
+                        font-size: 18px;
+                        color: #666666;
+                        width: 236px;
+                    }
+
+                    .enedis div.centre {
+                        text-align: center;
+                        color: #232e85;
+                        font-size: 14px;
+                    }
+
+                    .enedis div.index {
+                        font-family: "Digital-7 MonoItalic";
+                        font-size: 32px;
+                        width: 236px;
+                        text-align: right;
+                    }
+
+                    td.cpt {
+                        width: 256px;
+                        background-color: #cccccc;
+                        border-radius: 20px;
+                    }
+                </style>
+
+                <table>
+                    <tr>
+                        <td class="cpt">
+                            <div class="enedis">
+                                <div class="name centre">Index en kWH</div>
+                                <br>
+                                <div id="HCHPname" class="name">Heures Pleines</div>
+                                <div id="HCHP" class="index">0</div>
+                                <br>
+                                <div id="HCHCname" class="name">Heures Creuses</div>
+                                <div id="HCHC" class="index">0</div>
+
+                            </div>
+                        </td>
+                        <td width="20px"></td>
+                        <td>
+                            <canvas id="gauge-papp"></canvas>
+                            <canvas id="gauge-iinst"></canvas>
+                        </td>
+                    </tr>
+                </table>
                 <div>
-                    <h5>Nota: kVA = kW / cos &Phi;</h5>
+                    <p>
+                        <small>Rappel: VA = W / cos &Phi;</small>
+                    </p>
                 </div>
             </div>
 
@@ -921,6 +984,16 @@
                     var tic = JSON.parse(e.data);
                     gaugePAPP.value = tic.PAPP;
                     gaugeIINST.value = tic.IINST;
+                    $("#HCHP").text((tic.HCHP / 1000).toFixed(3) + "");
+                    $("#HCHC").text((tic.HCHC / 1000).toFixed(3) + "");
+                    if (tic.PTEC == "HC") {
+                        $("#HCHPname").text('Heures Pleines');
+                        $("#HCHCname").html('Heures Creuses<span class="glyphicon glyphicon glyphicon-ok-sign"></span>');
+                    }
+                    else {
+                        $("#HCHPname").html('Heures Pleines<span class="glyphicon glyphicon glyphicon-ok-sign"></span>');
+                        $("#HCHCname").text('Heures Creuses');
+                    }
                 }, false);
 
             }

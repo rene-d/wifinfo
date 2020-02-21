@@ -347,7 +347,7 @@ void http_notif_adps()
     {
         if (etat_adps == false)
         {
-            // on vient de passer en ADPS: on signale et on bascule en mode AsDPS
+            // on vient de passer en ADPS: on signale et on bascule dans l'état ADPS
             etat_adps = true;
             http_notif(HTTP_NOTIF_TYPE_ADPS);
         }
