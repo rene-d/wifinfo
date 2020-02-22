@@ -1,5 +1,11 @@
 # WifInfo
 
+
+[![Total alerts](https://img.shields.io/lgtm/alerts/g/rene-d/wifinfo.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/rene-d/wifinfo/alerts/)
+[![Language grade: C/C++](https://img.shields.io/lgtm/grade/cpp/g/rene-d/wifinfo.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/rene-d/wifinfo/context:cpp)
+[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/rene-d/wifinfo.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/rene-d/wifinfo/context:python)
+
+
 WifInfo est un module de consignation de la téléinformation des compteurs électriques 🇫🇷 avec serveur web embarqué.
 
 ## Introduction
