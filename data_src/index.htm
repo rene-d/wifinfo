@@ -369,7 +369,7 @@
                                         <div class="form-group">
                                             <label class="col-sm-3 control-label">Mise à jour</label>
                                             <div class="col-sm-9">
-                                                <select id="emon_port" name="emon_freq" class="form-control col-sm-2">
+                                                <select id="emon_freq" name="emon_freq" class="form-control col-sm-2">
                                                     <option value="0">désactivée</option>
                                                     <option value="15">toutes les 15 secondes</option>
                                                     <option value="30">toutes les 30 secondes</option>
@@ -444,7 +444,7 @@
                                         <div class="form-group">
                                             <label class="col-sm-3 control-label">Mise à jour</label>
                                             <div class="col-sm-9">
-                                                <select id="emon_port" name="jdom_freq" class="form-control col-sm-2">
+                                                <select id="jdom_freq" name="jdom_freq" class="form-control col-sm-2">
                                                     <option value="0">désactivée</option>
                                                     <option value="15">toutes les 15 secondes</option>
                                                     <option value="30">toutes les 30 secondes</option>
@@ -768,7 +768,7 @@
                 isousc = parseInt(value);
             }
             else if (row.na == "IINST") {
-                var pb, pe, cl;
+                var pe, cl;
                 iinst = parseInt(value);
                 pe = parseInt(iinst * 100 / isousc);
                 if (isNaN(pe))
@@ -931,10 +931,10 @@
                 });
             } else if (target == '#tab_fs') {
                 $.getJSON("/spiffs.json", function (spiffs_data) {
-                    var pb, pe, cl;
-                    total = spiffs_data.spiffs[0].Total;
-                    used = spiffs_data.spiffs[0].Used;
-                    freeram = spiffs_data.spiffs[0].RAM;
+                    var pe, cl;
+                    var total = spiffs_data.spiffs[0].Total;
+                    var used = spiffs_data.spiffs[0].Used;
+                    // freeram = spiffs_data.spiffs[0].RAM;
 
                     //$('#tab_fs_data').bootstrapTable({silent:true, showLoading:true});
                     $('#tab_fs_data').bootstrapTable('load', spiffs_data.files, {
@@ -1029,7 +1029,7 @@
             });
 
         $('#tab_scan').on('click-row.bs.table', function (e, name, args) {
-            var $form = $('#tab_cfg');
+            // var $form = $('#tab_cfg');
             $('#ssid').val(name.ssid);
             setTimeout(function () {
                 $('#psk').focus()
@@ -1097,7 +1097,7 @@
             var namef = ff.name.toLowerCase();
             var sizef = ff.size;
             var typef = ff.type;
-            var htmlf = 'Fichier:' + namef + '&nbsp;&nbsp;type:' + typef + '&nbsp;&nbsp;taille:' + sizef + ' octets'
+            //var htmlf = 'Fichier:' + namef + '&nbsp;&nbsp;type:' + typef + '&nbsp;&nbsp;taille:' + sizef + ' octets'
             console.log('name=' + namef);
             console.log('size' + sizef);
             console.log('type=' + typef);
@@ -1106,7 +1106,7 @@
             $('#sfile').text(namef + ' : ');
             if (okf) {
                 $btnf.removeClass('hide');
-                label = 'Transférer vers filesystem';
+                var label = 'Transférer vers filesystem';
                 $btnf.val(label);
                 $('#file_info').html('<strong>' + label + '</strong> ' + html);
             } else {
@@ -1127,7 +1127,7 @@
             var name = f.name.toLowerCase();
             var size = f.size;
             var type = f.type;
-            var html = 'Fichier:' + name + '&nbsp;&nbsp;type:' + type + '&nbsp;&nbsp;taille:' + size + ' octets'
+            var html = 'Fichier:' + name + '&nbsp;&nbsp;type:' + type + '&nbsp;&nbsp;taille:' + size + ' octets';
             console.log('name=' + name);
             console.log('size' + size);
             console.log('type=' + type);
@@ -1143,6 +1143,7 @@
                 ok = false;
             }
             if (ok) {
+                var label;
                 $btn.removeClass('hide');
                 if (name == "wifinfo.cpp.bin" || name == "wifinfo.ino.bin") {
                     label = 'Mise à jour Micro-Logiciel';
@@ -1219,7 +1220,7 @@
 
         window.onload = function () {
             var url = document.location.toString();
-            var full = location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '');
+            // var full = location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '');
             // console.log(url);
             // console.log(full);
             // console.log(location.port);
@@ -1237,7 +1238,7 @@
                 silent: true,
                 url: '/tinfo.json'
             });
-        }
+        };
 
     // $('#btn_test').click(function () {
     //     waitReboot();
