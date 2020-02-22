@@ -2,13 +2,16 @@
 # module téléinformation client
 # rene-d 2020
 
+set -e
+
+
 if [ -f /.dockerenv ]; then
     src_dir=/tic
-    cov_dir=/coverage
+    results=/results
 else
     cd $(dirname $0)
     src_dir=..
-    cov_dir=../coverage
+    results=.
     mkdir -p build
     cd build
 fi
@@ -16,10 +19,10 @@ fi
 cmake -DCODE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug ${src_dir}
 make -j
 
-lcov --base-directory . --directory . --zerocounters -q
-
 ctest --output-on-failure
 
-lcov --base-directory . --directory . -c -o tic.info
-lcov --remove tic.info "/usr*" -o tic.info
-genhtml -o ${cov_dir} -t "tic test coverage" --num-spaces 4 tic.info
+gcovr -r ${src_dir} --html --html-details -o ${results}/coverage.html
+
+cppcheck --project=compile_commands.json --suppress=*:/usr/local/include/nlohmann/json.hpp --xml 2> ${results}/cppcheck.xml
+
+cppcheck-htmlreport --file ${results}/cppcheck.xml --report-dir=${results}/cppcheck

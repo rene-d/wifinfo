@@ -84,7 +84,7 @@ String sys_uptime()
     long day = hr / 24;
 
     sprintf_P(buff, PSTR("%ld days %02d h %02d m %02d sec"), day, hr % 24, min % 60, sec % 60);
-    return buff;
+    return String(buff);
 }
 
 String sys_time_now()
@@ -93,7 +93,7 @@ String sys_time_now()
     struct tm *tm = localtime(&now);
     char buf[32];
     strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S%z", tm);
-    return buf;
+    return String(buf);
 }
 
 // Return JSON string containing system data
