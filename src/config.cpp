@@ -231,6 +231,11 @@ void config_show()
     Serial.print(F("port      : "));
     Serial.println(config.httpreq.port);
     Serial.print(F("url       : "));
+    Serial.print(F("method    : "));
+    if (config.httpreq.use_post)
+        Serial.println(F("POST"));
+    else
+        Serial.println(F("GET"));
     Serial.println(config.httpreq.url);
     Serial.print(F("freq      : "));
     Serial.println(config.httpreq.freq);
@@ -283,8 +288,9 @@ void config_get_json(String &r)
     js.append(CFG_FORM_HTTPREQ_HOST, config.httpreq.host);
     js.append(CFG_FORM_HTTPREQ_PORT, config.httpreq.port);
     js.append(CFG_FORM_HTTPREQ_URL, config.httpreq.url);
-    js.append(CFG_FORM_HTTPREQ_FREQ, config.httpreq.freq);
+    js.append(CFG_FORM_HTTPREQ_USE_POST, config.httpreq.use_post);
 
+    js.append(CFG_FORM_HTTPREQ_FREQ, config.httpreq.freq);
     js.append(CFG_FORM_HTTPREQ_TRIGGER_PTEC, config.httpreq.trigger_ptec);
     js.append(CFG_FORM_HTTPREQ_TRIGGER_ADPS, config.httpreq.trigger_adps);
     js.append(CFG_FORM_HTTPREQ_TRIGGER_SEUILS, config.httpreq.trigger_seuils);
@@ -349,8 +355,9 @@ void config_handle_form(ESP8266WebServer &server)
         strncpy(config.httpreq.host, server.arg(CFG_FORM_HTTPREQ_HOST).c_str(), CFG_HTTPREQ_HOST_LENGTH);
         config.httpreq.port = validate_int(server.arg(CFG_FORM_HTTPREQ_PORT), 0, 65535, CFG_HTTPREQ_DEFAULT_PORT);
         strncpy(config.httpreq.url, server.arg(CFG_FORM_HTTPREQ_URL).c_str(), CFG_HTTPREQ_URL_LENGTH);
-        config.httpreq.freq = validate_int(server.arg(CFG_FORM_HTTPREQ_FREQ), 0, 86400, 0);
+        config.httpreq.use_post = server.hasArg(CFG_FORM_HTTPREQ_USE_POST);
 
+        config.httpreq.freq = validate_int(server.arg(CFG_FORM_HTTPREQ_FREQ), 0, 86400, 0);
         config.httpreq.trigger_adps = server.hasArg(CFG_FORM_HTTPREQ_TRIGGER_ADPS);
         config.httpreq.trigger_ptec = server.hasArg(CFG_FORM_HTTPREQ_TRIGGER_PTEC);
         config.httpreq.trigger_seuils = server.hasArg(CFG_FORM_HTTPREQ_TRIGGER_SEUILS);

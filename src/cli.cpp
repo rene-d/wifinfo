@@ -222,7 +222,7 @@ void cli_setup()
         }
     });
 
-    cli_input.reserve(64);
+    cli_input.reserve(128 + 2);
 }
 
 int cli_loop_read()
