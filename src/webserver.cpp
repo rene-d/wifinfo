@@ -2,12 +2,12 @@
 // rene-d 2020
 
 #include "webserver.h"
-#include "filesystem.h"
-#include "sys.h"
 #include "config.h"
-#include "sse.h"
-#include "tic.h"
 #include "cpuload.h"
+#include "filesystem.h"
+#include "sse.h"
+#include "sys.h"
+#include "tic.h"
 
 #include <Arduino.h>
 #include <ESP8266WebServer.h>

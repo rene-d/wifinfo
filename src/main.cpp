@@ -3,14 +3,14 @@
 
 #include "timesync.h"
 #include "cli.h"
-#include "filesystem.h"
 #include "config.h"
+#include "cpuload.h"
+#include "filesystem.h"
 #include "led.h"
 #include "sys.h"
 #include "teleinfo.h"
-#include "webserver.h"
 #include "tic.h"
-#include "cpuload.h"
+#include "webserver.h"
 
 #include <Arduino.h>
 #include <ArduinoOTA.h>

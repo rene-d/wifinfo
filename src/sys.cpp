@@ -25,15 +25,15 @@
 
 #include "sys.h"
 #include "config.h"
-#include "sse.h"
-#include "led.h"
 #include "jsonbuilder.h"
-#include <ESP8266WiFi.h>
+#include "led.h"
+#include "sse.h"
 #include <ArduinoOTA.h>
 #include <ESP8266WebServer.h>
+#include <ESP8266WiFi.h>
 #include <FS.h>
-#include <user_interface.h>
 #include <sys/time.h>
+#include <user_interface.h>
 
 #include "emptyserial.h"
 
@@ -179,7 +179,9 @@ void sys_wifi_scan_json(String &response)
     for (uint8_t i = 0; i < n; ++i)
     {
         if (i != 0)
+        {
             response += F(",");
+        }
 
         response += F("{\"ssid\":\"");
         response += WiFi.SSID(i);
@@ -381,7 +383,9 @@ void sys_handle_factory_reset(ESP8266WebServer &server)
     delay(1000);
     ESP.restart();
     while (true)
+    {
         delay(1);
+    }
 }
 
 // reset the module
@@ -394,7 +398,9 @@ void sys_handle_reset(ESP8266WebServer &server)
     delay(1000);
     ESP.restart();
     while (true)
+    {
         delay(1);
+    }
 }
 
 #ifdef ENABLE_OTA

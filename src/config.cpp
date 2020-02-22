@@ -24,8 +24,8 @@
 // **********************************************************************************
 
 #include "config.h"
-#include "tic.h"
 #include "jsonbuilder.h"
+#include "tic.h"
 #include <EEPROM.h>
 #include <user_interface.h>
 
@@ -94,9 +94,13 @@ static uint16_t crc16Update(uint16_t crc, uint8_t a)
     for (i = 0; i < 8; ++i)
     {
         if (crc & 1)
+        {
             crc = (crc >> 1) ^ 0xA001;
+        }
         else
+        {
             crc = (crc >> 1);
+        }
     }
     return crc;
 }
@@ -126,7 +130,9 @@ bool config_read(bool clear_on_error)
     {
         // Clear config if wanted
         if (clear_on_error)
+        {
             memset(&config, 0, sizeof(Config));
+        }
         return false;
     }
 
@@ -147,7 +153,9 @@ bool config_save()
 
     // For whole size of config structure, pre-calculate CRC
     for (size_t i = 0; i < sizeof(Config) - 2; ++i)
+    {
         config.crc = crc16Update(config.crc, *pconfig++);
+    }
 
     // Re init pointer
     pconfig = (const uint8_t *)&config;
@@ -194,7 +202,9 @@ void config_show()
 
     Serial.print(F("Config   :"));
     if (config.options & OPTION_LED_TINFO)
+    {
         Serial.print(F(" LED_TINFO"));
+    }
     Serial.println();
 
     Serial.println(F("===== Emoncms"));
@@ -233,19 +243,29 @@ void config_show()
     Serial.print(F("url       : "));
     Serial.print(F("method    : "));
     if (config.httpreq.use_post)
+    {
         Serial.println(F("POST"));
+    }
     else
+    {
         Serial.println(F("GET"));
+    }
     Serial.println(config.httpreq.url);
     Serial.print(F("freq      : "));
     Serial.println(config.httpreq.freq);
     Serial.print(F("notifs    :"));
     if (config.httpreq.trigger_ptec)
+    {
         Serial.print(F(" PTEC"));
+    }
     if (config.httpreq.trigger_adps)
+    {
         Serial.print(F(" ADPS"));
+    }
     if (config.httpreq.trigger_seuils)
+    {
         Serial.print(F(" seuils"));
+    }
     Serial.println();
     Serial.print(F("seuil bas : "));
     Serial.println(config.httpreq.seuil_bas);
@@ -302,7 +322,9 @@ static int validate_int(const String &value, int a, int b, int d)
 {
     int v = value.toInt();
     if (a <= v && v <= b)
+    {
         return v;
+    }
     return d;
 }
 

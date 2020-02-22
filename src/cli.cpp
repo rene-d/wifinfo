@@ -2,17 +2,17 @@
 // rene-d 2020
 
 #include "cli.h"
-#include "timesync.h"
-#include "sse.h"
 #include "config.h"
 #include "filesystem.h"
-#include "tic.h"
+#include "sse.h"
 #include "sys.h"
+#include "tic.h"
+#include "timesync.h"
 
 #include <Arduino.h>
-#include <SimpleCLI.h>
-#include <PolledTimeout.h>
 #include <EEPROM.h>
+#include <PolledTimeout.h>
+#include <SimpleCLI.h>
 
 extern "C" uint32_t _EEPROM_start;
 
@@ -268,7 +268,9 @@ void cli_eeprom_dump(uint8_t bytesPerRow, size_t size)
 
     // default to 16 bytes per row
     if (bytesPerRow == 0)
+    {
         bytesPerRow = 16;
+    }
 
     Serial.println();
 

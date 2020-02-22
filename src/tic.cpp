@@ -2,11 +2,11 @@
 // rene-d 2020
 
 #include "tic.h"
-#include "teleinfo.h"
 #include "config.h"
 #include "httpreq.h"
-#include "sse.h"
 #include "led.h"
+#include "sse.h"
+#include "teleinfo.h"
 #include <PolledTimeout.h>
 
 // les différente notifications que httpreq peut envoyer
@@ -338,7 +338,9 @@ void http_notif_periode_en_cours()
 {
     const char *PTEC = tinfo.get_value("PTEC");
     if (PTEC == NULL)
+    {
         return;
+    }
 
     // a-t-on un changement de période ?
     if (strncmp(periode_en_cours, PTEC, sizeof(periode_en_cours)) != 0)
@@ -384,11 +386,15 @@ void http_notif_seuils()
 {
     const char *PAPP = tinfo.get_value("PAPP");
     if (PAPP == NULL)
+    {
         return;
+    }
 
     long papp = atol(PAPP);
     if (papp == 0)
+    {
         return;
+    }
 
     if ((papp >= config.httpreq.seuil_haut) && (seuil_en_cours == BAS))
     {
@@ -454,9 +460,13 @@ void tic_emoncms_data(String &url)
     {
         // On first item, do not add , separator
         if (first_item)
+        {
             first_item = false;
+        }
         else
+        {
             url += ",";
+        }
 
         url += label;
         url += ":";
@@ -477,15 +487,25 @@ void tic_emoncms_data(String &url)
             const char *p = value;
 
             if (*p == 'B' && *(p + 1) == 'A' && *(p + 2) == 'S')
+            {
                 url += "1";
+            }
             else if (*p == 'H' && *(p + 1) == 'C')
+            {
                 url += "2";
+            }
             else if (*p == 'E' && *(p + 1) == 'J' && *(p + 2) == 'P')
+            {
                 url += "3";
+            }
             else if (*p == 'B' && *(p + 1) == 'B' && *(p + 2) == 'R')
+            {
                 url += "4";
+            }
             else
+            {
                 url += "0";
+            }
         }
         else if (!strcmp(label, "HHPHC"))
         {
@@ -511,29 +531,53 @@ void tic_emoncms_data(String &url)
                 HPJR => Heures Pleines Jours Rouges.
                 */
             if (!strcmp(value, "TH"))
+            {
                 url += "1";
+            }
             else if (!strcmp(value, "HC"))
+            {
                 url += "2";
+            }
             else if (!strcmp(value, "HP"))
+            {
                 url += "3";
+            }
             else if (!strcmp(value, "HN"))
+            {
                 url += "4";
+            }
             else if (!strcmp(value, "PM"))
+            {
                 url += "5";
+            }
             else if (!strcmp(value, "HCJB"))
+            {
                 url += "6";
+            }
             else if (!strcmp(value, "HCJW"))
+            {
                 url += "7";
+            }
             else if (!strcmp(value, "HCJR"))
+            {
                 url += "8";
+            }
             else if (!strcmp(value, "HPJB"))
+            {
                 url += "9";
+            }
             else if (!strcmp(value, "HPJW"))
+            {
                 url += "10";
+            }
             else if (!strcmp(value, "HPJR"))
+            {
                 url += "11";
+            }
             else
+            {
                 url += "0";
+            }
         }
         else
         {
