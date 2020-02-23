@@ -229,16 +229,18 @@ int sys_wifi_connect()
         }
         else
         {
-
             // Copy SDK SSID
             strncpy(config.ssid, WiFi.SSID().c_str(), CFG_SSID_LENGTH);
 
             // Copy SDK password if any
             if (WiFi.psk() != "")
+            {
                 strncpy(config.psk, WiFi.psk().c_str(), CFG_SSID_LENGTH);
+            }
             else
+            {
                 *config.psk = '\0';
-
+            }
             Serial.println("found one!");
 
             // save back new config

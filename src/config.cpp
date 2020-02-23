@@ -162,8 +162,9 @@ bool config_save()
 
     // For whole size of config structure, write to EEP
     for (size_t i = 0; i < sizeof(Config); ++i)
+    {
         EEPROM.write(i, *pconfig++);
-
+    }
     // Physically save
     EEPROM.commit();
 

@@ -54,8 +54,9 @@ void tic_decode(int c)
     if (tinfo_decoder.ready())
     {
         if (config.options & OPTION_LED_TINFO)
+        {
             led_on();
-
+        }
         tinfo.copy_from(tinfo_decoder);
 
         Serial.printf("teleinfo: [%lu] %s  %s  %s  %s\n",
@@ -68,7 +69,9 @@ void tic_decode(int c)
         tic_notifs();
 
         if (config.options & OPTION_LED_TINFO)
+        {
             led_off();
+        }
     }
 }
 
@@ -390,7 +393,7 @@ void http_notif_seuils()
         return;
     }
 
-    long papp = atol(PAPP);
+    long papp = strtol(PAPP, nullptr, 10);
     if (papp == 0)
     {
         return;
@@ -434,7 +437,9 @@ void jeedom_notif()
         {
             // Config identifiant forcée ?
             if (config.jeedom.adco[0] != 0)
+            {
                 value = config.jeedom.adco;
+            }
         }
 
         url += F("&");
