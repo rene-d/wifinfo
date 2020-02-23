@@ -8,6 +8,8 @@ set -e
 if [ -f /.dockerenv ]; then
     src_dir=/tic
     results=/results
+    mkdir -p /build /results
+    cd /build
 else
     cd $(dirname $0)
     src_dir=..
