@@ -13,9 +13,10 @@ public:
     static String begin_host;
     static uint16_t begin_port;
     static String begin_url;
+    static bool begin_https;
 
 public:
-    void begin(WiFiClient &, const char *host, uint16_t port, const String &url);
+    void begin(WiFiClient &, const char *host, uint16_t port, const String &url, bool https = false);
     int GET()
     {
         return 0;

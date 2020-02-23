@@ -594,7 +594,9 @@ void emoncms_notif()
 {
     // Some basic checking
     if (config.emoncms.host[0] == 0)
+    {
         return;
+    }
 
     String url;
 
