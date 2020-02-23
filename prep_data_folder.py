@@ -7,6 +7,7 @@
 import shutil
 import pathlib
 import subprocess
+import os
 
 
 def get_minifier(suffix):
@@ -36,8 +37,13 @@ def get_version():
     read the git version
     """
 
-    wifinfo_version = subprocess.check_output("git describe --long --always --tags --all", shell=True).decode().strip()
-    wifinfo_version = wifinfo_version[wifinfo_version.index("/") + 1 :]
+    if pathlib.Path(".git").is_dir():
+        wifinfo_version = (
+            subprocess.check_output("git describe --long --always --tags --all", shell=True).decode().strip()
+        )
+        wifinfo_version = wifinfo_version[wifinfo_version.index("/") + 1 :]
+    else:
+        wifinfo_version = os.getenv("WIFINFO_VERSION", "develop")
 
     trace(f"  WIFINFO_VERSION = {wifinfo_version}")
     return wifinfo_version
