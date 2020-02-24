@@ -66,6 +66,7 @@ void config_reset()
     sprintf_P(config.host, PSTR("WifInfo-%06X"), ESP.getChipId());
     strcpy_P(config.ota_auth, DEFAULT_OTA_AUTH);
     config.ota_port = DEFAULT_OTA_PORT;
+    config.sse_freq = 10;
 
     // Emoncms
     strcpy_P(config.emoncms.host, CFG_EMON_DEFAULT_HOST);

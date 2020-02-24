@@ -6,6 +6,10 @@
 class ESPClass
 {
 public:
+    static int restart_called;
+    static int eraseConfig_called;
+
+public:
     uint32_t getChipId() const
     {
         return 0x12AB;
@@ -28,10 +32,12 @@ public:
 
     void restart()
     {
+        ++restart_called;
     }
 
     void eraseConfig()
     {
+        ++eraseConfig_called;
     }
 };
 

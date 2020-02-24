@@ -27,10 +27,9 @@ enum LedColors
 
 inline void led_setup()
 {
-    // int led = digitalRead(LED_BUILTIN);
     pinMode(LED_BUILTIN, OUTPUT);
-    // digitalWrite(LED_BUILTIN, led);
 }
+
 inline void led_on()
 {
     digitalWrite(LED_BUILTIN, LOW);
