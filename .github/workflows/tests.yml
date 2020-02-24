@@ -14,4 +14,4 @@ jobs:
       run: docker build -t tic .
 
     - name: run tests
-      run: docker run --rm -ti -v $PWD:/tic:ro -v /tmp/results:/results tic /tic/runtest.sh
+      run: docker run --rm -v $PWD:/tic:ro -v /tmp/results:/results tic /tic/runtest.sh
