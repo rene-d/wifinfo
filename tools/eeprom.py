@@ -13,11 +13,12 @@ import tempfile
 
 
 def print_cmd(cmd):
+    """ Affiche la commande de en grisé. """
     click.echo(click.style(" ".join(cmd), fg="bright_black"))
 
 
 def get_eeprom_base():
-    """ Lit l'adresse de base de l'eeprom """
+    """ Lit l'adresse de base de l'EEPROM. """
     output = subprocess.run(
         ["esptool.py", "--no-stub", "flash_id"], stderr=subprocess.DEVNULL, stdout=subprocess.PIPE
     ).stdout
@@ -43,7 +44,7 @@ def get_eeprom_base():
 
 
 def write_eeprom(config):
-    """ Sérialise la conf dans la page de 1Ko """
+    """ Sérialise la conf dans la page de 1Ko. """
 
     emoncms = struct.pack(
         "<33s33s33sHBI",
@@ -111,7 +112,7 @@ def write_eeprom(config):
 
 
 def read_eeprom(eeprom):
-    """ Désérialise la conf """
+    """ Désérialise la configuration. """
 
     config = {}
 
@@ -164,19 +165,19 @@ def cli_write():
 
 
 @cli_write.command()
-@click.option("-i", "--input", help="fichier source", default="config.yaml", type=click.File("rb"))
+@click.option("-i", "--input", "input_", help="fichier source", default="config.yaml", type=click.File("rb"))
 @click.option("-f", "--force", help="pas de question", is_flag=True)
-def cmd_write(input, force):
-    """ Charge une configuration en EEPROM """
+def cmd_write(input_, force):
+    """ Charge une configuration en EEPROM. """
     suffix = pathlib.Path(input.name).suffix.lower()
 
     if suffix == ".bin":
         eeprom_file = input
     else:
         if suffix == ".json":
-            config = json.load(input)
+            config = json.load(input_)
         elif suffix == ".yaml" or suffix == ".yml":
-            config = yaml.full_load(input)
+            config = yaml.full_load(input_)
         else:
             print(f"Extension de fichier non reconnue: {suffix}")
             return 2
@@ -186,7 +187,7 @@ def cmd_write(input, force):
         eeprom_file.flush()
         click.echo(click.style(yaml.safe_dump(config, sort_keys=False), fg="cyan"))
 
-    input.close()
+    input_.close()
 
     base = get_eeprom_base()
     if not base:
@@ -207,7 +208,7 @@ def cli_read():
 @cli_read.command()
 @click.option("-o", "--output", help="fichier destination", default="config.yaml", type=click.File("wb"))
 def cmd_read(output):
-    """ Lit la configuration depuis l'EEPROM """
+    """ Lit la configuration depuis l'EEPROM. """
     base = get_eeprom_base()
     if not base:
         return 2
@@ -244,14 +245,14 @@ def cli_dump():
 
 
 @cli_dump.command()
-@click.option("-i", "--input", help="fichier source", default="config.bin", type=click.File("rb"))
-@click.option("-f", "--format", help="fichier source", default="yaml", type=click.Choice(["yaml", "json"]))
-def cmd_dump(input, format):
-    """ Convertit le fichier EEPROM config.bin """
-    eeprom = input.read()
-    input.close()
+@click.option("-i", "--input", "input_", help="fichier source", default="config.bin", type=click.File("rb"))
+@click.option("-f", "--format", "format_", help="fichier source", default="yaml", type=click.Choice(["yaml", "json"]))
+def cmd_dump(input_, format_):
+    """ Convertit le fichier EEPROM config.bin."""
+    eeprom = input_.read()
+    input_.close()
 
-    if format == "json":
+    if format_ == "json":
         print(json.dumps(read_eeprom(eeprom), indent=4))
     else:
         print(yaml.safe_dump(read_eeprom(eeprom), sort_keys=False))

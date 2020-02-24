@@ -124,7 +124,7 @@ class Console(ConsoleBase):
 
 
 class Transform(object):
-    """do-nothing: forward all data unchanged"""
+    """ Do-nothing: forward all data unchanged """
 
     def rx(self, text):
         """ Text received from serial port """

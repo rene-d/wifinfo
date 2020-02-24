@@ -56,6 +56,28 @@ void config_setup()
     }
 }
 
+static void config_secure_strings()
+{
+    // ajoute des \0 pour plus de sécurité
+    config.ssid[CFG_SSID_LENGTH] = 0;
+    config.psk[CFG_PSK_LENGTH] = 0;
+    config.host[CFG_HOSTNAME_LENGTH] = 0;
+    config.ap_psk[CFG_PSK_LENGTH] = 0;
+    config.ota_auth[CFG_PSK_LENGTH] = 0;
+
+    config.emoncms.host[CFG_EMON_HOST_LENGTH] = 0;
+    config.emoncms.apikey[CFG_EMON_KEY_LENGTH] = 0;
+    config.emoncms.url[CFG_EMON_URL_LENGTH] = 0;
+
+    config.jeedom.host[CFG_JDOM_HOST_LENGTH] = 0;
+    config.jeedom.apikey[CFG_JDOM_KEY_LENGTH] = 0;
+    config.jeedom.url[CFG_JDOM_URL_LENGTH] = 0;
+    config.jeedom.adco[CFG_JDOM_ADCO_LENGTH] = 0;
+
+    config.httpreq.host[CFG_HTTPREQ_HOST_LENGTH] = 0;
+    config.httpreq.url[CFG_HTTPREQ_URL_LENGTH] = 0;
+}
+
 // Set configuration to default values
 void config_reset()
 {
@@ -124,6 +146,8 @@ bool config_read(bool clear_on_error)
         // calc CRC
         crc = crc16Update(crc, data);
     }
+
+    config_securse_strings();
 
     // CRC Error ?
     if (crc != 0)
@@ -386,6 +410,8 @@ void config_handle_form(ESP8266WebServer &server)
         config.httpreq.trigger_seuils = server.hasArg(CFG_FORM_HTTPREQ_TRIGGER_SEUILS);
         config.httpreq.seuil_bas = validate_int(server.arg(CFG_FORM_HTTPREQ_SEUIL_BAS), 0, 20000, 0);
         config.httpreq.seuil_haut = validate_int(server.arg(CFG_FORM_HTTPREQ_SEUIL_HAUT), 0, 20000, 0);
+
+        config_secure_strings();
 
         if (config_save())
         {
