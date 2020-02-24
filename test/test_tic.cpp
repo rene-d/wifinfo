@@ -23,6 +23,8 @@ static void test_config_notif(bool emoncms, bool jeedom, bool httpreq)
 {
     test_reset_timers();
 
+    config.options = 0;
+
     if (emoncms)
     {
         strcpy(config.emoncms.host, "emoncms.home");
@@ -442,4 +444,33 @@ TEST(tic, json)
     ASSERT_EQ(j2["HCHP"], 49126843);
     ASSERT_EQ(j2["PTEC"], "HP");
     ASSERT_EQ(j2["MOTDETAT"], 0);
+}
+
+TEST(tic, led)
+{
+    test_config_notif(false, false, false);
+
+    // active le clignotement
+    config.options |= OPTION_LED_TINFO;
+    digitalWrite_called = 0;
+    tinfo.copy_from(empty_tinfo);
+    ASSERT_TRUE(tinfo.is_empty());
+    for (auto c : trame_teleinfo)
+    {
+        tic_decode(c);
+    }
+    ASSERT_FALSE(tinfo.is_empty());
+    ASSERT_EQ(digitalWrite_called, 2);
+
+    // désactive le clignotement
+    config.options &= ~OPTION_LED_TINFO;
+    digitalWrite_called = 0;
+    tinfo.copy_from(empty_tinfo);
+    ASSERT_TRUE(tinfo.is_empty());
+    for (auto c : trame_teleinfo)
+    {
+        tic_decode(c);
+    }
+    ASSERT_FALSE(tinfo.is_empty());
+    ASSERT_EQ(digitalWrite_called, 0);
 }

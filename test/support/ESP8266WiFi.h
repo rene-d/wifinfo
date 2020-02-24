@@ -25,7 +25,7 @@ public:
 
     int8_t scanNetworks()
     {
-        return 1;
+        return 2;
     }
 
     void begin(const char *ssid, const char *psk = nullptr)
@@ -48,34 +48,34 @@ public:
     {
     }
 
-    int RSSI(uint8_t = 0) const
+    int RSSI(uint8_t n = 0) const
     {
-        return -72;
+        return n == 0 ? -72 : -99;
     }
 
-    String SSID(uint8_t = 0) const
+    String SSID(uint8_t n = 0) const
     {
-        return "superwifi";
+        return n == 0 ? "superwifi" : "mauvaiswifi";
     }
 
-    String psk(uint8_t = 0) const
+    String psk(uint8_t n = 0) const
     {
-        return "supermotdepasse";
+        return n == 0 ? "supermotdepasse" : "azerty";
     }
 
-    String BSSIDstr(uint8_t = 0) const
+    String BSSIDstr(uint8_t n = 0) const
     {
-        return "blah";
+        return n == 0 ? "blah" : "lol";
     }
 
-    uint8_t channel(uint8_t = 0) const
+    uint8_t channel(uint8_t n = 0) const
     {
-        return 1;
+        return n == 0 ? 1 : 2;
     }
 
-    uint8_t encryptionType(uint8_t = 0) const
+    uint8_t encryptionType(uint8_t n = 0) const
     {
-        return 8;
+        return n == 0 ? 8 : 6;
     }
 
     String macAddress() const

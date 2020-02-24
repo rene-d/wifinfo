@@ -8,6 +8,9 @@
 class ESP8266WebServer
 {
 public:
+    static int send_called;
+
+public:
     WiFiClient client()
     {
         return WiFiClient();
@@ -15,6 +18,7 @@ public:
 
     void send(int, const String &, const String &)
     {
+        ++send_called;
     }
 
     void on(const char *, ...)

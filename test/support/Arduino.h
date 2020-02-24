@@ -6,13 +6,21 @@
 #include <string>
 #include <iostream>
 
+extern int pinMode_called;
+extern int digitalRead_called;
+extern int digitalWrite_called;
+
 static inline unsigned long millis() { return 1000; }
 static inline unsigned long micros() { return 1000000; }
 static inline void delay(unsigned) {}
 
-static inline void pinMode(uint8_t pin, uint8_t mode) {}
-static inline void digitalWrite(uint8_t pin, uint8_t val) {}
-static inline int digitalRead(uint8_t pin) { return 0; }
+static inline void pinMode(uint8_t pin, uint8_t mode) { ++pinMode_called; }
+static inline void digitalWrite(uint8_t pin, uint8_t val) { ++digitalWrite_called; }
+static inline int digitalRead(uint8_t pin)
+{
+    ++digitalRead_called;
+    return 0;
+}
 
 #define LED_BUILTIN 2
 #define LOW 0

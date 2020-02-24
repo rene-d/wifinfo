@@ -2,6 +2,7 @@
 // rene-d 2020
 
 #include <ESP8266HTTPClient.h>
+#include <ESP8266WebServer.h>
 #include <PolledTimeout.h>
 #include <user_interface.h>
 #include <EEPROM.h>
@@ -15,11 +16,20 @@ WiFiClass WiFi;
 SerialClass Serial;
 SPIFFSClass SPIFFS;
 
+int pinMode_called = 0;
+int digitalRead_called = 0;
+int digitalWrite_called = 0;
+
 int HTTPClient::begin_called = 0;
 String HTTPClient::begin_host;
 uint16_t HTTPClient::begin_port = 0;
 String HTTPClient::begin_url;
 bool HTTPClient::begin_https = false;
+
+int ESP8266WebServer::send_called = 0;
+
+int ESPClass::restart_called = 0;
+int ESPClass::eraseConfig_called = 0;
 
 void HTTPClient::begin(WiFiClient &, const char *host, uint16_t port, const String &url, bool https)
 {

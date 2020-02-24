@@ -384,10 +384,6 @@ void sys_handle_factory_reset(ESP8266WebServer &server)
     Serial.println(F("Ok!"));
     delay(1000);
     ESP.restart();
-    while (true)
-    {
-        delay(1);
-    }
 }
 
 // reset the module
@@ -399,10 +395,6 @@ void sys_handle_reset(ESP8266WebServer &server)
     Serial.println(F("Ok!"));
     delay(1000);
     ESP.restart();
-    while (true)
-    {
-        delay(1);
-    }
 }
 
 #ifdef ENABLE_OTA
