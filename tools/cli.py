@@ -8,18 +8,20 @@
 #
 # SPDX-License-Identifier:    BSD-3-Clause
 
-import codecs
-import sys
-import threading
-import datetime
 import atexit
-import termios
+import codecs
+import datetime
 import fcntl
-import serial
-from serial.tools.list_ports import comports
-from serial.tools import hexlify_codec
-from simutic import tic
+import sys
+import termios
+import threading
+
 import click
+import serial
+from serial.tools import hexlify_codec
+from serial.tools.list_ports import comports
+
+from simutic import tic
 
 # pylint: disable=wrong-import-order,wrong-import-position
 
@@ -27,7 +29,7 @@ codecs.register(lambda c: hexlify_codec.getregentry() if c == "hexlify" else Non
 
 
 class Periodic(threading.Thread):
-    """ timer périodique """
+    """ Timer périodique """
 
     def __init__(self, interval, function):
         self.interval = interval
@@ -124,23 +126,23 @@ class Console(ConsoleBase):
 
 
 class Transform(object):
-    """do-nothing: forward all data unchanged"""
+    """ Do-nothing: forward all data unchanged """
 
     def rx(self, text):
-        """text received from serial port"""
+        """ Text received from serial port """
         return text
 
     def tx(self, text):
-        """text to be sent to serial port"""
+        """ Text to be sent to serial port """
         return text
 
     def echo(self, text):
-        """text to be sent but displayed on console"""
+        """ Text to be sent but displayed on console """
         return text
 
 
 class CRLF(Transform):
-    """ENTER sends CR+LF"""
+    """ ENTER sends CR+LF """
 
     def tx(self, text):
         return text.replace("\n", "\r\n")
@@ -436,7 +438,7 @@ def ask_for_port():
         return ports[0][0]
 
     sys.stderr.write("\n--- Available ports:\n")
-    for n, (port, desc, hwid) in enumerate(ports, 1):
+    for n, (port, desc, _) in enumerate(ports, 1):
         sys.stderr.write("--- {:2}: {:20} {!r}\n".format(n, port, desc))
 
     while True:

@@ -5,6 +5,7 @@
 set -euo pipefail
 
 cwd=$(cd $(dirname $0); pwd)
+echo $cwd
 
 docker run -ti --rm \
     -e TINFO_MODULE=${1:-192.168.4.1:80} \

@@ -2,10 +2,11 @@
 # rene-d 2020
 
 import datetime
-import math
-import time
-import random
 import json
+import math
+import random
+import time
+
 
 """
 Simulation de Téléinformation Client
@@ -14,21 +15,21 @@ Simulation de Téléinformation Client
 
 def group(label, value):
     """
-    construit un groupe d'une trame de téléinformation
+    Construit un groupe d'une trame de téléinformation
     """
-    sum = 0
+    cksum = 0
     for c in label:
-        sum += ord(c)
-    sum += ord(" ")
+        cksum += ord(c)
+    cksum += ord(" ")
     for c in value:
-        sum += ord(c)
-    sum = (sum & 63) + 32
-    return "\x0A" + label + " " + str(value) + " " + chr(sum) + "\x0D"
+        cksum += ord(c)
+    cksum = (cksum & 63) + 32
+    return "\x0A" + label + " " + str(value) + " " + chr(cksum) + "\x0D"
 
 
 class SimuTic:
     """
-    simule un compteur en option HP/HC
+    Simule un compteur en option HP/HC
     """
 
     def __init__(self):
@@ -44,7 +45,7 @@ class SimuTic:
 
     def bascule(self, quoi="T"):
         """
-        bascule de période tarifaire
+        Bascule de période tarifaire
         """
         if quoi == "T":
             self.heures_creuses = not self.heures_creuses
@@ -59,30 +60,36 @@ class SimuTic:
     @property
     def timestamp(self):
         """
-        retourne l'heure courante au format ISO8601
+        Retourne l'heure courante au format ISO8601
         """
         return datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
 
     @property
     def adco(self):
+        """
+        Retourne le numéro de compteur
+        """
         return self._adco
 
     @adco.setter
     def adco(self, value):
+        """
+        Positionne le numéro de compteur
+        """
         value = str(value)[0:12]
         self._adco = "0" * (12 - len(value)) + value
 
     @property
     def iinst_raw(self):
         """"
-        calcule l'intensité instantanée et met à jour les index et la puissance apparente
+        Calcule l'intensité instantanée et met à jour les index et la puissance apparente
         """
         return f"{self.iinst:03d}"
 
     @property
     def iinst(self):
         """"
-        calcule l'intensité instantanée et met à jour les index et la puissance apparente
+        Calcule l'intensité instantanée et met à jour les index et la puissance apparente
         """
         now = time.monotonic()
         self._iinst = 20 * abs(math.sin(now / 100))
@@ -97,14 +104,14 @@ class SimuTic:
     @property
     def papp_raw(self, text=False):
         """
-        calcule la Puissance APParente en VA avec un cos φ aléatoire
+        Calcule la Puissance APParente en VA avec un cos φ aléatoire
         """
         return f"{self.papp:05d}"
 
     @property
     def papp(self):
         """
-        calcule la Puissance APParente en VA avec un cos φ aléatoire
+        Calcule la Puissance APParente en VA avec un cos φ aléatoire
         """
         cos_phi = random.uniform(0.85, 1.15)
         return round(self._iinst * 230 * cos_phi) + self._pseuil
@@ -112,42 +119,42 @@ class SimuTic:
     @property
     def hchc_raw(self):
         """
-        retourne l'index Heures Creuses
+        Retourne l'index Heures Creuses
         """
         return f"{self.hchc:09d}"
 
     @property
     def hchc(self):
         """
-        retourne l'index Heures Creuses
+        Retourne l'index Heures Creuses
         """
         return round(self._hchc)
 
     @property
     def hchp_raw(self, text=False):
         """
-        retourne l'index Heures Pleines
+        Retourne l'index Heures Pleines
         """
         return f"{self.hchp:09d}"
 
     @property
     def hchp(self, text=False):
         """
-        retourne l'index Heures Pleines
+        Retourne l'index Heures Pleines
         """
         return round(self._hchp)
 
     @property
     def ptec_raw(self):
         """
-        retourne la Période Tarifaire En Cours
+        Retourne la Période Tarifaire En Cours
         """
         return (self.ptec + "....")[:4]
 
     @property
     def ptec(self):
         """
-        retourne la Période Tarifaire En Cours
+        Retourne la Période Tarifaire En Cours
         """
         if self.heures_creuses:
             return "HC"
@@ -157,7 +164,7 @@ class SimuTic:
     @property
     def adps_raw(self):
         """
-        retourne l'Avertissement de Dépassement de Puissance Souscrite
+        Retourne l'Avertissement de Dépassement de Puissance Souscrite
         """
         if self._adps == 0:
             return None
@@ -170,7 +177,7 @@ class SimuTic:
     @adps.setter
     def adps(self, value):
         """
-        positionne l'Avertissement de Dépassement de Puissance Souscrite
+        Positionne l'Avertissement de Dépassement de Puissance Souscrite
         """
         if isinstance(value, bool):
             self._adps = [0, self._isousc + 1][value]
@@ -182,20 +189,20 @@ class SimuTic:
     @property
     def isousc_raw(self):
         """
-        retourne l'Intensité SOUSCrite
+        Retourne l'Intensité SOUSCrite
         """
         return f"{self._isousc:02d}"
 
     @property
     def isousc(self):
         """
-        retourne l'Intensité SOUSCrite
+        Retourne l'Intensité SOUSCrite
         """
         return self._isousc
 
     def trame(self):
         """
-        construit une trame telle qu'elle esr envoyée par un compteur
+        Construit une trame telle qu'elle esr envoyée par un compteur
         """
         iinst_raw = self.iinst_raw
         tinfo = "\x02"
@@ -218,7 +225,7 @@ class SimuTic:
 
     def json_dict(self):
         """
-        retourne les valeurs sous forme de dictionnaire JSON
+        Retourne les valeurs sous forme de dictionnaire JSON
         """
         iinst = self.iinst
         d = {
@@ -241,7 +248,7 @@ class SimuTic:
 
     def json_array(self):
         """
-        retourne les valeurs sous forme de tableau JSON
+        Retourne les valeurs sous forme de tableau JSON
         """
         iinst_raw = self.iinst_raw
         d = [
