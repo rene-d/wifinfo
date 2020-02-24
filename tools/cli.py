@@ -373,7 +373,16 @@ class Miniterm(object):
                     self.pause_tic = not self.pause_tic
 
                 elif c == chr(0x10):  # Ctrl-P
-                    tic.bascule()
+                    tic.bascule("T")
+                    self.send_tic()
+
+                elif c == chr(0x01):  # Ctrl-A
+                    tic.bascule("A")
+                    self.send_tic()
+
+                elif c == chr(0x04):  # Ctrl-D
+                    tic.bascule("P")
+                    self.send_tic()
 
                 elif c == chr(0x03):  # Ctrl-C
                     self.stop()  # exit app

@@ -67,7 +67,10 @@ def write_eeprom(config):
         config["httpreq_url"].encode(),
         config["httpreq_port"],
         config["httpreq_freq"],
-        config["httpreq_trigger_adps"] | config["httpreq_trigger_ptec"] << 1 | config["httpreq_trigger_seuils"] << 2,
+        config["httpreq_trigger_adps"]
+        | config["httpreq_trigger_ptec"] << 1
+        | config["httpreq_trigger_seuils"] << 2
+        | config["httpreq_use_post"] << 7,
         config["httpreq_seuil_haut"],
         config["httpreq_seuil_bas"],
     )
@@ -138,6 +141,7 @@ def read_eeprom(eeprom):
     config["httpreq_host"] = httpreq[0].rstrip(b"\0").decode()
     config["httpreq_url"] = httpreq[1].rstrip(b"\0").decode()
     config["httpreq_port"] = httpreq[2]
+    config["httpreq_use_post"] = (httpreq[4] & 128) >> 7
     config["httpreq_freq"] = httpreq[3]
     config["httpreq_trigger_adps"] = httpreq[4] & 1
     config["httpreq_trigger_ptec"] = (httpreq[4] & 2) >> 1

@@ -87,8 +87,9 @@
 #define CFG_FORM_HTTPREQ_HOST FPSTR("httpreq_host")
 #define CFG_FORM_HTTPREQ_PORT FPSTR("httpreq_port")
 #define CFG_FORM_HTTPREQ_URL FPSTR("httpreq_url")
-#define CFG_FORM_HTTPREQ_FREQ FPSTR("httpreq_freq")
+#define CFG_FORM_HTTPREQ_USE_POST FPSTR("httpreq_use_post")
 
+#define CFG_FORM_HTTPREQ_FREQ FPSTR("httpreq_freq")
 #define CFG_FORM_HTTPREQ_TRIGGER_PTEC FPSTR("httpreq_trigger_ptec")
 #define CFG_FORM_HTTPREQ_TRIGGER_ADPS FPSTR("httpreq_trigger_adps")
 #define CFG_FORM_HTTPREQ_TRIGGER_SEUILS FPSTR("httpreq_trigger_seuils")
@@ -102,7 +103,7 @@ struct EmoncmsConfig
     char host[CFG_EMON_HOST_LENGTH + 1];  // FQDN
     char apikey[CFG_EMON_KEY_LENGTH + 1]; // Secret
     char url[CFG_EMON_URL_LENGTH + 1];    // URL
-    uint16_t port;                        // Protocol port (HTTP/HTTPS)
+    uint16_t port;                        // port
     uint8_t node;                         // optional node
     uint32_t freq;                        // refresh rate
     uint8_t filler[22];
@@ -116,7 +117,7 @@ struct JeedomConfig
     char apikey[CFG_JDOM_KEY_LENGTH + 1]; // Secret
     char url[CFG_JDOM_URL_LENGTH + 1];    // URL
     char adco[CFG_JDOM_ADCO_LENGTH + 1];  // Identifiant compteur
-    uint16_t port;                        // Protocol port (HTTP/HTTPS)
+    uint16_t port;                        // port
     uint32_t freq;                        // refresh rate
     uint8_t use_post;                     // POST un dictionnaire JSON
     uint8_t filler[89];
@@ -128,11 +129,13 @@ struct HttpreqConfig
 {
     char host[CFG_HTTPREQ_HOST_LENGTH + 1]; // FQDN
     char url[CFG_HTTPREQ_URL_LENGTH + 1];   // Path
-    uint16_t port;                          // Protocol port (HTTP/HTTPS)
+    uint16_t port;                          // port
     uint32_t freq;                          // refresh rate
     uint8_t trigger_adps : 1;
     uint8_t trigger_ptec : 1;
     uint8_t trigger_seuils : 1;
+    uint8_t unused : 4;   // pour remplir l'octet
+    uint8_t use_post : 1; // POST au lieu de GET, la data est le dict JSON
     uint16_t seuil_haut;
     uint16_t seuil_bas;
     uint8_t filler[61];

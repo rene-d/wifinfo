@@ -15,7 +15,7 @@ void http_request(const char *host, uint16_t port, const String &url, const char
 
     unsigned long start = micros();
 
-    http.begin(client, host, port, url);
+    http.begin(client, host, port, url, port == 443);
 
     Serial.printf("http://%s:%d%s => ", host, port, url.c_str());
 

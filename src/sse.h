@@ -6,8 +6,8 @@
 #pragma once
 
 #include <ESP8266WebServer.h>
-#include <user_interface.h>
 #include <list>
+#include <user_interface.h>
 
 class SseClient
 {

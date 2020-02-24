@@ -24,8 +24,8 @@
 // **********************************************************************************
 
 #include "config.h"
-#include "tic.h"
 #include "jsonbuilder.h"
+#include "tic.h"
 #include <EEPROM.h>
 #include <user_interface.h>
 
@@ -94,9 +94,13 @@ static uint16_t crc16Update(uint16_t crc, uint8_t a)
     for (i = 0; i < 8; ++i)
     {
         if (crc & 1)
+        {
             crc = (crc >> 1) ^ 0xA001;
+        }
         else
+        {
             crc = (crc >> 1);
+        }
     }
     return crc;
 }
@@ -126,7 +130,9 @@ bool config_read(bool clear_on_error)
     {
         // Clear config if wanted
         if (clear_on_error)
+        {
             memset(&config, 0, sizeof(Config));
+        }
         return false;
     }
 
@@ -147,15 +153,18 @@ bool config_save()
 
     // For whole size of config structure, pre-calculate CRC
     for (size_t i = 0; i < sizeof(Config) - 2; ++i)
+    {
         config.crc = crc16Update(config.crc, *pconfig++);
+    }
 
     // Re init pointer
     pconfig = (const uint8_t *)&config;
 
     // For whole size of config structure, write to EEP
     for (size_t i = 0; i < sizeof(Config); ++i)
+    {
         EEPROM.write(i, *pconfig++);
-
+    }
     // Physically save
     EEPROM.commit();
 
@@ -194,7 +203,9 @@ void config_show()
 
     Serial.print(F("Config   :"));
     if (config.options & OPTION_LED_TINFO)
+    {
         Serial.print(F(" LED_TINFO"));
+    }
     Serial.println();
 
     Serial.println(F("===== Emoncms"));
@@ -231,16 +242,31 @@ void config_show()
     Serial.print(F("port      : "));
     Serial.println(config.httpreq.port);
     Serial.print(F("url       : "));
+    Serial.print(F("method    : "));
+    if (config.httpreq.use_post)
+    {
+        Serial.println(F("POST"));
+    }
+    else
+    {
+        Serial.println(F("GET"));
+    }
     Serial.println(config.httpreq.url);
     Serial.print(F("freq      : "));
     Serial.println(config.httpreq.freq);
     Serial.print(F("notifs    :"));
     if (config.httpreq.trigger_ptec)
+    {
         Serial.print(F(" PTEC"));
+    }
     if (config.httpreq.trigger_adps)
+    {
         Serial.print(F(" ADPS"));
+    }
     if (config.httpreq.trigger_seuils)
+    {
         Serial.print(F(" seuils"));
+    }
     Serial.println();
     Serial.print(F("seuil bas : "));
     Serial.println(config.httpreq.seuil_bas);
@@ -283,8 +309,9 @@ void config_get_json(String &r)
     js.append(CFG_FORM_HTTPREQ_HOST, config.httpreq.host);
     js.append(CFG_FORM_HTTPREQ_PORT, config.httpreq.port);
     js.append(CFG_FORM_HTTPREQ_URL, config.httpreq.url);
-    js.append(CFG_FORM_HTTPREQ_FREQ, config.httpreq.freq);
+    js.append(CFG_FORM_HTTPREQ_USE_POST, config.httpreq.use_post);
 
+    js.append(CFG_FORM_HTTPREQ_FREQ, config.httpreq.freq);
     js.append(CFG_FORM_HTTPREQ_TRIGGER_PTEC, config.httpreq.trigger_ptec);
     js.append(CFG_FORM_HTTPREQ_TRIGGER_ADPS, config.httpreq.trigger_adps);
     js.append(CFG_FORM_HTTPREQ_TRIGGER_SEUILS, config.httpreq.trigger_seuils);
@@ -296,7 +323,9 @@ static int validate_int(const String &value, int a, int b, int d)
 {
     int v = value.toInt();
     if (a <= v && v <= b)
+    {
         return v;
+    }
     return d;
 }
 
@@ -349,8 +378,9 @@ void config_handle_form(ESP8266WebServer &server)
         strncpy(config.httpreq.host, server.arg(CFG_FORM_HTTPREQ_HOST).c_str(), CFG_HTTPREQ_HOST_LENGTH);
         config.httpreq.port = validate_int(server.arg(CFG_FORM_HTTPREQ_PORT), 0, 65535, CFG_HTTPREQ_DEFAULT_PORT);
         strncpy(config.httpreq.url, server.arg(CFG_FORM_HTTPREQ_URL).c_str(), CFG_HTTPREQ_URL_LENGTH);
-        config.httpreq.freq = validate_int(server.arg(CFG_FORM_HTTPREQ_FREQ), 0, 86400, 0);
+        config.httpreq.use_post = server.hasArg(CFG_FORM_HTTPREQ_USE_POST);
 
+        config.httpreq.freq = validate_int(server.arg(CFG_FORM_HTTPREQ_FREQ), 0, 86400, 0);
         config.httpreq.trigger_adps = server.hasArg(CFG_FORM_HTTPREQ_TRIGGER_ADPS);
         config.httpreq.trigger_ptec = server.hasArg(CFG_FORM_HTTPREQ_TRIGGER_PTEC);
         config.httpreq.trigger_seuils = server.hasArg(CFG_FORM_HTTPREQ_TRIGGER_SEUILS);

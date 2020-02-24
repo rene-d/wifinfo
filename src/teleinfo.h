@@ -152,7 +152,7 @@ public:
         struct tm *tm = localtime(&timestamp_.tv_sec);
         char buf[32];
         strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S%z", tm);
-        return buf;
+        return String(buf);
     }
 
     size_t get_frame_ascii(char *frame, size_t size) const

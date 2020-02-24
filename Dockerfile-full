@@ -1,0 +1,50 @@
+# module téléinformation client
+# rene-d 2020
+
+# multi-stage build for firmware and unit tests
+
+
+# the base toolchain
+#
+FROM debian:buster AS toolchain
+
+RUN apt-get update \
+&&  apt-get install -y gdb make cmake gcc g++ libgtest-dev vim wget curl bash gcovr cppcheck git python3 python3-pip
+
+RUN wget -nv -P /usr/local/include/nlohmann/ https://github.com/nlohmann/json/releases/download/v3.7.3/json.hpp
+
+RUN apt-get install -y --no-install-recommends nodejs npm
+RUN npm install -g html-minifier
+
+RUN pip3 install platformio \
+&&  platformio platform install --with-package framework-arduinoespressif8266 espressif8266 \
+&&  platformio settings set enable_telemetry false \
+&&  platformio settings set check_libraries_interval 0 \
+&&  platformio settings set check_platformio_interval 0 \
+&&  platformio settings set check_platforms_interval 0
+
+RUN pip3 install click sseclient influxdb flask flask-cors pyyaml pyserial
+
+
+# build the firmware and run unit tests
+#
+FROM toolchain AS builder
+
+ARG BOARD=esp12
+ENV WIFINFO_VERSION develop
+
+COPY . /tic
+RUN set -x \
+&&  cd /tic \
+&&  make BOARD=$BOARD check test build \
+&&  mv /tic/.pio/build/$BOARD/*.bin /tic
+
+
+# copy the bin in an empty image
+#
+FROM scratch
+
+COPY --from=builder /tic/firmware.bin /
+COPY --from=builder /tic/spiffs.bin /
+
+ENTRYPOINT /nothing

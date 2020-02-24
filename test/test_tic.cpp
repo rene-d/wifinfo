@@ -55,6 +55,7 @@ static void test_config_notif(bool emoncms, bool jeedom, bool httpreq)
         strcpy(config.httpreq.host, "sql.home");
         config.httpreq.port = 88;
         strcpy(config.httpreq.url, "/tinfo.php?hchc=$HCHC&hchp=$HCHP&papp=$PAPP");
+        config.httpreq.use_post = 0;
         config.httpreq.freq = 15;
         config.httpreq.trigger_ptec = 0;
         config.httpreq.trigger_seuils = 0;

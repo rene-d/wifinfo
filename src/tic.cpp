@@ -2,11 +2,11 @@
 // rene-d 2020
 
 #include "tic.h"
-#include "teleinfo.h"
 #include "config.h"
 #include "httpreq.h"
-#include "sse.h"
 #include "led.h"
+#include "sse.h"
+#include "teleinfo.h"
 #include <PolledTimeout.h>
 
 // les différente notifications que httpreq peut envoyer
@@ -39,6 +39,7 @@ static esp8266::polledTimeout::periodicMs timer_sse(esp8266::polledTimeout::peri
 Teleinfo tinfo;
 static TeleinfoDecoder tinfo_decoder;
 
+static void tic_get_json_dict_notif(String &data, const char *notif);
 static void http_notif(const char *notif);
 static void http_notif_periode_en_cours();
 static void http_notif_seuils();
@@ -53,8 +54,9 @@ void tic_decode(int c)
     if (tinfo_decoder.ready())
     {
         if (config.options & OPTION_LED_TINFO)
+        {
             led_on();
-
+        }
         tinfo.copy_from(tinfo_decoder);
 
         Serial.printf("teleinfo: [%lu] %s  %s  %s  %s\n",
@@ -67,7 +69,9 @@ void tic_decode(int c)
         tic_notifs();
 
         if (config.options & OPTION_LED_TINFO)
+        {
             led_off();
+        }
     }
 }
 
@@ -189,7 +193,7 @@ void tic_get_json_array(String &data)
     js.finalize();
 }
 
-void tic_get_json_dict(String &data)
+void tic_get_json_dict_notif(String &data, const char *notif)
 {
 
     if (tinfo.is_empty())
@@ -206,6 +210,11 @@ void tic_get_json_dict(String &data)
 
     js.append(FPSTR("timestamp"), tinfo.get_timestamp_iso8601().c_str());
 
+    if (notif != nullptr)
+    {
+        js.append(FPSTR("notif"), notif);
+    }
+
     while (tinfo.get_value_next(label, value, &state))
     {
         bool is_number = tinfo.get_integer(value);
@@ -219,6 +228,12 @@ void tic_get_json_dict(String &data)
     js.finalize();
 }
 
+void tic_get_json_dict(String &data)
+{
+    tic_get_json_dict_notif(data, nullptr);
+}
+
+// interface pour webserver http://wifinfo/<ETIQUETTE>
 const char *tic_get_value(const char *label)
 {
     return tinfo.get_value(label);
@@ -253,10 +268,11 @@ static void http_add_value_ex(String &uri, const char *label, const char *notif)
 void http_notif(const char *notif)
 {
     String uri;
-    uri.reserve(strlen(config.httpreq.url) + 32);
-
     char label[16];
 
+    uri.reserve(strlen(config.httpreq.url) + 32);
+
+    // formate l'URL
     for (const char *p = config.httpreq.url; *p; ++p)
     {
         if (*p == '~')
@@ -304,15 +320,30 @@ void http_notif(const char *notif)
         }
     }
 
-    Serial.printf_P(PSTR("http_notif: %s\n"), notif);
-    http_request(config.httpreq.host, config.httpreq.port, uri);
+    if (config.httpreq.use_post)
+    {
+        String data;
+
+        tic_get_json_dict_notif(data, notif);
+
+        Serial.printf_P(PSTR("http_notif: POST %s\n"), notif);
+
+        http_request(config.httpreq.host, config.httpreq.port, uri, data.c_str());
+    }
+    else
+    {
+        Serial.printf_P(PSTR("http_notif: GET %s\n"), notif);
+        http_request(config.httpreq.host, config.httpreq.port, uri);
+    }
 }
 
 void http_notif_periode_en_cours()
 {
     const char *PTEC = tinfo.get_value("PTEC");
     if (PTEC == NULL)
+    {
         return;
+    }
 
     // a-t-on un changement de période ?
     if (strncmp(periode_en_cours, PTEC, sizeof(periode_en_cours)) != 0)
@@ -358,11 +389,15 @@ void http_notif_seuils()
 {
     const char *PAPP = tinfo.get_value("PAPP");
     if (PAPP == NULL)
+    {
         return;
+    }
 
-    long papp = atol(PAPP);
+    long papp = strtol(PAPP, nullptr, 10);
     if (papp == 0)
+    {
         return;
+    }
 
     if ((papp >= config.httpreq.seuil_haut) && (seuil_en_cours == BAS))
     {
@@ -402,7 +437,9 @@ void jeedom_notif()
         {
             // Config identifiant forcée ?
             if (config.jeedom.adco[0] != 0)
+            {
                 value = config.jeedom.adco;
+            }
         }
 
         url += F("&");
@@ -428,9 +465,13 @@ void tic_emoncms_data(String &url)
     {
         // On first item, do not add , separator
         if (first_item)
+        {
             first_item = false;
+        }
         else
+        {
             url += ",";
+        }
 
         url += label;
         url += ":";
@@ -451,15 +492,25 @@ void tic_emoncms_data(String &url)
             const char *p = value;
 
             if (*p == 'B' && *(p + 1) == 'A' && *(p + 2) == 'S')
+            {
                 url += "1";
+            }
             else if (*p == 'H' && *(p + 1) == 'C')
+            {
                 url += "2";
+            }
             else if (*p == 'E' && *(p + 1) == 'J' && *(p + 2) == 'P')
+            {
                 url += "3";
+            }
             else if (*p == 'B' && *(p + 1) == 'B' && *(p + 2) == 'R')
+            {
                 url += "4";
+            }
             else
+            {
                 url += "0";
+            }
         }
         else if (!strcmp(label, "HHPHC"))
         {
@@ -485,29 +536,53 @@ void tic_emoncms_data(String &url)
                 HPJR => Heures Pleines Jours Rouges.
                 */
             if (!strcmp(value, "TH"))
+            {
                 url += "1";
+            }
             else if (!strcmp(value, "HC"))
+            {
                 url += "2";
+            }
             else if (!strcmp(value, "HP"))
+            {
                 url += "3";
+            }
             else if (!strcmp(value, "HN"))
+            {
                 url += "4";
+            }
             else if (!strcmp(value, "PM"))
+            {
                 url += "5";
+            }
             else if (!strcmp(value, "HCJB"))
+            {
                 url += "6";
+            }
             else if (!strcmp(value, "HCJW"))
+            {
                 url += "7";
+            }
             else if (!strcmp(value, "HCJR"))
+            {
                 url += "8";
+            }
             else if (!strcmp(value, "HPJB"))
+            {
                 url += "9";
+            }
             else if (!strcmp(value, "HPJW"))
+            {
                 url += "10";
+            }
             else if (!strcmp(value, "HPJR"))
+            {
                 url += "11";
+            }
             else
+            {
                 url += "0";
+            }
         }
         else
         {
@@ -524,7 +599,9 @@ void emoncms_notif()
 {
     // Some basic checking
     if (config.emoncms.host[0] == 0)
+    {
         return;
+    }
 
     String url;
 

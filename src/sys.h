@@ -13,4 +13,4 @@ void sys_wifi_scan_json(String &response);
 int sys_wifi_connect();
 
 void sys_ota_setup();
-void sys_ota_register(ESP8266WebServer &server);
+void sys_update_register(ESP8266WebServer &server);

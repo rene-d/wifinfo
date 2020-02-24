@@ -25,15 +25,15 @@
 
 #include "sys.h"
 #include "config.h"
-#include "sse.h"
-#include "led.h"
 #include "jsonbuilder.h"
-#include <ESP8266WiFi.h>
+#include "led.h"
+#include "sse.h"
 #include <ArduinoOTA.h>
 #include <ESP8266WebServer.h>
+#include <ESP8266WiFi.h>
 #include <FS.h>
-#include <user_interface.h>
 #include <sys/time.h>
+#include <user_interface.h>
 
 #include "emptyserial.h"
 
@@ -84,7 +84,7 @@ String sys_uptime()
     long day = hr / 24;
 
     sprintf_P(buff, PSTR("%ld days %02d h %02d m %02d sec"), day, hr % 24, min % 60, sec % 60);
-    return buff;
+    return String(buff);
 }
 
 String sys_time_now()
@@ -93,7 +93,7 @@ String sys_time_now()
     struct tm *tm = localtime(&now);
     char buf[32];
     strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S%z", tm);
-    return buf;
+    return String(buf);
 }
 
 // Return JSON string containing system data
@@ -179,7 +179,9 @@ void sys_wifi_scan_json(String &response)
     for (uint8_t i = 0; i < n; ++i)
     {
         if (i != 0)
+        {
             response += F(",");
+        }
 
         response += F("{\"ssid\":\"");
         response += WiFi.SSID(i);
@@ -227,16 +229,18 @@ int sys_wifi_connect()
         }
         else
         {
-
             // Copy SDK SSID
             strncpy(config.ssid, WiFi.SSID().c_str(), CFG_SSID_LENGTH);
 
             // Copy SDK password if any
             if (WiFi.psk() != "")
+            {
                 strncpy(config.psk, WiFi.psk().c_str(), CFG_SSID_LENGTH);
+            }
             else
+            {
                 *config.psk = '\0';
-
+            }
             Serial.println("found one!");
 
             // save back new config
@@ -381,7 +385,9 @@ void sys_handle_factory_reset(ESP8266WebServer &server)
     delay(1000);
     ESP.restart();
     while (true)
+    {
         delay(1);
+    }
 }
 
 // reset the module
@@ -394,7 +400,9 @@ void sys_handle_reset(ESP8266WebServer &server)
     delay(1000);
     ESP.restart();
     while (true)
+    {
         delay(1);
+    }
 }
 
 #ifdef ENABLE_OTA
@@ -443,74 +451,6 @@ void sys_ota_setup()
 #endif
         ESP.restart();
     });
-}
-
-void sys_ota_register(ESP8266WebServer &server)
-{
-    // handler for the /update form POST (once file upload finishes)
-    server.on(
-        "/update",
-        HTTP_POST,
-        // handler once file upload finishes
-        [&]() {
-            server.sendHeader("Connection", "close");
-            server.sendHeader("Access-Control-Allow-Origin", "*");
-            server.send(200, "text/plain", (Update.hasError()) ? "FAIL" : "OK");
-            ESP.restart();
-        },
-        // handler for upload, get's the sketch bytes,
-        // and writes them through the Update object
-        [&]() {
-            HTTPUpload &upload = server.upload();
-
-            if (upload.status == UPLOAD_FILE_START)
-            {
-                uint32_t maxSketchSpace = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
-                WiFiUDP::stopAll();
-                Serial.printf("Update: %s\n", upload.filename.c_str());
-                led_rgb_on(COLOR_MAGENTA);
-                ota_blink = true;
-
-                //start with max available size
-                if (!Update.begin(maxSketchSpace))
-                    Update.printError(Serial1);
-            }
-            else if (upload.status == UPLOAD_FILE_WRITE)
-            {
-                if (ota_blink)
-                {
-                    led_rgb_on(COLOR_MAGENTA);
-                }
-                else
-                {
-                    led_rgb_off();
-                }
-                ota_blink = !ota_blink;
-                Serial.print(".");
-                if (Update.write(upload.buf, upload.currentSize) != upload.currentSize)
-                    Update.printError(Serial1);
-            }
-            else if (upload.status == UPLOAD_FILE_END)
-            {
-                //true to set the size to the current progress
-                if (Update.end(true))
-                {
-                    Serial.printf("Update Success: %u\nRebooting...\n", upload.totalSize);
-                }
-                else
-                {
-                    Update.printError(Serial1);
-                }
-                led_rgb_off();
-            }
-            else if (upload.status == UPLOAD_FILE_ABORTED)
-            {
-                Update.end();
-                led_rgb_off();
-                Serial.println(F("Update was aborted"));
-            }
-            delay(0);
-        });
 }
 
 #endif // ENABLE_OTA

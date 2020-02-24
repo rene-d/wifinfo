@@ -9,6 +9,8 @@ import flask
 from flask_cors import CORS, cross_origin
 import datetime
 from simutic import tic
+import json
+
 
 app = flask.Flask(__name__)
 
@@ -50,7 +52,12 @@ def home():
 @app.route("/hc")
 def bascule_ptec():
     tic.bascule()
-    return tic.ptec
+    return tic.ptec_raw
+
+
+@app.route("/version")
+def version():
+    return "flask-develop-version"
 
 
 @app.route("/tinfo.json")
@@ -103,6 +110,7 @@ def config_json():
         "httpreq_host": "192.168.4.2",
         "httpreq_port": "8080",
         "httpreq_url": "/tinfo.php?hchp=$HCHP;hchc=$HCHC;papp=$PAPP;iinst=$IINST;type=$type",
+        "httpreq_use_post": 0,
         "httpreq_freq": "300",
         "httpreq_trigger_ptec": 1,
         "httpreq_trigger_adps": 1,
@@ -154,6 +162,14 @@ def config_form():
     return "OK"
 
 
+@app.route("/tinfo.php", methods=["GET", "POST"])
+def tinfo_php():
+    for name, value in flask.request.values.items():
+        print(f"{name} = {value}")
+    print("data =", json.dumps(flask.request.json, indent=4))
+    return "OK"
+
+
 @app.route("/sse/json", methods=["GET", "POST"])
 @app.route("/tic", methods=["GET", "POST"])
 @cross_origin()
@@ -168,4 +184,4 @@ def files(path):
 
 if __name__ == "__main__":
     app.debug = True
-    app.run(threaded=True)
+    app.run(threaded=True, host="0.0.0.0")

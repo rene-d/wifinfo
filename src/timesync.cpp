@@ -37,11 +37,11 @@
 ////////////////////////////////////////////////////////
 
 #include <ESP8266WiFi.h>
-#include <coredecls.h> // settimeofday_cb()
 #include <Schedule.h>
+#include <coredecls.h> // settimeofday_cb()
 
-#include <time.h>     // time() ctime()
 #include <sys/time.h> // struct timeval
+#include <time.h>     // time() ctime()
 
 #include <sntp.h> // sntp_servermode_dhcp()
 

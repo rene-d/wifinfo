@@ -17,15 +17,17 @@ SPIFFSClass SPIFFS;
 
 int HTTPClient::begin_called = 0;
 String HTTPClient::begin_host;
-uint16_t HTTPClient::begin_port;
+uint16_t HTTPClient::begin_port = 0;
 String HTTPClient::begin_url;
+bool HTTPClient::begin_https = false;
 
-void HTTPClient::begin(WiFiClient &, const char *host, uint16_t port, const String &url)
+void HTTPClient::begin(WiFiClient &, const char *host, uint16_t port, const String &url, bool https)
 {
     begin_called++;
     begin_host = host;
     begin_port = port;
     begin_url = url;
+    begin_https = https;
 }
 
 void system_update_cpu_freq(uint8_t)
