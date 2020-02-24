@@ -22,7 +22,7 @@ cors = CORS(app, resources={r"/": {"origins": "http://localhost:5000"}})
 
 def uptime():
     """
-    retourne le temps depuis le lancement du programme
+    Retourne le temps depuis le lancement du programme
     """
     # "0 days 00 h 13 m 17 sec"
     now = int(time.monotonic())
@@ -31,7 +31,7 @@ def uptime():
 
 def timestamp():
     """
-    retourne l'heure courante au format ISO8601
+    Retourne l'heure courante au format ISO8601
     """
     return datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
 
@@ -184,4 +184,4 @@ def files(path):
 
 if __name__ == "__main__":
     app.debug = True
-    app.run(threaded=True, host="0.0.0.0")
+    app.run(threaded=True)  # , host="0.0.0.0"

@@ -34,7 +34,7 @@ def trace(*args):
 
 def get_version():
     """
-    read the git version
+    Read the git version
     """
 
     if pathlib.Path(".git").is_dir():

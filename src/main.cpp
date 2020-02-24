@@ -79,8 +79,6 @@ __      ___  __ ___       __
 
 void loop()
 {
-    int c;
-
 #ifdef ENABLE_CPULOAD
     cpuload_loop();
 #endif
@@ -94,7 +92,7 @@ void loop()
     // MDNS.update();
 
 #ifdef ENABLE_CLI
-    c = cli_loop_read();
+    int c = cli_loop_read();
     if (c != -1)
     {
         // passe c à la téléinformation
@@ -103,7 +101,7 @@ void loop()
 #else
     if (Serial.available())
     {
-        c = Serial.read();
+        int c = Serial.read();
         tic_decode(c);
     }
 #endif

@@ -111,13 +111,12 @@ bool config_read(bool clear_on_error)
 {
     uint16_t crc = ~0;
     uint8_t *pconfig = (uint8_t *)&config;
-    uint8_t data;
 
     // For whole size of config structure
     for (size_t i = 0; i < sizeof(Config); ++i)
     {
         // read data
-        data = EEPROM.read(i);
+        uint8_t data = EEPROM.read(i);
 
         // save into struct
         *pconfig++ = data;

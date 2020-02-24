@@ -38,6 +38,9 @@ TVA_20 = 1.20  # TVA 20%
 
 class Sonde:
     def __init__(self):
+        """
+        Initialise la sonde
+        """
 
         self.tarif_hc_ttc = (TARIF_HC + TCFE + CSPE) * TVA_20
         self.tarif_hp_ttc = (TARIF_HP + TCFE + CSPE) * TVA_20
@@ -45,8 +48,10 @@ class Sonde:
         print("tarif_hp_ttc: ", self.tarif_hp_ttc)
 
     def connect(self, influxdb_addr):
+        """
+        Connexion à la base de données InfluxDB
+        """
 
-        # connexion à la base de données InfluxDB
         self.client = InfluxDBClient(influxdb_addr, 8086)
         database = "teleinfo"
         while True:
@@ -64,6 +69,10 @@ class Sonde:
                 break
 
     def insert_data(self, data):
+        """
+        Ajoute un point de mesure
+        """
+
         points = [
             {
                 "measurement": "conso",
@@ -84,6 +93,10 @@ class Sonde:
         self.client.write_points(points)
 
     def sse(self, frequency, wifinfo_addr):
+        """
+        Se connecte au serveur SSE et stocke les mesures qu'il envoie
+        """
+
         while True:
             try:
                 # source SSE
@@ -110,6 +123,9 @@ class Sonde:
                 time.sleep(10)
 
     def req(self, frequency, wifinfo_addr):
+        """
+        Polle le module à intervalle régulier
+        """
         last_timestamp = None
 
         while True:
@@ -147,4 +163,4 @@ def main(frequency, wifinfo_addr, influxdb_addr):
 
 
 if __name__ == "__main__":
-    exit(main())
+    main()
