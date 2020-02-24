@@ -95,7 +95,7 @@ TEST(sys, led)
     ASSERT_EQ(digitalRead_called, 0);
     ASSERT_EQ(digitalWrite_called, 2); // uniquement un appel à digitalWrite
 
-    led_rgb_toggle(COLOR_RED);
+    led_toggle();
     ASSERT_EQ(pinMode_called, 1);
     ASSERT_EQ(digitalRead_called, 1);  // un appel à digitalRead
     ASSERT_EQ(digitalWrite_called, 3); // et un appel à digitalWrite
