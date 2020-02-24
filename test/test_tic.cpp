@@ -173,6 +173,47 @@ TEST(notifs, http_notif)
     ASSERT_EQ(HTTPClient::begin_host, "sql.home");
 }
 
+// test HTTP GET ou POST
+//
+TEST(notifs, http_get_post)
+{
+    test_config_notif(false, false, true);
+    strcpy(config.httpreq.url, "/json?chipid=$chipid&papp=~PAPP~&n=$notif");
+
+    tinfo_init(1800, false);
+
+    // HTTP GET
+    config.httpreq.use_post = 0;
+    HTTPClient::begin_called = 0;
+    HTTPClient::POST_called = 0;
+    HTTPClient::GET_called = 0;
+    http_notif("GET");
+    ASSERT_EQ(HTTPClient::begin_called, 1);
+    ASSERT_EQ(HTTPClient::begin_url, "/json?chipid=0x0012AB&papp=1800&n=GET");
+    ASSERT_EQ(HTTPClient::GET_called, 1);
+    ASSERT_EQ(HTTPClient::POST_called, 0);
+
+    // HTTP POST
+    config.httpreq.use_post = 1;
+    HTTPClient::begin_called = 0;
+    HTTPClient::POST_called = 0;
+    HTTPClient::GET_called = 0;
+    http_notif("POST");
+    ASSERT_EQ(HTTPClient::begin_called, 1);
+    ASSERT_EQ(HTTPClient::begin_url, "/json?chipid=0x0012AB&papp=1800&n=POST");
+    ASSERT_EQ(HTTPClient::GET_called, 0);
+    ASSERT_EQ(HTTPClient::POST_called, 1);
+
+    // la payload doit être un JSON
+    auto j1 = json::parse(HTTPClient::POST_data.s);
+    // std::cout << HTTPClient::POST_data.s << std::endl;
+
+    // 11 valeurs + timestamp + notif
+    ASSERT_EQ(j1.size(), 13u);
+    ASSERT_EQ(j1["notif"], "POST");
+    ASSERT_EQ(j1["PAPP"], 1800);
+}
+
 // test du déclenchement de la notif http
 //
 TEST(notifs, http_timer)
@@ -446,6 +487,8 @@ TEST(tic, json)
     ASSERT_EQ(j2["MOTDETAT"], 0);
 }
 
+// test clignotement led ou pas sur réception téléinfo
+//
 TEST(tic, led)
 {
     test_config_notif(false, false, false);
@@ -473,4 +516,15 @@ TEST(tic, led)
     }
     ASSERT_FALSE(tinfo.is_empty());
     ASSERT_EQ(digitalWrite_called, 0);
+}
+
+// test valeur individuelle
+//
+TEST(tic, get_value)
+{
+    tinfo_init(2001, false);
+
+    ASSERT_STREQ(tic_get_value("PAPP"), "2001");
+    ASSERT_STREQ(tic_get_value("OPTARIF"), "HC");
+    ASSERT_STREQ(tic_get_value("HHPHC"), "A");
 }

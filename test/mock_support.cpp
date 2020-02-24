@@ -25,20 +25,15 @@ String HTTPClient::begin_host;
 uint16_t HTTPClient::begin_port = 0;
 String HTTPClient::begin_url;
 bool HTTPClient::begin_https = false;
+int HTTPClient::GET_called = 0;
+int HTTPClient::POST_called = 0;
+String HTTPClient::POST_data;
+int HTTPClient::addHeader_called = 0;
 
 int ESP8266WebServer::send_called = 0;
 
 int ESPClass::restart_called = 0;
 int ESPClass::eraseConfig_called = 0;
-
-void HTTPClient::begin(WiFiClient &, const char *host, uint16_t port, const String &url, bool https)
-{
-    begin_called++;
-    begin_host = host;
-    begin_port = port;
-    begin_url = url;
-    begin_https = https;
-}
 
 void system_update_cpu_freq(uint8_t)
 {
