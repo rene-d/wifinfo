@@ -15,3 +15,9 @@ jobs:
 
     - name: run tests
       run: docker run --rm -v $PWD:/tic:ro -v /tmp/results:/results tic /tic/runtest.sh
+
+    - name: Archive code coverage results
+        uses: actions/upload-artifact@v1
+        with:
+          name: code-coverage-report
+          path: /tmp/results/coverage*.html
