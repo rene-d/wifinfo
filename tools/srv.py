@@ -55,6 +55,11 @@ def bascule_ptec():
     return tic.ptec_raw
 
 
+@app.route("/version")
+def version():
+    return "flask-develop-version"
+
+
 @app.route("/tinfo.json")
 def tinfo_json():
     d = tic.json_array()

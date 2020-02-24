@@ -246,7 +246,7 @@ class SimuTic:
         iinst_raw = self.iinst_raw
         d = [
             {"na": "timestamp", "va": self.timestamp},
-            {"na": "ADCO", "va": self.adco_raw},
+            {"na": "ADCO", "va": self.adco},
             {"na": "OPTARIF", "va": "HC.."},
             {"na": "ISOUSC", "va": self.isousc_raw},
             {"na": "HCHC", "va": self.hchc_raw},
