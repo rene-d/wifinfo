@@ -1,0 +1,23 @@
+name: Unit tests
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: build image
+      run: docker build -t tic .
+
+    - name: run tests
+      run: docker run --rm -v $PWD:/tic:ro -v /tmp/results:/results tic /tic/runtest.sh
+
+    - name: Archive code coverage results
+      uses: actions/upload-artifact@v1
+      with:
+        name: code-coverage-report
+        path: /tmp/results/

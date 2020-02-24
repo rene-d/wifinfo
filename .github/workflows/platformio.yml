@@ -1,0 +1,32 @@
+name: PlatformIO CI
+
+on:
+  push:
+   branches:
+     - master
+   tags:
+     - build
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python
+      uses: actions/setup-python@v1
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install platformio
+
+    - name: Run PlatformIO
+      run: platformio run -e esp12 -e esp01s
+
+    - name: Build the SPIFFS filesystem
+      run: platformio run -e esp12 -e esp01s -t buildfs
+
+    - name: Run PlatformIO check
+      run: platformio check -e esp12 -e esp01s
