@@ -280,10 +280,9 @@ int sys_wifi_connect()
         // 200 ms loop
         while (((ret = WiFi.status()) != WL_CONNECTED) && timeout)
         {
-            // Orange LED
-            led_rgb_on(COLOR_ORANGE);
+            led_on();
             delay(50);
-            led_rgb_off();
+            led_off();
             delay(150);
             --timeout;
         }
@@ -362,9 +361,9 @@ int sys_wifi_connect()
     // launching potentially buggy main()
     for (uint8_t i = 0; i <= 10; i++)
     {
-        led_rgb_on(COLOR_MAGENTA);
+        led_on());
         delay(100);
-        led_rgb_off();
+        led_off();
         delay(200);
         ArduinoOTA.handle();
     }
@@ -403,31 +402,31 @@ void sys_ota_setup()
 {
     // OTA callbacks
     ArduinoOTA.onStart([]() {
-        led_rgb_on(COLOR_MAGENTA);
+        led_on());
         Serial.println(F("Update Started"));
         ota_blink = true;
     });
 
     ArduinoOTA.onEnd([]() {
-        led_rgb_off();
+        led_off();
         Serial.println(F("Update finished : restarting"));
     });
 
     ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
         if (ota_blink)
         {
-            led_rgb_on(COLOR_MAGENTA);
+            led_on());
         }
         else
         {
-            led_rgb_off();
+            led_off();
         }
         ota_blink = !ota_blink;
         //Serial.printf("Progress: %u%%\n", (progress / (total / 100)));
     });
 
     ArduinoOTA.onError([](ota_error_t error) {
-        led_rgb_on(COLOR_RED);
+        led_on();
 #ifdef DEBUG
         Serial.printf("Update Error[%u]: ", error);
         if (error == OTA_AUTH_ERROR)
