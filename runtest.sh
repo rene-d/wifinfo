@@ -11,7 +11,7 @@ if [ -f /.dockerenv ]; then
     mkdir -p /build /results
     cd /build
 else
-    cd "$(dirname ""$0"")"
+    cd $(dirname $0)
     src_dir=..
     results=.
     mkdir -p build
