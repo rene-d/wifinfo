@@ -104,17 +104,15 @@ void webserver_setup()
         server.send(200, "text/html", "OK");
     });
 
+    // enregistre le handler de /update
+    sys_update_register(server);
+
     // serves all SPIFFS Web file with 24hr max-age control
     // to avoid multiple requests to ESP
     server.serveStatic("/font", SPIFFS, "/font", "max-age=86400");
     server.serveStatic("/js", SPIFFS, "/js", "max-age=86400");
     server.serveStatic("/css", SPIFFS, "/css", "max-age=86400");
     server.serveStatic("/version", SPIFFS, "/version", "max-age=86400");
-
-#ifdef ENABLE_OTA
-    // enregistre le handler de /update
-    sys_ota_register(server);
-#endif
 
     server.onNotFound(webserver_handle_notfound);
 

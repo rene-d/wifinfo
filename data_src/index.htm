@@ -3,13 +3,9 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="UTF-8">
-    <!--
     <link rel="stylesheet" href="css/wifinfo.css">
--->
-
-<link rel="stylesheet" href="css/wifinfo.css">
-<script src="js/wifinfo.js"></script>
-<script src="js/gauge.min.js"></script>
+    <script src="js/wifinfo.js"></script>
+    <script src="js/gauge.min.js"></script>
 
     <style>
         canvas {
@@ -23,8 +19,6 @@
 </head>
 
 <body>
-
-
 
     <div class="container">
         <!--  Onglets  -->
@@ -111,10 +105,10 @@
                         </td>
                     </tr>
                 </table>
-                <div>
-                    <p>
-                        <small>Rappel: VA = W / cos &Phi;</small>
-                    </p>
+                <div class="text-center">
+                    <br/>
+                    <small>Rappel: <mark>VA = W / cos &Phi;</mark> <em>(déphasage du courant par rapport à la tension)</em>
+                    </small>
                 </div>
             </div>
 
@@ -166,21 +160,7 @@
                         </div>
                     </div>
                 </div>
-                <!-- SPIFFS table toolbar -->
-                <!--
-                <div id="fs_toolbar">
-            <div class="form-inline" role="form">
-            <div class="form-group">
-            <span>Pour ajouter ou remplacer un fichier&nbsp;</span>
-            </div>
-                        <div class="form-group">
-                        <div class="dropbase dropfilesmall" id="dz">
-                        &nbsp;&nbsp;déposer le dans cette zone&nbsp;&nbsp;
-                        </div>
-                        </div>
-            </div>
-        </div>
-                -->
+
                 <div class="panel panel-default">
                     <div class="panel-heading">
                         <h3 class="panel-title">Système de fichiers SPIFFS</h3>
@@ -196,83 +176,6 @@
                                 </tr>
                             </thead>
                         </table>
-                    </div>
-                </div>
-
-                <!-- Ajout upload file possibilité
-                <div class="panel panel-danger">
-                    <div class="panel-heading clearfix">
-                        <h3 class="panel-title">Téléversement de fichiers vers le filesystem SPIFFS</h3>
-                    </div>
-                    <div class="panel-body">
-                        <div class="row">
-                            <form method='POST' id='frm_file' action='/uploadfile' enctype='multipart/form-data'>
-                                <div class="col-xs-9">
-                                    <div class="input-group">
-                                        <span class="input-group-btn">
-                                            <span class="btn btn-info btn-file">Selectionner&hellip;
-                                                <input id="file_toload" type="file" name="uploadfile"></input>
-                                            </span>
-                                        </span>
-                                        <input id="txt_upload_file" type="text" size="32" class="form-control" placeholder="Choisir sur le PC un fichier à téléverser dans le SPIFFS" readonly>
-                                    </div>
-                                </div>
-                                <div class="col-xs-3">
-                                    <input class="btn btn-danger hide" type="button" id="btn_upload_file" value=""/>
-                                </div>
-                            </form>
-                        </div>
-                        </p>
-                        <div id='pgfile' class='hide'>
-                            <span id='sfil' style="float:left;width:18ex;text-align:center;"></span>
-                            <div class="progress">
-                                <div class="progress-bar progress-bar-success" style="width:0" id="pfile">
-                                    <span id="psfile"></span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="panel-footer">
-                        <p id="file_info"></p>
-                    </div>
-                </div> -- Upload possibilité -->
-
-                <div class="panel panel-danger">
-                    <div class="panel-heading clearfix">
-                        <h3 class="panel-title">Mise à jour micro-logiciel ou serveur WEB embarqué</h3>
-                    </div>
-                    <div class="panel-body">
-                        <div class="row">
-                            <form method='POST' id='frm_fw' action='/update' enctype='multipart/form-data'>
-                                <div class="col-xs-9">
-                                    <div class="input-group">
-                                        <span class="input-group-btn">
-                                            <span class="btn btn-info btn-file">Selectionner&hellip;
-                                                <input id="file_fw" type="file" name="update"></input>
-                                            </span>
-                                        </span>
-                                        <input id="txt_upload_fw" type="text" size="32" class="form-control"
-                                            placeholder="Aucun fichier .cpp.bin ou .ino.bin ou .spiffs.bin choisi" readonly>
-                                    </div>
-                                </div>
-                                <div class="col-xs-3">
-                                    <!--<input class="btn btn-danger hide" type="button" id="btn_upload_fw" onclick="Sendfile('fw');" value=""/>-->
-                                    <input class="btn btn-danger hide" type="button" id="btn_upload_fw" value="" />
-                                </div>
-                            </form>
-                        </div>
-                        </p>
-                        <div id='pgfw' class='hide'>
-                            <span id='sfw' style="float:left;width:18ex;text-align:center;"></span>
-                            <div class="progress">
-                                <div class="progress-bar progress-bar-success" style="width:0" id="pfw">
-                                    <span id="psfw"></span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="panel-footer">
-                        <p id="fw_info"></p>
                     </div>
                 </div>
             </div> <!-- tab pane SPIFFS-->
@@ -410,7 +313,6 @@
                             </div>
                         </div> <!-- panel emoncms -->
 
-
                         <!-- Panel Jeedom -->
                         <div class="panel-group" id="pan_jdom">
                             <div class="panel panel-warning">
@@ -515,8 +417,8 @@
                                             <div class="col-sm-9">
                                                 <input type="text" class="form-control" id="httpreq_url" name="httpreq_url" maxlength="150" placeholder="URI">
 
-<label class="checkbox-inline"><input type="checkbox" id="httpreq_use_post" name="httpreq_use_post"
-    value="1">Méthode POST (la donnée est le dictionnaire JSON)</label>
+                                                <label class="checkbox-inline"><input type="checkbox" id="httpreq_use_post" name="httpreq_use_post"
+                                                        value="1">Méthode POST (la donnée est le dictionnaire JSON)</label>
 
                                             </div>
                                         </div>
@@ -648,7 +550,49 @@
                                 </div>
                             </div>
                         </div> <!-- advanced -->
+
                     </form> <!-- config form -->
+
+                    <!-- upload firmware -->
+                    <div class="panel panel-danger">
+                        <div class="panel-heading clearfix">
+                            <h3 class="panel-title">Mise à jour firmware ou serveur web embarqué</h3>
+                        </div>
+                        <div class="panel-body">
+                            <div class="row">
+                                <form method='POST' id='frm_fw' action='/noupdate' enctype='multipart/form-data'>
+                                    <div class="col-xs-9">
+                                        <div class="input-group">
+                                            <span class="input-group-btn">
+                                                <span class="btn btn-info btn-file">Sélectionner&hellip;
+                                                    <input id="file_fw" type="file" name="update"></input>
+                                                </span>
+                                            </span>
+                                            <input id="txt_upload_fw" type="text" size="32" class="form-control"
+                                                placeholder="Aucun fichier firmware.bin ou spiffs.bin choisi" readonly>
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-3">
+                                        <!--<input class="btn btn-danger hide" type="button" id="btn_upload_fw" onclick="Sendfile('fw');" value=""/>-->
+                                        <input class="btn btn-danger hide" type="button" id="btn_upload_fw" value="" />
+                                    </div>
+                                </form>
+                            </div>
+                            </p>
+                            <div id='pgfw' class='hide'>
+                                <span id='sfw' style="float:left;width:18ex;text-align:center;"></span>
+                                <div class="progress">
+                                    <div class="progress-bar progress-bar-success" style="width:0" id="pfw">
+                                        <span id="psfw"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel-footer">
+                            <p id="fw_info"></p>
+                        </div>
+                    </div>
+
                 </div>
             </div> <!-- tab config-->
 
@@ -732,7 +676,7 @@
     </div> <!-- Container -->
 
     <!-- Scripts devant être chargés en fin de page -->
-     <!--
+    <!--
     <script src="js/wifinfo.js"></script>
     -->
     <script>
@@ -867,15 +811,6 @@
                 var pe = (data.loaded / data.total * 100).toFixed(0);
                 $('#pfw').css('width', pe + '%');
                 $('#psfw').text(formatSize(data.loaded) + ' / ' + formatSize(data.total));
-            }
-        }
-
-        // Upload file facility
-        function progressUploadf(data) {
-            if (data.lengthComputable) {
-                var pef = (data.loaded / data.total * 100).toFixed(0);
-                $('#pfile').css('width', pef + '%');
-                $('#psfile').text(formatSize(data.loaded) + ' / ' + formatSize(data.total));
             }
         }
 
@@ -1100,64 +1035,34 @@
             }
         });
 
-        $('#file_toload').change(function () {
-            var $txtf = $('#txt_upload_file');
-            var $btnf = $('#btn_upload_file');
-            var okf = true;
-            var ff = this.files[0];
-            var namef = ff.name.toLowerCase();
-            var sizef = ff.size;
-            var typef = ff.type;
-            //var htmlf = 'Fichier:' + namef + '&nbsp;&nbsp;type:' + typef + '&nbsp;&nbsp;taille:' + sizef + ' octets'
-            console.log('name=' + namef);
-            console.log('size' + sizef);
-            console.log('type=' + typef);
-
-            $('#pgfile').removeClass('show').addClass('hide');
-            $('#sfile').text(namef + ' : ');
-            if (okf) {
-                $btnf.removeClass('hide');
-                var label = 'Transférer vers filesystem';
-                $btnf.val(label);
-                $('#file_info').html('<strong>' + label + '</strong> ' + html);
-            } else {
-                $txtf.attr('readonly', '');
-                $txtf.val('');
-                $txtf.attr('readonly', 'readonly');
-                $btnf.addClass('hide');
-            }
-
-            return okf;
-        });
-
+        // sélection fichier de firmware
         $('#file_fw').change(function () {
             var $txt = $('#txt_upload_fw');
             var $btn = $('#btn_upload_fw');
             var ok = true;
             var f = this.files[0];
             var name = f.name.toLowerCase();
-            var size = f.size;
-            var type = f.type;
-            var html = 'Fichier:' + name + '&nbsp;&nbsp;type:' + type + '&nbsp;&nbsp;taille:' + size + ' octets';
-            console.log('name=' + name);
-            console.log('size' + size);
-            console.log('type=' + type);
+            var html = f.type + ' - taille:' + f.size + '&nbsp;octets'
 
             $('#pgfw').removeClass('show').addClass('hide');
             $('#sfw').text(name + ' : ');
 
-            if (!f.type.match('application/octet-stream')) {
+            if (!f.type.match('application/macbinary') && !f.type.match('application/octet-stream')) {
                 Notify(3, 'remove', 'danger', 'Type de fichier non conforme', 'Le fichier de mise à jour doit être un fichier binaire');
                 ok = false;
-            } else if (name != "wifinfo.cpp.bin" && name != "wifinfo.ino.bin" && name != "wifinfo.spiffs.bin") {
-                Notify(5, 'remove', 'danger', 'Nom de fichier incorrect', 'Le fichier de mise à jour doit être nommé <ul><li>Wifinfo.cpp.bin Wifinfo.ino.bin (Micro-logiciel) ou</li><li>Wifinfo.spiffs.bin (Système de fichiers)</li></ul>');
+            } else if (name != "firmware.bin" && name != "spiffs.bin") {
+                Notify(5, 'remove', 'danger', 'Nom de fichier incorrect', 'Le fichier de mise à jour doit être nommé: <ul><li>firmware.bin (Logiciel)</li><li>spiffs.bin (Système de fichiers)</li></ul>');
                 ok = false;
             }
             if (ok) {
-                var label;
+                // met le nom de fichier dans la zone de texte
+                $txt.attr('readonly', '');
+                $txt.val(f.name);
+                $txt.attr('readonly', 'readonly');
+
                 $btn.removeClass('hide');
-                if (name == "wifinfo.cpp.bin" || name == "wifinfo.ino.bin") {
-                    label = 'Mise à jour Micro-Logiciel';
+                if (name == "firmware.bin") {
+                    label = 'Mise à jour Logiciel';
                 } else {
                     label = 'Mise à jour SPIFFS';
                 }
@@ -1168,36 +1073,10 @@
                 $txt.val('');
                 $txt.attr('readonly', 'readonly');
                 $btn.addClass('hide');
+                $('#fw_info').html("");
+
             }
             return ok;
-        });
-
-        $('#btn_upload_file').click(function () {
-            var formData = new FormData($('#frm_file')[0]);
-            $.ajax({
-                url: '/uploadfile',
-                type: 'POST',
-                data: formData,
-                cache: false,
-                contentType: false,
-                processData: false,
-                xhrf: function () {
-                    var myXhrf = $.ajaxSettings.xhrf();
-                    if (myXhrf.upload)
-                        myXhrf.upload.addEventListener('progress', progressUploadf, false);
-                    return myXhrf;
-                },
-                beforeSendf: function () {
-                    $('#pgfile').removeClass('hide');
-                },
-                success: function (msg, textStatus, xhrf) {
-                    Notify(2, 'floppy-saved', 'success', 'Transfert du fichier terminé', '<strong>' + xhrf.status + '</strong> ' + msg);
-                },
-                error: function (xhrf, textStatus, errorThrown) {
-                    $('#pfile').removeClass('progress-bar-success').addClass('progress-bar-danger');
-                    Notify(4, 'floppy-remove', 'danger', 'Erreur lors du transfert du fichier ' + name, '<strong>' + xhrf.status + '</strong> ' + errorThrown);
-                }
-            });
         });
 
         $('#btn_upload_fw').click(function () {
@@ -1219,12 +1098,14 @@
                     $('#pgfw').removeClass('hide');
                 },
                 success: function (msg, textStatus, xhr) {
-                    Notify(2, 'floppy-saved', 'success', 'Envoi de la mise à jour terminé', '<strong>' + xhr.status + '</strong> ' + msg);
+                    Notify(2, 'floppy-saved', 'success', 'Envoi de la mise à jour terminé',
+                        '<strong>' + xhr.status + '</strong> ' + msg);
                     waitReboot();
                 },
                 error: function (xhr, textStatus, errorThrown) {
                     $('#pfw').removeClass('progress-bar-success').addClass('progress-bar-danger');
-                    Notify(4, 'floppy-remove', 'danger', 'Erreur lors de la mise à jour du fichier ' + name, '<strong>' + xhr.status + '</strong> ' + errorThrown);
+                    Notify(4, 'floppy-remove', 'danger', 'Erreur lors de la mise à jour',
+                        '<strong>' + xhr.status + '</strong> ' + errorThrown);
                 }
             });
         });
@@ -1249,16 +1130,13 @@
                 silent: true,
                 url: '/tinfo.json'
             });
+
+            $.get("/version", function (data) {
+                $('#version').text(data);
+            });
         };
 
-    // $('#btn_test').click(function () {
-    //     waitReboot();
-    // });
     </script>
-
-
-
-
 
     <script>
         var gaugePAPP = new RadialGauge({
@@ -1330,7 +1208,14 @@
         gaugeIINST.draw();
     </script>
 
-
+    <div class="text-center">
+        <small>
+            <br />
+            Module Wi-Fi de téléinformation -
+            <a href="https://rene-d.github.io/wifinfo">site web</a> - version <span id="version"></span> - <a href="https://github.com/rene-d/wifinfo"><img
+                    src="GitHub-Mark-32px.png" height="16px" width="16px">&nbsp;GitHub</a>
+        </small>
+    </div>
 </body>
 
 </html>

@@ -20,6 +20,7 @@ enum LedColors
 #define led_on()
 #define led_off()
 #define led_rgb_on(x)
+#define led_rgb_toggle(x)
 #define led_rgb_off()
 
 #else
@@ -43,6 +44,11 @@ inline void led_off()
 inline void led_rgb_on(LedColors color)
 {
     digitalWrite(LED_BUILTIN, LOW);
+}
+
+inline void led_rgb_toggle(LedColors color)
+{
+    digitalWrite(LED_BUILTIN, 1 - digitalRead(LED_BUILTIN));
 }
 
 inline void led_rgb_off()
