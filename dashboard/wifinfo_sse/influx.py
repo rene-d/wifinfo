@@ -9,16 +9,16 @@
 Store SSE in the InfluxDB database
 """
 
+import json
 import logging
+import socket
+import sys
 import time
+
+import click
 import requests
 from influxdb import InfluxDBClient
 from sseclient import SSEClient
-import json
-import click
-import socket
-import sys
-
 
 # Tarifs réglementés EDF fin 2019
 

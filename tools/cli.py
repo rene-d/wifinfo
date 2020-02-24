@@ -8,17 +8,19 @@
 #
 # SPDX-License-Identifier:    BSD-3-Clause
 
-import codecs
-import sys
-import threading
-import datetime
 import atexit
-import termios
+import codecs
+import datetime
 import fcntl
-import serial
-from serial.tools.list_ports import comports
-from serial.tools import hexlify_codec
+import sys
+import termios
+import threading
+
 import click
+import serial
+from serial.tools import hexlify_codec
+from serial.tools.list_ports import comports
+
 from simutic import tic
 
 # pylint: disable=wrong-import-order,wrong-import-position

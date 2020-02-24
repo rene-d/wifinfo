@@ -4,13 +4,14 @@
 # https://github.com/Mikhus/canvas-gauges/
 # https://www.chartjs.org/
 
+import datetime
+import json
 import time
+
 import flask
 from flask_cors import CORS, cross_origin
-import datetime
-from simutic import tic
-import json
 
+from simutic import tic
 
 app = flask.Flask(__name__)
 

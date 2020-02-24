@@ -2,14 +2,15 @@
 # module téléinformation client
 # rene-d 2020
 
-import struct
-import pathlib
 import json
-import yaml
-import click
-import subprocess
+import pathlib
 import re
+import struct
+import subprocess
 import tempfile
+
+import click
+import yaml
 
 
 def print_cmd(cmd):
@@ -19,9 +20,9 @@ def print_cmd(cmd):
 
 def get_eeprom_base():
     """ Lit l'adresse de base de l'EEPROM. """
-    output = subprocess.run(
-        ["esptool.py", "--no-stub", "flash_id"], stderr=subprocess.DEVNULL, stdout=subprocess.PIPE
-    ).stdout
+    cmd = ["esptool.py", "--no-stub", "flash_id"]
+    print_cmd(cmd)
+    output = subprocess.run(cmd, stderr=subprocess.DEVNULL, stdout=subprocess.PIPE).stdout
     mem = re.search(rb"Detected flash size: (\w+)(?=\n)", output, re.DOTALL)
     if not mem:
         print("Impossible de déterminer la taille de la flash")
@@ -96,7 +97,6 @@ def write_eeprom(config):
         httpreq,
     )
 
-    assert len(eeprom) == 1022
     crc = 0xFFFF
     for a in eeprom:
         crc = crc ^ a
@@ -107,7 +107,10 @@ def write_eeprom(config):
                 crc = crc >> 1
     eeprom += struct.pack("<H", crc)
 
-    assert len(eeprom) == 1024
+    if len(eeprom) != 1024:
+        print(f"Mauvaise longueur: EEPROM {len(eeprom)} bytes != 1024")
+        exit(2)
+
     return eeprom
 
 
@@ -164,15 +167,16 @@ def cli_write():
     pass
 
 
-@cli_write.command()
+@cli_write.command(name="write")
 @click.option("-i", "--input", "input_", help="fichier source", default="config.yaml", type=click.File("rb"))
 @click.option("-f", "--force", help="pas de question", is_flag=True)
-def cmd_write(input_, force):
+def write(input_, force):
     """ Charge une configuration en EEPROM. """
-    suffix = pathlib.Path(input.name).suffix.lower()
+    suffix = pathlib.Path(input_.name).suffix.lower()
 
     if suffix == ".bin":
-        eeprom_file = input
+        eeprom_file = input_
+        config = read_eeprom(eeprom_file.read())
     else:
         if suffix == ".json":
             config = json.load(input_)
@@ -185,7 +189,8 @@ def cmd_write(input_, force):
         eeprom_file = tempfile.NamedTemporaryFile("w+b", prefix="eeprom", suffix=".bin")
         eeprom_file.write(write_eeprom(config))
         eeprom_file.flush()
-        click.echo(click.style(yaml.safe_dump(config, sort_keys=False), fg="cyan"))
+
+    click.echo(click.style(yaml.safe_dump(config, sort_keys=False), fg="cyan"))
 
     input_.close()
 
@@ -193,7 +198,7 @@ def cmd_write(input_, force):
     if not base:
         return 2
 
-    cmd = ["esptool.py", "--after", "hard_reset", "write_flash", f"0x{base:x}", {eeprom_file.name}]
+    cmd = ["esptool.py", "--after", "hard_reset", "write_flash", f"0x{base:x}", eeprom_file.name]
     print_cmd(cmd)
     if not force:
         click.confirm("Voulez-vous contnuer ?", abort=True)
@@ -205,7 +210,7 @@ def cli_read():
     pass
 
 
-@cli_read.command()
+@cli_read.command(name="read")
 @click.option("-o", "--output", help="fichier destination", default="config.yaml", type=click.File("wb"))
 def cmd_read(output):
     """ Lit la configuration depuis l'EEPROM. """
@@ -244,11 +249,11 @@ def cli_dump():
     pass
 
 
-@cli_dump.command()
+@cli_dump.command(name="dump")
 @click.option("-i", "--input", "input_", help="fichier source", default="config.bin", type=click.File("rb"))
 @click.option("-f", "--format", "format_", help="fichier source", default="yaml", type=click.Choice(["yaml", "json"]))
 def cmd_dump(input_, format_):
-    """ Convertit le fichier EEPROM config.bin."""
+    """ Convertit le fichier EEPROM config.bin. """
     eeprom = input_.read()
     input_.close()
 

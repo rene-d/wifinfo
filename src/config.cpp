@@ -147,7 +147,7 @@ bool config_read(bool clear_on_error)
         crc = crc16Update(crc, data);
     }
 
-    config_securse_strings();
+    config_secure_strings();
 
     // CRC Error ?
     if (crc != 0)

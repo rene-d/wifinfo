@@ -2,11 +2,12 @@
 # module téléinformation client
 # rene-d 2020
 
-from sseclient import SSEClient
-import click
 import socket
-import requests
 import time
+
+import click
+import requests
+from sseclient import SSEClient
 
 
 @click.command(context_settings={"help_option_names": ["-h", "--help"]})

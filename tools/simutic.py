@@ -2,10 +2,11 @@
 # rene-d 2020
 
 import datetime
-import math
-import time
-import random
 import json
+import math
+import random
+import time
+
 
 """
 Simulation de Téléinformation Client

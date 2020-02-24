@@ -1,5 +1,7 @@
 # WifInfo
 
+![PlatformIO CI](https://github.com/rene-d/wifinfo/workflows/PlatformIO%20CI/badge.svg)
+![Unit tests](https://github.com/rene-d/wifinfo/workflows/Unit%20tests/badge.svg)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/980ec5f2be584a44be127a8a2bdccd99)](https://www.codacy.com/manual/rene-d/wifinfo?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=rene-d/wifinfo&amp;utm_campaign=Badge_Grade)
 
 WifInfo est un module de consignation de la téléinformation des compteurs électriques 🇫🇷 avec serveur web embarqué.
