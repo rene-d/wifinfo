@@ -1,0 +1,17 @@
+name: Unit tests
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: build image
+      run: docker build -t tic .
+
+    - name: run tests
+      run: docker run --rm -ti -v $PWD:/tic:ro -v /tmp/results:/results tic /tic/runtest.sh
