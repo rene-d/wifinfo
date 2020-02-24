@@ -236,12 +236,16 @@ void tic_get_json_dict(String &data)
 // interface pour webserver http://wifinfo/<ETIQUETTE>
 const char *tic_get_value(const char *label)
 {
-    return tinfo.get_value(label);
+    return tinfo.get_value(label, nullptr, true);
 }
 
 static void http_add_value_ex(String &uri, const char *label, const char *notif)
 {
     if (strcasecmp_P(label, PSTR("type")) == 0)
+    {
+        uri += notif;
+    }
+    else if (strcasecmp_P(label, PSTR("notif")) == 0)
     {
         uri += notif;
     }
