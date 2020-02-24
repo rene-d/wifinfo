@@ -6,11 +6,14 @@
 static bool sys_update_is_ok = false; // indicates a successful update
 static Ticker blink;
 
+extern "C" uint32_t _FS_start;
+extern "C" uint32_t _FS_end;
+
 //
 static void sys_update_finish(ESP8266WebServer &server, bool finish = false)
 {
     Serial.println(F("sys_update_finish"));
-    led_rgb_off();
+    led_off();
     blink.detach();
 
     if (Update.hasError())
@@ -83,13 +86,26 @@ void sys_update_register(ESP8266WebServer &server)
             {
                 Serial.printf_P(PSTR("upload start: %s (%u bytes)\n"), upload.filename.c_str(), upload.contentLength);
                 blink.attach_ms(333, [] {
-                    led_rgb_toggle(COLOR_MAGENTA);
+                    led_toggle();
                 });
 
                 sys_update_is_ok = false;
                 int command = (upload.filename.indexOf("spiffs.bin") != -1) ? U_FS : U_FLASH;
 
-                if (!Update.begin(1024000, command))
+                // upload.contentLength is NOT the real upload size
+                uint32_t max_size;
+                if (command == U_FS)
+                {
+                    // contentLength is a little above the authorized length
+                    max_size = (uint32_t)&_FS_end - (uint32_t)&_FS_start;
+                }
+                else
+                {
+                    // should be always ok
+                    max_size = upload.contentLength;
+                }
+
+                if (!Update.begin(max_size, command))
                 {
                     Serial.println(F("begin error"));
                     sys_update_finish(server);
