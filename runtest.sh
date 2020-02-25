@@ -23,8 +23,11 @@ make -j
 
 ctest --output-on-failure
 
-gcovr -r ${src_dir} --html --html-details -o ${results}/coverage.html
+if [ "$1" = "cov" ]; then
+    gcovr -r ${src_dir} --html -o ${results}/coverage.html
+else
+    gcovr -r ${src_dir} --html --html-details -o ${results}/coverage.html
 
-cppcheck --project=compile_commands.json --suppress=*:/usr/local/include/nlohmann/json.hpp --xml 2> ${results}/cppcheck.xml
-
-cppcheck-htmlreport --file ${results}/cppcheck.xml --report-dir=${results}/cppcheck
+    cppcheck --project=compile_commands.json --suppress=*:/usr/local/include/nlohmann/json.hpp --xml 2> ${results}/cppcheck.xml
+    cppcheck-htmlreport --file ${results}/cppcheck.xml --report-dir=${results}/cppcheck
+fi
