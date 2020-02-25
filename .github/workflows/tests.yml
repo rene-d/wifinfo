@@ -16,6 +16,9 @@ jobs:
     - name: run tests
       run: docker run -v $PWD:/tic:ro -v /tmp/results:/results tic /tic/runtest.sh cov
 
+    - name: run tests2
+      run: ls -l /tmp/results; docker ps -a;echo $PWD;uname -a;pwd
+
     - name: Archive code coverage results
       uses: actions/upload-artifact@v1
       with:
