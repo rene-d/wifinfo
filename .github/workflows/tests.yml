@@ -10,17 +10,38 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: build image
-      run: docker build -t tic .
 
-    - name: run tests
-      run: docker run -v $PWD:/tic:ro -v /tmp/results:/results tic /tic/runtest.sh cov
+    - name: configure system
+      run: |
+        sudo apt-get install -y libgtest-dev python3 python3-pip
+        pip3 install -U gcovr
+        wget -nv -P test/support/nlohmann/ https://github.com/nlohmann/json/releases/download/v3.7.3/json.hpp
 
-    - name: run tests2
-      run: ls -l /tmp/results; docker ps -a;echo $PWD;uname -a;pwd
+    - name: build
+      run: |
+        mkdir build
+        cd build
+        cmake -DCODE_COVERAGE=ON ..
+        make -j
+
+    - name: test
+      run: |
+        ./tic
+
+    - name: cov
+      run: |
+        gcovr -r .. --html -o /tmp/coverage.html
+
+
+
+    # - name: build image
+    #   run: docker build -t tic .
+
+    # - name: run tests
+    #   run: docker run -v $PWD:/tic:ro -v /tmp/results:/results tic /tic/runtest.sh cov
 
     - name: Archive code coverage results
       uses: actions/upload-artifact@v1
       with:
         name: code-coverage-report
-        path: /tmp/results/coverage.html
+        path: /tmp/coverage.html

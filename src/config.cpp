@@ -26,20 +26,14 @@
 #include "config.h"
 #include "jsonbuilder.h"
 #include "tic.h"
+#include "strncpy_s.h"
 #include <EEPROM.h>
 #include <user_interface.h>
 
 #include "emptyserial.h"
 
-// Configuration structure for whole program
+// Configuration object for whole program
 Config config;
-
-
-static inline void str_copy(char *dest, const String& source, size_t len)
-{
-    str_copy(dest, source.c_str(), len);
-    dest[len] = '\0';
-}
 
 
 void config_setup()
@@ -62,9 +56,10 @@ void config_setup()
 
         Serial.println(F("Reset to default"));
     }
+
 }
 
-static void config_secure_strings()
+static void config_securize_cstrings()
 {
     // ajoute des \0 pour plus de sécurité
     config.ssid[CFG_SSID_LENGTH] = 0;
@@ -155,7 +150,7 @@ bool config_read(bool clear_on_error)
         crc = crc16Update(crc, data);
     }
 
-    config_secure_strings();
+    config_securize_cstrings();
 
     // CRC Error ?
     if (crc != 0)
@@ -377,11 +372,11 @@ void config_handle_form(ESP8266WebServer &server)
 #endif
 
         // Wi-Fi et avancé
-        str_copy(config.ssid, server.arg(CFG_FORM_SSID), CFG_SSID_LENGTH);
-        str_copy(config.psk, server.arg(CFG_FORM_PSK), CFG_SSID_LENGTH);
-        str_copy(config.host, server.arg(CFG_FORM_HOST), CFG_HOSTNAME_LENGTH);
-        str_copy(config.ap_psk, server.arg(CFG_FORM_AP_PSK), CFG_SSID_LENGTH);
-        str_copy(config.ota_auth, server.arg(CFG_FORM_OTA_AUTH), CFG_SSID_LENGTH);
+        strncpy_s(config.ssid, server.arg(CFG_FORM_SSID), CFG_SSID_LENGTH);
+        strncpy_s(config.psk, server.arg(CFG_FORM_PSK), CFG_SSID_LENGTH);
+        strncpy_s(config.host, server.arg(CFG_FORM_HOST), CFG_HOSTNAME_LENGTH);
+        strncpy_s(config.ap_psk, server.arg(CFG_FORM_AP_PSK), CFG_SSID_LENGTH);
+        strncpy_s(config.ota_auth, server.arg(CFG_FORM_OTA_AUTH), CFG_SSID_LENGTH);
         config.ota_port = validate_int(server.arg(CFG_FORM_OTA_PORT), 0, 65535, DEFAULT_OTA_PORT);
 
         config.sse_freq = validate_int(server.arg(CFG_FORM_SSE_FREQ), 0, 360, 0);
@@ -391,25 +386,25 @@ void config_handle_form(ESP8266WebServer &server)
             config.options |= OPTION_LED_TINFO;
 
         // Emoncms
-        str_copy(config.emoncms.host, server.arg(CFG_FORM_EMON_HOST), CFG_EMON_HOST_LENGTH);
+        strncpy_s(config.emoncms.host, server.arg(CFG_FORM_EMON_HOST), CFG_EMON_HOST_LENGTH);
         config.emoncms.port = validate_int(server.arg(CFG_FORM_EMON_PORT), 0, 65535, CFG_EMON_DEFAULT_PORT);
-        str_copy(config.emoncms.url, server.arg(CFG_FORM_EMON_URL), CFG_EMON_URL_LENGTH);
-        str_copy(config.emoncms.apikey, server.arg(CFG_FORM_EMON_KEY), CFG_EMON_KEY_LENGTH);
+        strncpy_s(config.emoncms.url, server.arg(CFG_FORM_EMON_URL), CFG_EMON_URL_LENGTH);
+        strncpy_s(config.emoncms.apikey, server.arg(CFG_FORM_EMON_KEY), CFG_EMON_KEY_LENGTH);
         config.emoncms.node = validate_int(server.arg(CFG_FORM_EMON_NODE), 0, 255, 0);
         config.emoncms.freq = validate_int(server.arg(CFG_FORM_EMON_FREQ), 0, 86400, 0);
 
         // jeedom
-        str_copy(config.jeedom.host, server.arg(CFG_FORM_JDOM_HOST), CFG_JDOM_HOST_LENGTH);
+        strncpy_s(config.jeedom.host, server.arg(CFG_FORM_JDOM_HOST), CFG_JDOM_HOST_LENGTH);
         config.jeedom.port = validate_int(server.arg(CFG_FORM_JDOM_PORT), 0, 65535, CFG_JDOM_DEFAULT_PORT);
-        str_copy(config.jeedom.url, server.arg(CFG_FORM_JDOM_URL), CFG_JDOM_URL_LENGTH);
-        str_copy(config.jeedom.apikey, server.arg(CFG_FORM_JDOM_KEY), CFG_JDOM_KEY_LENGTH);
-        str_copy(config.jeedom.adco, server.arg(CFG_FORM_JDOM_ADCO), CFG_JDOM_ADCO_LENGTH);
+        strncpy_s(config.jeedom.url, server.arg(CFG_FORM_JDOM_URL), CFG_JDOM_URL_LENGTH);
+        strncpy_s(config.jeedom.apikey, server.arg(CFG_FORM_JDOM_KEY), CFG_JDOM_KEY_LENGTH);
+        strncpy_s(config.jeedom.adco, server.arg(CFG_FORM_JDOM_ADCO), CFG_JDOM_ADCO_LENGTH);
         config.jeedom.freq = validate_int(server.arg(CFG_FORM_JDOM_FREQ), 0, 86400, 0);
 
         // HTTP Request
-        str_copy(config.httpreq.host, server.arg(CFG_FORM_HTTPREQ_HOST), CFG_HTTPREQ_HOST_LENGTH);
+        strncpy_s(config.httpreq.host, server.arg(CFG_FORM_HTTPREQ_HOST), CFG_HTTPREQ_HOST_LENGTH);
         config.httpreq.port = validate_int(server.arg(CFG_FORM_HTTPREQ_PORT), 0, 65535, CFG_HTTPREQ_DEFAULT_PORT);
-        str_copy(config.httpreq.url, server.arg(CFG_FORM_HTTPREQ_URL), CFG_HTTPREQ_URL_LENGTH);
+        strncpy_s(config.httpreq.url, server.arg(CFG_FORM_HTTPREQ_URL), CFG_HTTPREQ_URL_LENGTH);
         config.httpreq.use_post = server.hasArg(CFG_FORM_HTTPREQ_USE_POST);
 
         config.httpreq.freq = validate_int(server.arg(CFG_FORM_HTTPREQ_FREQ), 0, 86400, 0);
@@ -419,7 +414,7 @@ void config_handle_form(ESP8266WebServer &server)
         config.httpreq.seuil_bas = validate_int(server.arg(CFG_FORM_HTTPREQ_SEUIL_BAS), 0, 20000, 0);
         config.httpreq.seuil_haut = validate_int(server.arg(CFG_FORM_HTTPREQ_SEUIL_HAUT), 0, 20000, 0);
 
-        config_secure_strings();
+
 
         if (config_save())
         {

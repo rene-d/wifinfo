@@ -6,6 +6,7 @@
 #include "httpreq.h"
 #include "led.h"
 #include "sse.h"
+#include "strncpy_s.h"
 #include "teleinfo.h"
 #include <PolledTimeout.h>
 
@@ -274,7 +275,7 @@ void http_notif(const char *notif)
     String uri;
     char label[16];
 
-    uri.reserve(strlen(config.httpreq.url) + 32);
+    uri.reserve(CFG_HTTPREQ_HOST_LENGTH + 32);
 
     // formate l'URL
     for (const char *p = config.httpreq.url; *p; ++p)
@@ -352,7 +353,7 @@ void http_notif_periode_en_cours()
     // a-t-on un changement de période ?
     if (strncmp(periode_en_cours, PTEC, sizeof(periode_en_cours)) != 0)
     {
-        strncpy(periode_en_cours, PTEC, sizeof(periode_en_cours));
+        strncpy_s(periode_en_cours, PTEC, sizeof(periode_en_cours) - 1);
         if (init_periode_en_cours)
         {
             // premier passage: on mémorise la période courante

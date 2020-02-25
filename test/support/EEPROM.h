@@ -4,6 +4,7 @@
 #pragma once
 
 #include <vector>
+#include <inttypes.h>
 
 class EEPROMClass
 {
@@ -22,15 +23,19 @@ public:
 
     uint8_t read(uint32_t addr)
     {
-        if (addr >= eeprom.size())
-            return 0;
-        return eeprom[addr];
+        if ((size_t)addr < eeprom.size())
+        {
+            return eeprom[addr];
+        }
+        return 0;
     }
 
     void write(uint32_t addr, uint8_t byte)
     {
-        if (addr < eeprom.size())
+        if ((size_t)addr < eeprom.size())
+        {
             eeprom[addr] = byte;
+        }
     }
 
     void commit() {}
