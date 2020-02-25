@@ -18,6 +18,7 @@ jobs:
 
     - name: build
       run: |
+        set -x
         mkdir -p build artifacts
         cd build
         cmake -DCODE_COVERAGE=ON ..
