@@ -1,7 +1,7 @@
 # module téléinformation client
 # rene-d 2020
 
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.10)
 
 project(tic)
 
@@ -16,6 +16,11 @@ if(CMAKE_HOST_SYSTEM_NAME STREQUAL Darwin)
     find_package(gtest REQUIRED)
 else()
     set(GTEST_BOTH_LIBRARIES gtest gtest_main)
+
+    # debian/ubuntu
+    if(EXISTS /usr/src/googletest/CMakeLists.txt)
+        add_subdirectory(/usr/src/googletest external EXCLUDE_FROM_ALL)
+    endif()
 endif()
 
 
@@ -70,7 +75,7 @@ target_compile_definitions(tic PRIVATE ENABLE_CLI DEBUG)
 
 
 enable_testing()
-add_test(NAME tic_test COMMAND tic)
+add_test(NAME tic_test COMMAND tic --gtest_output=xml)
 
 
 function(dump_cmake_variables)
