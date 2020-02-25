@@ -23,15 +23,9 @@ jobs:
         cd build
         cmake -DCODE_COVERAGE=ON ..
         make -j
-        mkdir -p artifacts
-
-    - name: test
-      run: |
         ./tic
-
-    - name: reports
-      run: |
         wget -nv https://github.com/adarmalik/gtest2html/raw/master/gtest2html.xslt
+        mkdir -p artifacts
         xsltproc gtest2html.xslt test_detail.xml > artifacts/test_detail.html
         gcovr -r .. --html -o artifacts/coverage.html
 
