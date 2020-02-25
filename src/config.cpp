@@ -25,8 +25,8 @@
 
 #include "config.h"
 #include "jsonbuilder.h"
-#include "tic.h"
 #include "strncpy_s.h"
+#include "tic.h"
 #include <EEPROM.h>
 #include <user_interface.h>
 
