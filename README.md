@@ -3,6 +3,7 @@
 ![PlatformIO CI](https://github.com/rene-d/wifinfo/workflows/PlatformIO%20CI/badge.svg)
 ![Unit tests](https://github.com/rene-d/wifinfo/workflows/Unit%20tests/badge.svg)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/980ec5f2be584a44be127a8a2bdccd99)](https://www.codacy.com/manual/rene-d/wifinfo?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=rene-d/wifinfo&amp;utm_campaign=Badge_Grade)
+[![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 
 WifInfo est un module de consignation de la téléinformation des compteurs électriques 🇫🇷 avec serveur web embarqué.
 
@@ -16,7 +17,8 @@ Ce projet est la fusion de développements réalisés en vue du remplacement d'u
 -   Server-sent event ([SSE](https://fr.wikipedia.org/wiki/Server-sent_events)) pour les mises à jour des index
 -   Notifications HTTP sur changements HC/HP et dépasssement de seuils ou ADPS
 -   Client en liaison série pour mise au point avec [SimpleCLI](https://github.com/spacehuhn/SimpleCLI)
--   Tests sur PC avec [Google Test](https://github.com/google/googletest) et couverture avec [lcov](http://ltp.sourceforge.net/coverage/lcov.php)
+-   Tests unitaires sur PC et couverture
+-   Analyse statique de code
 -   Client Python de simulation [cli.py](tools/cli.py) sur base de `miniterm.py` de [pyserial](https://pyserial.readthedocs.io/)
 -   Compression et minimisation de la partie web avant écriture du filesystem (`data_src` ⇒ `data` au moment du build)
 -   Serveur Python [Flask](https://www.palletsprojects.com/p/flask/) pour développement de la partie web
@@ -80,7 +82,7 @@ Exemple: `/update.php?ptec=$PTEC&conso=~HCHC~+~HCHP~&id=$chipid` ⇒ `/update.ph
 -   <http://wifinfo/reset> : permet de redémarrer le module
 -   <http://wifinfo/version> : retourne la version (tag git) du système de fichiers
 
-### Client SSE
+### Notifications SSE
 
 Les événements SSE sont accessibles via deux URL: <http://wifinfo/tic> ou <http://wifinfo/sse/json>, avec une limitiation à deux clients simultatnés.
 
@@ -140,14 +142,14 @@ Pour activer le mode commande (si compilé avec l'option `ENABLE_CLI`), il faut 
 -   `Ctrl-P` bascule entre heures creuses et heures pleines
 -   `Ctrl-C` sort du client
 
-[sse.py][tools/sse.py] est un client SSE. Lorsque WifInfo a un client connecté, il envoie toutes les trames reçues du compteur sur cette socket.
+[sse.py](tools/sse.py) est un client SSE. Lorsque WifInfo a un client connecté, il envoie toutes les trames reçues du compteur sur cette socket.
 
 ```bash
 pip3 install sseclient click
 ./sse.py
 ```
 
-## Tests unitaires
+## Tests et couverture
 
 Sans Docker:
 
@@ -169,7 +171,7 @@ docker run --rm -ti -v $(pwd):/tic:ro -v $(pwd)/coverage:/coverage tic /tic/runt
 
 La couverture est disponible dans `./coverage/index.html`.
 
-## Développement web
+## Développement de l'interface HTML
 
 ### Avec module simulé (aucun esp8266 requis)
 
@@ -230,13 +232,22 @@ Le montage final utilise un ESP-01S avec le module [PiTInfo](http://hallard.me/p
 -   [Node.js](https://nodejs.org/en/)
 -   [html-minifier](https://github.com/kangax/html-minifier) : Javascript-based HTML compressor/minifier
 
-### Tests unitaires
+### Tests unitaires & couverture
 
 -   [Docker](https://www.docker.com) ou [Docker Desktop](https://www.docker.com/products/docker-desktop)
 -   [CMake](https://cmake.org)
 -   [Google Test](https://github.com/google/googletest) : Google Testing and Mocking Framework
 -   [nlohmann json](https://github.com/nlohmann/json) : JSON for Modern C++
--   [lcov](http://ltp.sourceforge.net/coverage/lcov.php) : front-end for GCC's coverage testing tool gcov
+-   [gcovr](https://gcovr.com/) : Generate C/C++ code coverage reports with gcov
+-   [gtest2html](https://github.com/adarmalik/gtest2html) : Convert googletest xml output to html
+
+### QA & CI/CD
+
+-   [cppcheck](http://cppcheck.net) : static analysis tool for C/C++ code
+-   [clang-tidy](https://clang.llvm.org/extra/clang-tidy/) : clang-based C++ “linter” tool
+-   [git](https://git-scm.com)
+-   [GitHub Actions](https://github.com/features/actions)
+-   [Codacy](https://www.codacy.com)
 
 ### Client de test/injecteur de téléinfo
 

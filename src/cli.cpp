@@ -5,6 +5,8 @@
 #include "config.h"
 #include "filesystem.h"
 #include "sse.h"
+#include "strncpy_s.h"
+
 #include "sys.h"
 #include "tic.h"
 #include "timesync.h"
@@ -92,16 +94,16 @@ void cli_setup()
 
         else if ((arg == F("wifi")) && (cmd.countArgs() >= 1))
         {
-            strncpy(config.ssid, cmd.getArg(1).getValue().c_str(), CFG_SSID_LENGTH);
-            strncpy(config.psk, cmd.getArg(2).getValue().c_str(), CFG_PSK_LENGTH);
+            strncpy_s(config.ssid, cmd.getArg(1).getValue().c_str(), CFG_SSID_LENGTH);
+            strncpy_s(config.psk, cmd.getArg(2).getValue().c_str(), CFG_PSK_LENGTH);
             config_save();
 
             ESP.restart();
         }
         else if ((arg == F("ap")) && (cmd.countArgs() >= 1))
         {
-            strncpy(config.host, cmd.getArg(1).getValue().c_str(), CFG_HOSTNAME_LENGTH);
-            strncpy(config.ap_psk, cmd.getArg(2).getValue().c_str(), CFG_PSK_LENGTH);
+            strncpy_s(config.host, cmd.getArg(1).getValue().c_str(), CFG_HOSTNAME_LENGTH);
+            strncpy_s(config.ap_psk, cmd.getArg(2).getValue().c_str(), CFG_PSK_LENGTH);
             config_save();
 
             ESP.restart();

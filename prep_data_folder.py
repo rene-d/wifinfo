@@ -38,9 +38,8 @@ def get_version():
     """
 
     if pathlib.Path(".git").is_dir():
-        wifinfo_version = (
-            subprocess.check_output("git describe --long --always --tags --all", shell=True).decode().strip()
-        )
+        cmd = ["git", "describe", "--long", "--always", "--tags", "--all"]
+        wifinfo_version = subprocess.check_output(cmd).decode().strip()
         wifinfo_version = wifinfo_version[wifinfo_version.index("/") + 1 :]
     else:
         wifinfo_version = os.getenv("WIFINFO_VERSION", "develop")

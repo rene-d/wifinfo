@@ -32,13 +32,16 @@ struct tm *mock_localtime(const time_t *t)
 
 size_t mock_strftime(char *dest, size_t sz, const char *__restrict, const struct tm *tm)
 {
-    if (tm != nullptr && tm->tm_year == MOCK_YEAR)
+    if ((dest != nullptr) && (sz >= strlen(A_SMALL_STEP_FOR_MAN) + 1))
     {
-        strncpy(dest, A_SMALL_STEP_FOR_MAN, sz);
-    }
-    else
-    {
-        strncpy(dest, "", sz);
+        if (tm != nullptr && tm->tm_year == MOCK_YEAR)
+        {
+            strncpy(dest, A_SMALL_STEP_FOR_MAN, sz);
+        }
+        else
+        {
+            strncpy(dest, "", sz);
+        }
     }
     return 0; /* inutilisé */
 }

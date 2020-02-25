@@ -33,7 +33,7 @@ test:
 
 docker:
 	docker buildx build -t test .
-	docker run --rm -ti \
+	docker run --rm \
 		-v $(PWD):/tic:ro \
 		-v $(PWD)/build/build-docker:/build \
 		-v $(PWD)/build/results-docker:/results \

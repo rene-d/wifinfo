@@ -22,11 +22,23 @@ jobs:
         python -m pip install --upgrade pip
         pip install platformio
 
-    - name: Run PlatformIO
-      run: platformio run -e esp12 -e esp01s
+    - name: Run PlatformIO firmware
+      run: platformio run
 
     - name: Build the SPIFFS filesystem
-      run: platformio run -e esp12 -e esp01s -t buildfs
+      run: platformio run -t buildfs
 
     - name: Run PlatformIO check
-      run: platformio check -e esp12 -e esp01s
+      run: platformio check
+
+    - name: Make artifacts
+      run: |
+        cd .pio/build
+        mkdir -p ../zip
+        zip ../zip/wifinfo-$(git describe).zip $(ls */spiffs.bin */firmware.bin)
+
+    - name: Archive firmware+spiffs
+      uses: actions/upload-artifact@v1
+      with:
+        name: firmware-spiffs
+        path: .pio/zip/

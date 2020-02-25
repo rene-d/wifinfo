@@ -12,6 +12,7 @@
 #define led_setup()
 #define led_on()
 #define led_off()
+#define led_toggle()
 
 #else
 

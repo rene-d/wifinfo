@@ -28,6 +28,7 @@
 #include "jsonbuilder.h"
 #include "led.h"
 #include "sse.h"
+#include "strncpy_s.h"
 #include <ArduinoOTA.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266WiFi.h>
@@ -230,12 +231,12 @@ int sys_wifi_connect()
         else
         {
             // Copy SDK SSID
-            strncpy(config.ssid, WiFi.SSID().c_str(), CFG_SSID_LENGTH);
+            strncpy_s(config.ssid, WiFi.SSID().c_str(), CFG_SSID_LENGTH);
 
             // Copy SDK password if any
             if (WiFi.psk() != "")
             {
-                strncpy(config.psk, WiFi.psk().c_str(), CFG_SSID_LENGTH);
+                strncpy_s(config.psk, WiFi.psk().c_str(), CFG_SSID_LENGTH);
             }
             else
             {
@@ -315,8 +316,8 @@ int sys_wifi_connect()
         WiFi.disconnect();
 
         // SSID = hostname
-        strncpy(ap_ssid, config.host, sizeof(ap_ssid) - 1);
-        ap_ssid[31] = 0;
+        strncpy_s(ap_ssid, config.host, sizeof(ap_ssid) - 1);
+
         Serial.print(F("Switching to AP "));
         Serial.println(ap_ssid);
         Serial.flush();
