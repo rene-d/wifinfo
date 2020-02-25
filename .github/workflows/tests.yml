@@ -13,7 +13,7 @@ jobs:
     - name: configure system
       run: |
         sudo apt-get install -y libgtest-dev python3 python3-pip xsltproc
-        pip3 install -U gcovr
+        sudo pip3 install -v -U gcovr
         wget -nv -P test/support/nlohmann/ https://github.com/nlohmann/json/releases/download/v3.7.3/json.hpp
 
     - name: build
