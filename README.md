@@ -80,7 +80,7 @@ Exemple: `/update.php?ptec=$PTEC&conso=~HCHC~+~HCHP~&id=$chipid` ⇒ `/update.ph
 -   <http://wifinfo/reset> : permet de redémarrer le module
 -   <http://wifinfo/version> : retourne la version (tag git) du système de fichiers
 
-### Client SSE
+### Notifications SSE
 
 Les événements SSE sont accessibles via deux URL: <http://wifinfo/tic> ou <http://wifinfo/sse/json>, avec une limitiation à deux clients simultatnés.
 
@@ -140,14 +140,14 @@ Pour activer le mode commande (si compilé avec l'option `ENABLE_CLI`), il faut 
 -   `Ctrl-P` bascule entre heures creuses et heures pleines
 -   `Ctrl-C` sort du client
 
-[sse.py][tools/sse.py] est un client SSE. Lorsque WifInfo a un client connecté, il envoie toutes les trames reçues du compteur sur cette socket.
+[sse.py](tools/sse.py) est un client SSE. Lorsque WifInfo a un client connecté, il envoie toutes les trames reçues du compteur sur cette socket.
 
 ```bash
 pip3 install sseclient click
 ./sse.py
 ```
 
-## Tests unitaires
+## Tests et couverture
 
 Sans Docker:
 
@@ -169,7 +169,7 @@ docker run --rm -ti -v $(pwd):/tic:ro -v $(pwd)/coverage:/coverage tic /tic/runt
 
 La couverture est disponible dans `./coverage/index.html`.
 
-## Développement web
+## Développement de l'interface HTML
 
 ### Avec module simulé (aucun esp8266 requis)
 

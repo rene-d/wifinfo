@@ -231,11 +231,13 @@ int sys_wifi_connect()
         {
             // Copy SDK SSID
             strncpy(config.ssid, WiFi.SSID().c_str(), CFG_SSID_LENGTH);
+            config.ssid[CFG_SSID_LENGTH] = 0;
 
             // Copy SDK password if any
             if (WiFi.psk() != "")
             {
                 strncpy(config.psk, WiFi.psk().c_str(), CFG_SSID_LENGTH);
+                config.psk[CFG_SSID_LENGTH] = 0;
             }
             else
             {
@@ -316,7 +318,8 @@ int sys_wifi_connect()
 
         // SSID = hostname
         strncpy(ap_ssid, config.host, sizeof(ap_ssid) - 1);
-        ap_ssid[31] = 0;
+        ap_ssid[sizeof(ap_ssid) - 1] = 0;
+
         Serial.print(F("Switching to AP "));
         Serial.println(ap_ssid);
         Serial.flush();

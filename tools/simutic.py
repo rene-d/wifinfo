@@ -1,16 +1,13 @@
 # module téléinformation client
 # rene-d 2020
 
+# Simulation de Téléinformation Client
+
 import datetime
 import json
 import math
 import random
 import time
-
-
-"""
-Simulation de Téléinformation Client
-"""
 
 
 def group(label, value):
