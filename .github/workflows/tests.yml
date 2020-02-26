@@ -43,4 +43,4 @@ jobs:
       run: |
         cpp-coveralls --exclude build --exclude .pio
       env:
-        COVERALLS_REPO_TOKEN: oPNFisk0VZdO2ngxTczKuBnCI9Ms3kxYB
+        COVERALLS_REPO_TOKEN: ${{ secrets.coveralls_token }}

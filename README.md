@@ -244,11 +244,12 @@ Le montage final utilise un ESP-01S avec le module [PiTInfo](http://hallard.me/p
 
 ### QA & CI/CD
 
+-   [git](https://git-scm.com) : free and open source distributed version control system
 -   [cppcheck](http://cppcheck.net) : static analysis tool for C/C++ code
 -   [clang-tidy](https://clang.llvm.org/extra/clang-tidy/) : clang-based C++ “linter” tool
--   [git](https://git-scm.com)
--   [GitHub Actions](https://github.com/features/actions)
--   [Codacy](https://www.codacy.com)
+-   [GitHub Actions](https://github.com/features/actions) : workflow automation for GitHub
+-   [Codacy](https://www.codacy.com) : Automated code reviews & code analytics
+-   [Coveralls](https://coveralls.io) : Test Coverage History & Statistics
 
 ### Client de test/injecteur de téléinfo
 
