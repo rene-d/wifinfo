@@ -1,8 +1,9 @@
 # WifInfo
 
-![PlatformIO CI](https://github.com/rene-d/wifinfo/workflows/PlatformIO%20CI/badge.svg)
-![Unit tests](https://github.com/rene-d/wifinfo/workflows/Unit%20tests/badge.svg)
+[![PlatformIO CI](https://github.com/rene-d/wifinfo/workflows/PlatformIO%20CI/badge.svg)](https://github.com/rene-d/wifinfo/actions?query=workflow%3A%22PlatformIO+CI%22)
+[![Unit tests](https://github.com/rene-d/wifinfo/workflows/Unit%20tests/badge.svg)](https://github.com/rene-d/wifinfo/actions?query=workflow%3A%22Unit+tests%22)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/980ec5f2be584a44be127a8a2bdccd99)](https://www.codacy.com/manual/rene-d/wifinfo?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=rene-d/wifinfo&amp;utm_campaign=Badge_Grade)
+[![Coverage Status](https://coveralls.io/repos/github/rene-d/wifinfo/badge.svg)](https://coveralls.io/github/rene-d/wifinfo)
 [![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 
 WifInfo est un module de consignation de la téléinformation des compteurs électriques 🇫🇷 avec serveur web embarqué.
