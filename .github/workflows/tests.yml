@@ -1,6 +1,6 @@
 name: Unit tests
 
-on: [push]
+on: [push, pull_request]
 
 jobs:
   build:
@@ -39,16 +39,6 @@ jobs:
       with:
         name: tests-code-coverage-results
         path: artifacts/
-    - name: Archive 2
-      uses: actions/upload-artifact@v1
-      with:
-        name: test_detail.html
-        path: artifacts/test_detail.html
-    - name: Archive 3
-      uses: actions/upload-artifact@v1
-      with:
-        name: coverage.html
-        path: artifacts/coverage.html
 
     - name: Upload to coveralls.io
       run: |
@@ -59,6 +49,6 @@ jobs:
     - name: Upload to Codacy
       run: |
         gcovr -r . --xml -o cobertura.xml
-        bash <(curl -Ls https://coverage.codacy.com/get.sh)
+        bash <(curl -Ls https://coverage.codacy.com/get.sh) report -l cpp
       env:
         CODACY_PROJECT_TOKEN: ${{ secrets.codacy_token }}
