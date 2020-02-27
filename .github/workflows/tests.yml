@@ -39,9 +39,13 @@ jobs:
       with:
         name: tests-code-coverage-results
         path: artifacts/
+    - name: Archive 2
+      uses: actions/upload-artifact@v1
       with:
         name: test_detail.html
         path: artifacts/test_detail.html
+    - name: Archive 3
+      uses: actions/upload-artifact@v1
       with:
         name: coverage.html
         path: artifacts/coverage.html
