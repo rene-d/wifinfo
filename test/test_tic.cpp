@@ -23,6 +23,8 @@ static void test_config_notif(bool emoncms, bool jeedom, bool httpreq)
 {
     test_reset_timers();
 
+    memset(&config, 0, sizeof(config));
+
     config.options = 0;
 
     if (emoncms)

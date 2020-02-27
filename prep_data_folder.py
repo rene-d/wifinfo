@@ -113,7 +113,9 @@ def prepare_www_files(source, target, env):
         if cmd:
             cmd = cmd.format(S=src_file.as_posix(), D=dest_file.as_posix())
             subprocess.check_call(cmd, shell=True)
-            trace(f"  minified:   {src_file.relative_to(data_src_dir)} → {dest_file.relative_to(data_dir)}")
+            trace(
+                f"  minified:   {src_file.relative_to(data_src_dir)} → {dest_file.relative_to(data_dir)}"
+            )
         else:
             shutil.copy2(src_file, dest_file)
             trace(f"  copied:     {dest_file.relative_to(data_dir)}")

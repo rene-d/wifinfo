@@ -165,7 +165,9 @@ class LF(Transform):
 class NoTerminal(Transform):
     """remove typical terminal control codes from input"""
 
-    REPLACEMENT_MAP = dict((x, 0x2400 + x) for x in range(32) if chr(x) not in "\r\n\b\t")
+    REPLACEMENT_MAP = dict(
+        (x, 0x2400 + x) for x in range(32) if chr(x) not in "\r\n\b\t"
+    )
     REPLACEMENT_MAP.update(
         {0x7F: 0x2421, 0x9B: 0x2425,}  # DEL  # CSI
     )
@@ -323,7 +325,9 @@ class Miniterm(object):
 
     def update_transformations(self):
         """take list of transformation classes and instantiate them for rx and tx"""
-        transformations = [EOL_TRANSFORMATIONS[self.eol]] + [TRANSFORMATIONS[f] for f in self.filters]
+        transformations = [EOL_TRANSFORMATIONS[self.eol]] + [
+            TRANSFORMATIONS[f] for f in self.filters
+        ]
         self.tx_transformations = [t() for t in transformations]
         self.rx_transformations = list(reversed(self.tx_transformations))
 
@@ -430,7 +434,9 @@ def ask_for_port():
     # filtre les ports impossibles
     ports = []
     for comport in sorted(comports()):
-        if comport[0].startswith("/dev/cu.") and not comport[0].startswith("/dev/cu.usb"):
+        if comport[0].startswith("/dev/cu.") and not comport[0].startswith(
+            "/dev/cu.usb"
+        ):
             continue
         ports.append(comport)
 
@@ -471,7 +477,9 @@ def ask_for_port():
     show_default=True,
     type=click.FloatRange(1, 60),
 )
-@click.option("-a", "pause_tic", help="téléinfo automatique", is_flag=True, default=True)
+@click.option(
+    "-a", "pause_tic", help="téléinfo automatique", is_flag=True, default=True
+)
 def main(port, tinfo_baudrate, frequence_trames, pause_tic):
     """Command line tool, entry point"""
 

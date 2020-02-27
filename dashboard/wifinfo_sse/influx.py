@@ -59,7 +59,8 @@ class Sonde:
                 if not {"name": database} in self.client.get_list_database():
                     # client.create_database(database)
                     self.client.query(
-                        f'CREATE DATABASE "{database}" WITH DURATION 30d REPLICATION 1 NAME "month"', method="POST"
+                        f'CREATE DATABASE "{database}" WITH DURATION 30d REPLICATION 1 NAME "month"',
+                        method="POST",
                     )
                 self.client.switch_database(database)
             except requests.exceptions.ConnectionError:
@@ -144,12 +145,23 @@ class Sonde:
 
 @click.command()
 @click.option(
-    "-freq", "frequency", envvar="FREQUENCY", help="fréquence d'écriture dans la base InfluxDb", type=click.IntRange(5, 3600), default=10,
+    "-freq",
+    "frequency",
+    envvar="FREQUENCY",
+    help="fréquence d'écriture dans la base InfluxDb",
+    type=click.IntRange(5, 3600),
+    default=10,
 )
 @click.option(
-    "-module", "wifinfo_addr", envvar="WIFINFO", help="adresse IP du module WifInfo", default="192.168.4.1",
+    "-module",
+    "wifinfo_addr",
+    envvar="WIFINFO",
+    help="adresse IP du module WifInfo",
+    default="192.168.4.1",
 )
-@click.option("-host", "influxdb_addr", help="adresse IP du module WifInfo", default="influxdb")
+@click.option(
+    "-host", "influxdb_addr", help="adresse IP du module WifInfo", default="influxdb"
+)
 def main(frequency, wifinfo_addr, influxdb_addr):
 
     sonde = Sonde()

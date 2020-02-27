@@ -7,6 +7,7 @@ import pathlib
 import re
 import struct
 import subprocess
+import sys
 import tempfile
 
 import click
@@ -22,7 +23,9 @@ def get_eeprom_base():
     """ Lit l'adresse de base de l'EEPROM. """
     cmd = ["esptool.py", "--no-stub", "flash_id"]
     print_cmd(cmd)
-    output = subprocess.run(cmd, stderr=subprocess.DEVNULL, stdout=subprocess.PIPE).stdout
+    output = subprocess.run(
+        cmd, stderr=subprocess.DEVNULL, stdout=subprocess.PIPE
+    ).stdout
     mem = re.search(rb"Detected flash size: (\w+)(?=\n)", output, re.DOTALL)
     if not mem:
         print("Impossible de déterminer la taille de la flash")
@@ -168,7 +171,14 @@ def cli_write():
 
 
 @cli_write.command(name="write")
-@click.option("-i", "--input", "input_", help="fichier source", default="config.yaml", type=click.File("rb"))
+@click.option(
+    "-i",
+    "--input",
+    "input_",
+    help="fichier source",
+    default="config.yaml",
+    type=click.File("rb"),
+)
 @click.option("-f", "--force", help="pas de question", is_flag=True)
 def write(input_, force):
     """ Charge une configuration en EEPROM. """
@@ -198,7 +208,14 @@ def write(input_, force):
     if not base:
         return 2
 
-    cmd = ["esptool.py", "--after", "hard_reset", "write_flash", f"0x{base:x}", eeprom_file.name]
+    cmd = [
+        "esptool.py",
+        "--after",
+        "hard_reset",
+        "write_flash",
+        f"0x{base:x}",
+        eeprom_file.name,
+    ]
     print_cmd(cmd)
     if not force:
         click.confirm("Voulez-vous contnuer ?", abort=True)
@@ -211,7 +228,13 @@ def cli_read():
 
 
 @cli_read.command(name="read")
-@click.option("-o", "--output", help="fichier destination", default="config.yaml", type=click.File("wb"))
+@click.option(
+    "-o",
+    "--output",
+    help="fichier destination",
+    default="config.yaml",
+    type=click.File("wb"),
+)
 def cmd_read(output):
     """ Lit la configuration depuis l'EEPROM. """
     base = get_eeprom_base()
@@ -226,7 +249,15 @@ def cmd_read(output):
     else:
         eeprom_file = output
 
-    cmd = ["esptool.py", "--after", "no_reset", "read_flash", f"0x{base:x}", "0x400", eeprom_file.name]
+    cmd = [
+        "esptool.py",
+        "--after",
+        "no_reset",
+        "read_flash",
+        f"0x{base:x}",
+        "0x400",
+        eeprom_file.name,
+    ]
     print_cmd(cmd)
     subprocess.run(cmd)
 
@@ -245,25 +276,52 @@ def cmd_read(output):
 
 
 @click.group()
-def cli_dump():
+def cli_conv():
     pass
 
 
-@cli_dump.command(name="dump")
-@click.option("-i", "--input", "input_", help="fichier source", default="config.bin", type=click.File("rb"))
-@click.option("-f", "--format", "format_", help="fichier source", default="yaml", type=click.Choice(["yaml", "json"]))
-def cmd_dump(input_, format_):
+@cli_conv.command(name="conv")
+@click.option("-i", "--input", "input_", help="fichier source", type=click.File("rb"))
+@click.option(
+    "-f",
+    "--format",
+    "format_",
+    help="fichier source",
+    default="yaml",
+    type=click.Choice(["yaml", "json", "bin"]),
+)
+def cmd_conf(input_, format_):
     """ Convertit le fichier EEPROM config.bin. """
-    eeprom = input_.read()
+
+    if input_ is None:
+        input_ = sys.stdin.buffer
+        suffix = ""
+    else:
+        suffix = pathlib.Path(input_.name).suffix
+
+    if suffix == ".json":
+        config = json.load(input_)
+        eeprom = write_eeprom(config)
+    elif suffix == ".yaml" or suffix == ".yml":
+        config = yaml.full_load(input_)
+        eeprom = write_eeprom(config)
+    else:
+        eeprom = input_.read(1024)
+        if len(eeprom) != 1024:
+            print(f"Mauvaise longueur: EEPROM {len(eeprom)} bytes != 1024")
+            exit(2)
+
     input_.close()
 
     if format_ == "json":
         print(json.dumps(read_eeprom(eeprom), indent=4))
-    else:
+    elif format_ == "yaml":
         print(yaml.safe_dump(read_eeprom(eeprom), sort_keys=False))
+    else:
+        sys.stdout.buffer.write(eeprom)
 
 
-cli = click.CommandCollection(sources=[cli_write, cli_read, cli_dump])
+cli = click.CommandCollection(sources=[cli_write, cli_read, cli_conv])
 
 if __name__ == "__main__":
     cli()

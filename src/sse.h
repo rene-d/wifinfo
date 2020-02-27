@@ -14,7 +14,7 @@ class SseClient
     WiFiClient client_;
 
 public:
-    SseClient(ESP8266WebServer &server)
+    explicit SseClient(ESP8266WebServer &server)
     {
         // récupère le _currentClient : comme l'application est monothreadée
         // c'est forcément celui qui déclenché la callback on()

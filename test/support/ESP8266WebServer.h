@@ -9,6 +9,9 @@ class ESP8266WebServer
 {
 public:
     static int send_called;
+    static int send_code;
+    static int hasArg_called;
+    static int arg_called;
 
 public:
     WiFiClient client()
@@ -16,9 +19,10 @@ public:
         return WiFiClient();
     }
 
-    void send(int, const String &, const String &)
+    void send(int code, const String &, const String &)
     {
         ++send_called;
+        send_code = code;
     }
 
     void on(const char *, ...)
@@ -29,20 +33,23 @@ public:
     {
     }
 
-    String arg(const String &) const
+    virtual String arg(const String &) const
     {
-        return "arg";
+        ++arg_called;
+        return "1";
     }
-    String arg(int) const
+    virtual String arg(int) const
     {
-        return "arg";
+        ++arg_called;
+        return "1";
     }
-    bool hasArg(const String &) const
+    virtual bool hasArg(const String &) const
     {
+        ++hasArg_called;
         return true;
     }
 
-    int args() const
+    virtual int args() const
     {
         return 1;
     }

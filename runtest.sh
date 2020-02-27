@@ -20,7 +20,6 @@ fi
 
 cmake -DCODE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug ${src_dir}
 make -j
-
 ctest --output-on-failure
 
 if [ "$1" = "cov" ]; then
@@ -28,6 +27,8 @@ if [ "$1" = "cov" ]; then
 else
     gcovr -r ${src_dir} --html --html-details -o ${results}/coverage.html
 
-    cppcheck --project=compile_commands.json --suppress=*:/usr/local/include/nlohmann/json.hpp --xml 2> ${results}/cppcheck.xml
+    cppcheck --project=compile_commands.json --suppress=*:/usr/local/include/nlohmann/json.hpp --enable=all --xml 2> ${results}/cppcheck.xml
     cppcheck-htmlreport --file ${results}/cppcheck.xml --report-dir=${results}/cppcheck
 fi
+
+# BUILD_DIR=. coverage run ${src_dir}/test/test_eeprom.py
