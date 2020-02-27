@@ -42,7 +42,7 @@ jobs:
 
     - name: Upload to coveralls.io
       run: |
-        cpp-coveralls --exclude .pio --gcov-options '\-lp'
+        cpp-coveralls --exclude .pio/ --exclude test/ --exclude build/CMakeFiles/*/CompilerIdC/ --exclude build/CMakeFiles/*/CompilerIdCXX/ --gcov-options '\-lp'
       env:
         COVERALLS_REPO_TOKEN: ${{ secrets.coveralls_token }}
 
