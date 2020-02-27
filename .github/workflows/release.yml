@@ -31,8 +31,8 @@ jobs:
           platformio run -e esp01s_prod -e esp12e_prod -t buildfs
 
           cd .pio/build
-          zip --junk-paths wifinfo-esp01_1m.zip esp01s_prod/*.bin
-          zip --junk-paths wifinfo-esp12e.zip esp12e_prod/*.bin
+          zip --junk-paths ../../wifinfo-esp01_1m.zip esp01s_prod/*.bin
+          zip --junk-paths ../../wifinfo-esp12e.zip esp12e_prod/*.bin
 
       - name: Create Release
         id: create_release
