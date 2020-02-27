@@ -18,7 +18,7 @@ public:
     static const int neverExpires = -1;
     static const int alwaysExpired = 0;
 
-    periodicMs(int)
+    explicit periodicMs(int)
     {
     }
 

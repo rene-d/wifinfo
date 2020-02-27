@@ -42,14 +42,15 @@ if(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   endif()
 endif()
 
-
+#
+#
 add_executable(tic
+    test/test_support.cpp
     test/test_teleinfo.cpp
     test/test_config.cpp
     test/test_tic.cpp
     test/test_sys.cpp
     test/test_filesystem.cpp
-    test/test_support.cpp
     test/mock_time.cpp
     test/mock.cpp
     test/mock_support.cpp)
@@ -73,11 +74,22 @@ target_link_libraries(tic PUBLIC coverage_config)
 
 target_compile_definitions(tic PRIVATE ENABLE_CLI DEBUG)
 
+#
+#
+add_executable(gen_eeprom
+    test/gen_eeprom.cpp test/mock_support.cpp)
+target_include_directories(gen_eeprom
+    PRIVATE src
+    PRIVATE test/support)
 
+
+#
+#
 enable_testing()
 add_test(NAME tic_test COMMAND tic --gtest_output=xml)
 
-
+#
+#
 function(dump_cmake_variables)
     get_cmake_property(_variableNames VARIABLES)
     list(SORT _variableNames)

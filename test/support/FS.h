@@ -60,7 +60,6 @@ public:
         info.usedBytes = 123000;
         info.blockSize = 512;
         info.pageSize = 1024;
-        info.pageSize = 1024;
         info.maxOpenFiles = 32;
         info.maxPathLength = 54;
     }

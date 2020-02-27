@@ -414,8 +414,6 @@ void config_handle_form(ESP8266WebServer &server)
         config.httpreq.seuil_bas = validate_int(server.arg(CFG_FORM_HTTPREQ_SEUIL_BAS), 0, 20000, 0);
         config.httpreq.seuil_haut = validate_int(server.arg(CFG_FORM_HTTPREQ_SEUIL_HAUT), 0, 20000, 0);
 
-
-
         if (config_save())
         {
             ret = 200;

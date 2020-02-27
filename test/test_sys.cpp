@@ -6,6 +6,14 @@
 // WIP
 #include "sys.cpp"
 
+TEST(sys, format)
+{
+    EXPECT_EQ(sys_format_size(1).s, "1 byte");
+    EXPECT_EQ(sys_format_size(1536).s, "1.50 kB");
+    EXPECT_EQ(sys_format_size(10485760).s, "10.00 MB");
+    EXPECT_EQ(sys_format_size(3221225472u).s, "3.00 GB");
+}
+
 TEST(sys, get_json)
 {
     String data;

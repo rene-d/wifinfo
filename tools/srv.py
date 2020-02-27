@@ -125,8 +125,20 @@ def config_json():
 @app.route("/wifiscan.json")
 def wifiscan_json():
     d = [
-        {"ssid": "orange", "rssi": -84, "bssi": "11:22:33:00:00:00", "channel": 1, "encryptionType": 7,},
-        {"ssid": "FreeWifi", "rssi": -74, "bssi": "11:22:33:00:00:00", "channel": 6, "encryptionType": 8,},
+        {
+            "ssid": "orange",
+            "rssi": -84,
+            "bssi": "11:22:33:00:00:00",
+            "channel": 1,
+            "encryptionType": 7,
+        },
+        {
+            "ssid": "FreeWifi",
+            "rssi": -74,
+            "bssi": "11:22:33:00:00:00",
+            "channel": 6,
+            "encryptionType": 8,
+        },
     ]
     return flask.jsonify(d)
 

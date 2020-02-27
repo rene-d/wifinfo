@@ -5,6 +5,7 @@
 
 #include <string>
 #include <iostream>
+#include <cstring>
 
 extern int pinMode_called;
 extern int digitalRead_called;
@@ -55,17 +56,20 @@ public:
     std::string s;
 
 public:
-    String() = default;
-
-    String(int n)
+    String(const char *o = nullptr)
     {
-        s = std::to_string(n);
+        if (o != nullptr)
+            s.assign(o);
     }
-
-    String(const char *o)
-    {
-        s.assign(o);
-    }
+    String(const String &o) : s(o) {}
+    explicit String(int n) : s(std::to_string(n)) {}
+    explicit String(long n) : s(std::to_string(n)) {}
+    explicit String(unsigned long n) : s(std::to_string(n)) {}
+    explicit String(uint16_t n) : s(std::to_string(n)) {}
+    explicit String(uint32_t n) : s(std::to_string(n)) {}
+    explicit String(float, unsigned char decimalPlaces = 2);
+    explicit String(double, unsigned char decimalPlaces = 2);
+    explicit String(char c) { s.assign(1, c); }
 
     const char *c_str() const
     {
@@ -208,6 +212,17 @@ public:
     {
         s.erase(p, p + count);
     }
+
+    String &operator=(const char *o)
+    {
+        s.assign(o);
+        return *this;
+    }
+    String &operator=(int n)
+    {
+        *this = String(n);
+        return *this;
+    }
 };
 
 inline String operator+(const String &l, const String &r)
@@ -238,16 +253,26 @@ inline std::ostream &operator<<(std::ostream &o, const String &s)
 class SerialClass
 {
 public:
-    void println() {}
-    void print(const char *) {}
-    void println(const char *) {}
-    void print(const String &) {}
-    void println(const String &) {}
-    void println(uint32_t) {}
-    void print(int) {}
-    void printf(const char *, ...) {}
-    void printf_P(const char *, ...) {}
-    void flush() {}
+    static String buffer;
+    static int flush_called;
+
+public:
+    void println() { buffer += "\n"; }
+    void print(const char *s) { buffer += s; }
+    void println(const char *s) { buffer += String(s) + "\n"; }
+    void print(const String &s) { buffer += s; }
+    void println(const String &s) { buffer += s + "\n"; }
+    void print(int n) { buffer += String(n); }
+    void print(uint16_t n) { buffer += String(n); }
+    void print(uint32_t n) { buffer += String(n); }
+    void println(int n) { buffer += String(n) + "\n"; }
+    void println(uint16_t n) { buffer += String(n) + "\n"; }
+    void println(uint32_t n) { buffer += String(n) + "\n"; }
+    void print(char c) { buffer += String(c); }
+    void println(char c) { buffer += String(c) + "\n"; }
+    size_t printf(const char *, ...);
+    size_t printf_P(const char *, ...);
+    void flush() { ++flush_called; }
 };
 
 extern SerialClass Serial;

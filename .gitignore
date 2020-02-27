@@ -5,9 +5,8 @@
 data/
 .pio/
 build/
-coverage/
 __pycache__/
-
+.coverage
 
 #
 # Windows image file caches

@@ -10,12 +10,12 @@ class JSONBuilder
     String &s;
 
 public:
-    JSONBuilder(String &r) : s(r)
+    explicit JSONBuilder(String &r) : s(r)
     {
         s.concat(F("{\""));
     }
 
-    JSONBuilder(String &r, size_t reserve_size) : s(r)
+    explicit JSONBuilder(String &r, size_t reserve_size) : s(r)
     {
         if (reserve_size != 0)
             s.reserve(reserve_size);
@@ -89,12 +89,12 @@ class JSONTableBuilder
     String &s;
 
 public:
-    JSONTableBuilder(String &r) : s(r)
+    explicit JSONTableBuilder(String &r) : s(r)
     {
         s.concat(F("["));
     }
 
-    JSONTableBuilder(String &r, size_t reserve_size) : s(r)
+    explicit JSONTableBuilder(String &r, size_t reserve_size) : s(r)
     {
         if (reserve_size != 0)
             s.reserve(reserve_size);
