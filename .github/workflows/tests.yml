@@ -39,9 +39,22 @@ jobs:
       with:
         name: tests-code-coverage-results
         path: artifacts/
+      with:
+        name: test_detail.html
+        path: artifacts/test_detail.html
+      with:
+        name: coverage.html
+        path: artifacts/coverage.html
 
     - name: Upload to coveralls.io
       run: |
         cpp-coveralls --exclude .pio --gcov-options '\-lp'
       env:
         COVERALLS_REPO_TOKEN: ${{ secrets.coveralls_token }}
+
+    - name: Upload to Codacy
+      run: |
+        gcovr -r . --xml -o cobertura.xml
+        bash <(curl -Ls https://coverage.codacy.com/get.sh)
+      env:
+        CODACY_PROJECT_TOKEN: ${{ secrets.codacy_token }}
