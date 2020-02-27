@@ -5,12 +5,13 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/980ec5f2be584a44be127a8a2bdccd99)](https://www.codacy.com/manual/rene-d/wifinfo?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=rene-d/wifinfo&amp;utm_campaign=Badge_Grade)
 [![Coverage Status](https://coveralls.io/repos/github/rene-d/wifinfo/badge.svg)](https://coveralls.io/github/rene-d/wifinfo)
 [![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+[![Latest version](https://img.shields.io/github/v/tag/rene-d/wifinfo.svg?logo=github&label=Latest%20version)](https://github.com/rene-d/wifinfo/releases)
 
 WifInfo est un module de consignation de la téléinformation des compteurs électriques 🇫🇷 avec serveur web embarqué.
 
 ## Introduction
 
-Ce projet est la fusion de développements réalisés en vue du remplacement d'un [eco-devices](http://gce-electronics.com/fr/111-eco-devices) sur base de [ESP-01](https://fr.wikipedia.org/wiki/ESP8266) et de la une réécriture quasi complète - sauf la partie interface web - du projet homonyme de [C-H. Hallard](http://hallard.me) [LibTeleinfo](https://github.com/hallard/LibTeleinfo) avec des modifications notamment de [olileger](https://github.com/olileger/LibTeleinfo) et [Doume](https://github.com/Doume/LibTeleinfo).
+Ce projet est la fusion de développements réalisés en vue du remplacement d'un [eco-devices](http://gce-electronics.com/fr/111-eco-devices) sur base de [Espressif 8266EX](https://fr.wikipedia.org/wiki/ESP8266) et de la une réécriture quasi complète - sauf la partie interface web - du projet homonyme de [C-H. Hallard](http://hallard.me) [LibTeleinfo](https://github.com/hallard/LibTeleinfo) avec des modifications notamment de [olileger](https://github.com/olileger/LibTeleinfo) et [Doume](https://github.com/Doume/LibTeleinfo).
 
 -   Meilleure séparation des fonctions dans des fichiers sources différents
 -   Homogénéisation du nommage, nettoyage du code source
@@ -90,6 +91,28 @@ Les événements SSE sont accessibles via deux URL: <http://wifinfo/tic> ou <htt
 La donnée est la trame de téléinformation au format JSON, comme <http://wifinfo/json>.
 
 Elle est envoyée à chaque réception de trame depuis le compteur.
+
+## Installation
+
+Le projet est compilé automatiquement pour deux boards:
+-   [esp01_1m](https://docs.platformio.org/en/latest/boards/espressif8266/esp01_1m.html) : ESP-01S avec 1 Mo de mémoire flash et LED sur GPIO2, dont 256 Ko pour le filesystem SPIFFS
+-   [esp12e](https://docs.platformio.org/en/latest/boards/espressif8266/esp12e.html) : ESP-12E (type NodeMCU 1.0) ou ESP-07 avec 4 Mo de flash, dont 1 Mo pour le filesystem SPIFFS
+
+La programmation d'un module requiert des outils. [esptool.py](https://github.com/espressif/esptool) est l'outil officiel. L'IDE [Arduino](https://www.arduino.cc/en/main/software) permet également de le faire.
+
+Veuillez noter que chaque firmware est compilé pour une board précise, avec un plan d'adressage et une taille mémoire précises.
+
+Programmation module 1 Mo :
+```bash
+esptool.py write_flash 0 firmware.bin
+esptool.py write_flash 0xc0000 spiffs.bin
+```
+
+Programmation module 4 Mo :
+```bash
+esptool.py write_flash 0 firmware.bin
+esptool.py write_flash 0x300000 spiffs.bin
+```
 
 ## Compilation
 
