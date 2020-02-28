@@ -272,7 +272,7 @@ Le montage final utilise un ESP-01S avec le module [PiTInfo](http://hallard.me/p
 -   [clang-tidy](https://clang.llvm.org/extra/clang-tidy/) : clang-based C++ “linter” tool
 -   [GitHub Actions](https://github.com/features/actions) : workflow automation for GitHub
 -   [Codacy](https://www.codacy.com) : Automated code reviews & code analytics
--   [Coveralls](https://coveralls.io) : Test Coverage History & Statistics
+-   [Codecov](https://codecov.io) : Tools to group, merge, archive, and compare coverage reports.
 
 ### Client de test/injecteur de téléinfo
 
