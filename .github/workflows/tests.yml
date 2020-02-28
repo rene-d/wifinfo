@@ -52,3 +52,10 @@ jobs:
         bash <(curl -Ls https://coverage.codacy.com/get.sh) report -l cpp
       env:
         CODACY_PROJECT_TOKEN: ${{ secrets.codacy_token }}
+
+    - name: Upload to Codecov
+      run: |
+        # gcovr -r . --xml -o cobertura.xml
+        bash <(curl -s https://codecov.io/bash)
+      env:
+        CODECOV_TOKEN: ${{ secrets.codecov_token }}
