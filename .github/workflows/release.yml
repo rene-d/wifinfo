@@ -31,8 +31,11 @@ jobs:
           platformio run -e esp01s_prod -e esp12e_prod -t buildfs
 
           cd .pio/build
-          zip --junk-paths ../../wifinfo-esp01_1m.zip esp01s_prod/*.bin
-          zip --junk-paths ../../wifinfo-esp12e.zip esp12e_prod/*.bin
+          zip --junk-paths ../../esp01_1m.zip esp01s_prod/*.bin
+          zip --junk-paths ../../esp12e.zip esp12e_prod/*.bin
+
+          cd ../..
+          tools/mkarduinosrc.py arduino.zip
 
       - name: Create Release
         id: create_release
@@ -45,24 +48,35 @@ jobs:
           draft: false
           prerelease: false
 
-      - name: Upload Release Asset 1
+      - name: Upload Release Asset ESP01S
         id: upload-release-asset-1
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
-          asset_path: ./wifinfo-esp01_1m.zip
+          asset_path: ./esp01_1m.zip
           asset_name: wifinfo-esp01_1m.zip
           asset_content_type: application/zip
 
-      - name: Upload Release Asset 2
+      - name: Upload Release Asset ESP12E
         id: upload-release-asset-2
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
-          asset_path: ./wifinfo-esp12e.zip
+          asset_path: ./esp12e.zip
           asset_name: wifinfo-esp12e.zip
+          asset_content_type: application/zip
+
+      - name: Upload Release Asset Sources
+        id: upload-release-asset-3
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
+          asset_path: ./arduino.zip
+          asset_name: wifinfo-arduino-sources.zip
           asset_content_type: application/zip

@@ -7,8 +7,8 @@
 
 struct EmptySerialClass
 {
-    void printf(const char *format, ...) {}
-    void printf_P(PGM_P format, ...) {}
+    void printf(const char *, ...) {}
+    void printf_P(PGM_P, ...) {}
     void print(const __FlashStringHelper *) {}
     void print(const String &) {}
     void print(const char[]) {}
@@ -22,7 +22,7 @@ struct EmptySerialClass
     void print(const Printable &) {}
 
     void println(const __FlashStringHelper *) {}
-    void println(const String &s) {}
+    void println(const String &) {}
     void println(const char[]) {}
     void println(char) {}
     void println(unsigned char, int = DEC) {}
