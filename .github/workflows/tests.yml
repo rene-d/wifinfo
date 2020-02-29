@@ -34,6 +34,10 @@ jobs:
         xsltproc gtest2html.xslt build/test_detail.xml > artifacts/test_detail.html
         gcovr -r . --html -o artifacts/coverage.html
 
+    - name: Amalgamation for Arduino IDE
+      run: |
+        tools/mkarduinosrc.py -1 artifacts/wifinfo-amalgamation.zip
+
     - name: Archive tests and code coverage results
       uses: actions/upload-artifact@v1
       with:
