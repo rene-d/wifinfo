@@ -1,6 +1,7 @@
 // module téléinformation client
 // rene-d 2020
 
+#include "features.h"
 #include "timesync.h"
 #include "cli.h"
 #include "config.h"
@@ -22,7 +23,7 @@ void setup()
     led_on();
     delay(100);
 
-#ifdef DEBUG
+#ifdef ENABLE_DEBUG
     // en debug, on reste à 115200: on ne se branche pas au compteur
     Serial.begin(115200);
 #else
@@ -81,6 +82,7 @@ void loop()
 {
 #ifdef ENABLE_CPULOAD
     cpuload_loop();
+    // return;
 #endif
 
     webserver_loop();

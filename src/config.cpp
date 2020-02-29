@@ -23,6 +23,7 @@
 //
 // **********************************************************************************
 
+#include "features.h"
 #include "config.h"
 #include "jsonbuilder.h"
 #include "strncpy_s.h"
@@ -364,7 +365,7 @@ void config_handle_form(ESP8266WebServer &server)
     // We validated config ?
     if (server.hasArg("save"))
     {
-#ifdef DEBUG
+#ifdef ENABLE_DEBUG
         Serial.println(F("===== Posted configuration"));
         for (int i = 0; i < server.args(); ++i)
             Serial.printf("  %3d  %-20s = %s\n", i, server.argName(i).c_str(), server.arg(i).c_str());

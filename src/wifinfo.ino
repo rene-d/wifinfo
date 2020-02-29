@@ -1,10 +1,11 @@
 // module téléinformation client
 // rene-d 2020
 
-
-// Note pour Arduino IDE
+// Notes pour Arduino IDE
 
 // Tout le code du sketch se trouve dans les fichiers *.cpp
+// Les réglages de compilation se trouvent dans le fichier features.h
 // Le dossier data est créé à partir de data_src
+
 // Bibliothèque à installer (Croquis/Include une bibliothèque/Gérer les bibliothèques): SimpleCLI
-// Outil pour uploader le filesystem SPIFFS: cf. https://github.com/esp8266/arduino-esp8266fs-plugin
+// Plugin pour téléverser le filesystem SPIFFS: cf. https://github.com/esp8266/arduino-esp8266fs-plugin

@@ -1,3 +1,7 @@
+// module téléinformation client
+// rene-d 2020
+
+#include "features.h"
 #include "led.h"
 #include "sys.h"
 #include <ESP8266WebServer.h>

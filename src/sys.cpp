@@ -23,7 +23,9 @@
 //
 // **********************************************************************************
 
+#include "features.h"
 #include "sys.h"
+#include "cpuload.h"
 #include "config.h"
 #include "jsonbuilder.h"
 #include "led.h"
@@ -39,10 +41,6 @@
 #include "emptyserial.h"
 
 extern "C" int clock_gettime(clockid_t unused, struct timespec *tp);
-
-#ifndef WIFINFO_VERSION
-#define WIFINFO_VERSION "develop"
-#endif
 
 extern SseClients sse_clients;
 
@@ -120,8 +118,8 @@ void sys_get_info_json(String &response)
     js.append(F("Compilé le"), __DATE__ " " __TIME__);
 
     String flags;
-#ifdef DEBUG
-    flags += F(" DEBUG");
+#ifdef ENABLE_DEBUG
+    flags += F(" ENABLE_DEBUG");
 #endif
 #ifdef ENABLE_CLI
     flags += F(" ENABLE_CLI");
@@ -163,6 +161,11 @@ void sys_get_info_json(String &response)
 
     js.append(F("SSE clients"), sse_clients.count());
     js.append(F("SSE connexions"), sse_clients.remotes());
+
+#ifdef ENABLE_CPULOAD
+    sprintf_P(buffer, PSTR("%d %%"), cpuload_cpu());
+    js.append(F("CPU"), buffer);
+#endif
 
     js.finalize();
 }
@@ -211,7 +214,7 @@ int sys_wifi_connect()
 {
     int ret = WiFi.status();
 
-    // #ifdef DEBUG
+    // #ifdef ENABLE_DEBUG
     //     Serial.println("========== WiFi diags start");
     //     WiFi.printDiag(Serial);
     //     Serial.println("========== WiFi diags end");
@@ -428,7 +431,7 @@ void sys_ota_setup()
 
     ArduinoOTA.onError([](ota_error_t error) {
         led_on();
-#ifdef DEBUG
+#ifdef ENABLE_DEBUG
         Serial.printf("Update Error[%u]: ", error);
         if (error == OTA_AUTH_ERROR)
             Serial.println("Auth Failed");

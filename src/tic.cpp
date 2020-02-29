@@ -1,6 +1,7 @@
 // module téléinformation client
 // rene-d 2020
 
+#include "features.h"
 #include "tic.h"
 #include "config.h"
 #include "httpreq.h"

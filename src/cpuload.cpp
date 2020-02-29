@@ -1,6 +1,8 @@
 // module téléinformation client
 // rene-d 2020
 
+#include "features.h"
+
 #ifdef ENABLE_CPULOAD
 
 #include "cpuload.h"
@@ -25,13 +27,24 @@ void cpuload_loop()
 
         perf_counter = 0;
 
-#ifdef DEBUG
+#ifdef ENABLE_DEBUG
         if (perf_index == 0)
         {
             cpuload_print(Serial);
         }
 #endif
     }
+}
+
+int cpuload_cpu()
+{
+    uint32_t sum = 0;
+    for (int i = 0; i < 10; ++i)
+    {
+        sum += perfs[i];
+    }
+    sum /= 10;
+    return (100 * (MAX_COUNTER_80MHZ - sum)) / MAX_COUNTER_80MHZ;
 }
 
 void cpuload_print(Print &prt)
