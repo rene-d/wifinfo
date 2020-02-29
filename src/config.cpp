@@ -374,10 +374,10 @@ void config_handle_form(ESP8266WebServer &server)
 
         // Wi-Fi et avancé
         strncpy_s(config.ssid, server.arg(CFG_FORM_SSID), CFG_SSID_LENGTH);
-        strncpy_s(config.psk, server.arg(CFG_FORM_PSK), CFG_SSID_LENGTH);
+        strncpy_s(config.psk, server.arg(CFG_FORM_PSK), CFG_PSK_LENGTH);
         strncpy_s(config.host, server.arg(CFG_FORM_HOST), CFG_HOSTNAME_LENGTH);
-        strncpy_s(config.ap_psk, server.arg(CFG_FORM_AP_PSK), CFG_SSID_LENGTH);
-        strncpy_s(config.ota_auth, server.arg(CFG_FORM_OTA_AUTH), CFG_SSID_LENGTH);
+        strncpy_s(config.ap_psk, server.arg(CFG_FORM_AP_PSK), CFG_PSK_LENGTH);
+        strncpy_s(config.ota_auth, server.arg(CFG_FORM_OTA_AUTH), CFG_PSK_LENGTH);
         config.ota_port = validate_int(server.arg(CFG_FORM_OTA_PORT), 0, 65535, DEFAULT_OTA_PORT);
 
         config.sse_freq = validate_int(server.arg(CFG_FORM_SSE_FREQ), 0, 360, 0);
