@@ -365,7 +365,7 @@ int sys_wifi_connect()
     // launching potentially buggy main()
     for (uint8_t i = 0; i <= 10; i++)
     {
-        led_on());
+        led_on();
         delay(100);
         led_off();
         delay(200);
@@ -406,7 +406,7 @@ void sys_ota_setup()
 {
     // OTA callbacks
     ArduinoOTA.onStart([]() {
-        led_on());
+        led_on();
         Serial.println(F("Update Started"));
         ota_blink = true;
     });
@@ -419,7 +419,7 @@ void sys_ota_setup()
     ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
         if (ota_blink)
         {
-            led_on());
+            led_on();
         }
         else
         {
