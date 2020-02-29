@@ -5,7 +5,7 @@
 #include <getopt.h>
 #include <unistd.h>
 
-#ifndef DEBUG
+#ifndef ENABLE_DEBUG
 EmptySerialClass EmptySerial;
 #endif
 

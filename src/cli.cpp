@@ -1,6 +1,7 @@
 // module téléinformation client
 // rene-d 2020
 
+#include "settings.h"
 #include "cli.h"
 #include "config.h"
 #include "filesystem.h"
@@ -17,6 +18,8 @@
 #include <SimpleCLI.h>
 
 extern "C" uint32_t _EEPROM_start;
+extern "C" uint32_t _FS_start;
+extern "C" uint32_t _FS_end;
 
 static void cli_eeprom_dump(uint8_t bytesPerRow, size_t size);
 
@@ -186,6 +189,9 @@ void cli_setup()
         Serial.printf_P(PSTR("checkFlashConfig  : %d\n"), ESP.checkFlashConfig());
         Serial.printf_P(PSTR("FlashChipVendorId : 0x%x\n"), ESP.getFlashChipVendorId());
         Serial.printf_P(PSTR("EEPROM_start      : 0x%08x\n"), (uint32_t)&_EEPROM_start - 0x40200000);
+        Serial.printf_P(PSTR("EEPROM_end        : 0x%08x\n"), (uint32_t)&_EEPROM_start - 0x40200000 + SPI_FLASH_SEC_SIZE);
+        Serial.printf_P(PSTR("FS_start          : 0x%08x\n"), (uint32_t)&_FS_start - 0x40200000);
+        Serial.printf_P(PSTR("FS_end            : 0x%08x\n"), (uint32_t)&_FS_end - 0x40200000);
 
         Serial.printf_P(PSTR("FreeHeap          : %u\n"), ESP.getFreeHeap());
         Serial.printf_P(PSTR("MaxFreeBlockSize  : %u\n"), ESP.getMaxFreeBlockSize());
@@ -239,8 +245,8 @@ int cli_loop_read()
     if (Serial.available())
     {
         int c = Serial.read();
-        if ((c == 0x09) || (c == 0x1B)) // ESC non présent dans une trame de téléinfo
-        {                               // TAB possible en séparateur, mais pas rencontré
+        if ((c == 0x09) || (c == 0x1B) || (c == '`')) // ESC non présent dans une trame de téléinfo
+        {                                             // TAB possible en séparateur, mais pas rencontré
             cli_mode = true;
             Serial.print("$ ");
         }

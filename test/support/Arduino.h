@@ -250,6 +250,12 @@ inline std::ostream &operator<<(std::ostream &o, const String &s)
     return o;
 }
 
+class Print
+{
+protected:
+    virtual size_t write(uint8_t c) = 0;
+};
+
 class SerialClass
 {
 public:

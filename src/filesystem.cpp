@@ -1,6 +1,7 @@
 // module téléinformation client
 // rene-d 2020
 
+#include "settings.h"
 #include "filesystem.h"
 #include "jsonbuilder.h"
 

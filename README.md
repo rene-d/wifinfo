@@ -124,12 +124,13 @@ La page HTML est compressée avec [html-minifier](https://github.com/kangax/html
 
 ### Options de compilation
 
--   `DEBUG` : active la sortie sur le port série TX et vitesse 115200. Non utilisable avec un compteur, il faut utiliser le client de test pour injecter des trames.
+-   `ENABLE_DEBUG` : active la sortie sur le port série TX et vitesse 115200. Non utilisable avec un compteur, il faut utiliser le client de test pour injecter des trames.
 -   `ENABLE_CLI` : active les commandes par port série (`TAB` ou `ESC`)
--   `DISABLE_LED` : désactive l'utilisation de LED pour les cartes qui n'en ont pas
+-   `ENABLE_LED` : active l'utilisation de LED pour les cartes qui en ont une (esp01s, esp12e)
 -   `ENABLE_OTA` : rajoute le code pour les mises à jour OTA **(non testé)**
+-   `ENABLE_CPULOAD` : mesure de manière empirique la charge CPU
 
-Nota: Sans l'option `DEBUG`, le port série est réglé à 1200 7E1 en RX uniquement. Il y a suffisamment d'outils de mise au point pour ne pas à devoir tester avec un compteur ou un autre microcontrôleur qui simule la téléinformation.
+Nota: Sans l'option `ENABLE_DEBUG`, le port série est réglé à 1200 7E1 en RX uniquement. Il y a suffisamment d'outils de mise au point pour ne pas à devoir tester avec un compteur ou un autre microcontrôleur qui simule la téléinformation.
 
 ### PlatformtIO
 
@@ -220,7 +221,7 @@ L'interface alors sera disponible à cette adresse: <http://localhost:5001/>, av
 
 La mise en place d'une stack sonde/InfluxDB/Grafana est grandement simplifiée grâce à Docker.
 
-Le fichier [docker-compose.yaml](dashboard/docker-compose.yaml) rassemble les trois services:
+Le fichier [docker-compose.yaml](tools/dashboard/docker-compose.yaml) rassemble les trois services:
 
 -   la sonde, écrite en Python, qui récupère les données en JSON via une connexion SSE avec le module
 -   la base de données InfluxDB de type TSBD

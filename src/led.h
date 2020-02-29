@@ -5,16 +5,7 @@
 
 #include <Arduino.h>
 
-#ifdef DISABLE_LED
-
-// pas de buildin led sur certains ESP-01
-
-#define led_setup()
-#define led_on()
-#define led_off()
-#define led_toggle()
-
-#else
+#ifdef ENABLE_LED
 
 inline void led_setup()
 {
@@ -35,5 +26,12 @@ inline void led_toggle()
 {
     digitalWrite(LED_BUILTIN, 1 - digitalRead(LED_BUILTIN));
 }
+
+#else
+
+#define led_setup()
+#define led_on()
+#define led_off()
+#define led_toggle()
 
 #endif

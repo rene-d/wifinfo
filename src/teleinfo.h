@@ -39,7 +39,7 @@ public:
 protected:
     char frame_[MAX_FRAME_SIZE]; // buffer de mémorisation de la trame
     size_t size_{0};             // offset courant (i.e. longueur de la trame)
-    timeval timestamp_{0};       // date du début de la trame
+    timeval timestamp_{0, 0};    // date du début de la trame
 
 public:
     void copy_from(const Teleinfo &tinfo)

@@ -45,12 +45,14 @@ endif()
 #
 #
 add_executable(tic
-    test/test_support.cpp
-    test/test_teleinfo.cpp
     test/test_config.cpp
-    test/test_tic.cpp
-    test/test_sys.cpp
     test/test_filesystem.cpp
+    test/test_led_enabled.cpp
+    test/test_led_disabled.cpp
+    test/test_sys.cpp
+    test/test_teleinfo.cpp
+    test/test_tic.cpp
+    test/test_support.cpp
     test/mock_time.cpp
     test/mock.cpp
     test/mock_support.cpp)
@@ -72,7 +74,7 @@ target_link_libraries(tic
 
 target_link_libraries(tic PUBLIC coverage_config)
 
-target_compile_definitions(tic PRIVATE ENABLE_CLI DEBUG)
+target_compile_definitions(tic PRIVATE ENABLE_CLI ENABLE_DEBUG PLATFORMIO=1 WIFINFO_VERSION=\"test\")
 
 #
 #
@@ -81,7 +83,7 @@ add_executable(gen_eeprom
 target_include_directories(gen_eeprom
     PRIVATE src
     PRIVATE test/support)
-
+target_compile_definitions(gen_eeprom PRIVATE PLATFORMIO=1 WIFINFO_VERSION=\"test\")
 
 #
 #

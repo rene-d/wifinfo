@@ -7,6 +7,7 @@
 
 void cpuload_loop();
 void cpuload_print(Print &prt);
+int cpuload_cpu();
 
 class StringPrint : public Print
 {

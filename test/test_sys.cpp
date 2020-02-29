@@ -3,7 +3,7 @@
 
 #include "mock.h"
 
-// WIP
+#define ENABLE_LED
 #include "sys.cpp"
 
 TEST(sys, format)
@@ -82,7 +82,7 @@ TEST(sys, reset)
     ASSERT_EQ(ESPClass::eraseConfig_called, 0);
 }
 
-TEST(sys, led)
+TEST(led, enabled)
 {
     pinMode_called = 0;
     digitalRead_called = 0;

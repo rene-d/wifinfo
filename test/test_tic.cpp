@@ -5,6 +5,7 @@
 #include "mock_time.h"
 #include <ESP8266HTTPClient.h>
 
+#define ENABLE_LED
 #include "tic.cpp"
 #include "httpreq.cpp"
 
