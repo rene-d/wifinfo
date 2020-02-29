@@ -23,7 +23,7 @@
 //
 // **********************************************************************************
 
-#include "features.h"
+#include "settings.h"
 #include "sys.h"
 #include "cpuload.h"
 #include "config.h"

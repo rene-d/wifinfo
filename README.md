@@ -221,7 +221,7 @@ L'interface alors sera disponible à cette adresse: <http://localhost:5001/>, av
 
 La mise en place d'une stack sonde/InfluxDB/Grafana est grandement simplifiée grâce à Docker.
 
-Le fichier [docker-compose.yaml](dashboard/docker-compose.yaml) rassemble les trois services:
+Le fichier [docker-compose.yaml](tools/dashboard/docker-compose.yaml) rassemble les trois services:
 
 -   la sonde, écrite en Python, qui récupère les données en JSON via une connexion SSE avec le module
 -   la base de données InfluxDB de type TSBD

@@ -17,12 +17,12 @@
 #define ENABLE_LED
 
 // active les commandes par port série (`TAB` ou `ESC`)
-//  #define ENABLE_CLI
+// #define ENABLE_CLI
 
 // rajoute le code pour les mises à jour OTA **(non testé)**
 // #define ENABLE_OTA
 
 // mesure de manière empirique la charge CPU
-//  #define ENABLE_CPULOAD
+// #define ENABLE_CPULOAD
 
 #endif

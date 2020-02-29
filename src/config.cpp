@@ -23,7 +23,7 @@
 //
 // **********************************************************************************
 
-#include "features.h"
+#include "settings.h"
 #include "config.h"
 #include "jsonbuilder.h"
 #include "strncpy_s.h"
