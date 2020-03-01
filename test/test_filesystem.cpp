@@ -22,7 +22,7 @@ TEST(fs, json)
 {
     String data;
 
-    fs_get_spiffs_json(data);
+    fs_get_spiffs_json(data, false);
     // std::cout << data << std::endl;
 
     auto j1 = json::parse(data.s);
@@ -32,4 +32,13 @@ TEST(fs, json)
     ASSERT_TRUE(j1["files"].is_array());
     ASSERT_EQ(j1["files"][0]["na"], "fichier1.txt");
     ASSERT_EQ(j1["files"][0]["va"], 1000);
+}
+
+TEST(fs, json_restricted)
+{
+    String data;
+
+    fs_get_spiffs_json(data, true);
+
+    ASSERT_EQ(data.s, "{}");
 }

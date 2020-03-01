@@ -5,6 +5,7 @@
 # https://www.chartjs.org/
 
 import datetime
+import gzip
 import json
 import time
 
@@ -47,24 +48,36 @@ def event_stream():
 
 @app.route("/")
 def home():
-    return flask.redirect("/index.htm")
+    return flask.redirect("/index.html")
+
+
+@app.route("/r")
+def home_restricted():
+    b = open(app.root_path + "/../data/index.restrict.html.gz", "rb").read()
+    b = gzip.decompress(b)
+    return b, "text/html"
+
+
+@app.route("/hb.htm")
+def heartbeat():
+    return "OK"
 
 
 @app.route("/hc")
 def bascule_ptec():
     tic.bascule()
-    return tic.ptec_raw
+    return tic.ptec_raw, "text/plain"
 
 
 @app.route("/version")
 def version():
-    return "flask-develop-version"
+    return "flask-develop-version", "text/plain"
 
 
 @app.route("/tinfo.json")
 def tinfo_json():
     d = tic.json_array()
-    return d
+    return d, app.config["JSONIFY_MIMETYPE"]
 
 
 @app.route("/spiffs.json")
@@ -125,20 +138,8 @@ def config_json():
 @app.route("/wifiscan.json")
 def wifiscan_json():
     d = [
-        {
-            "ssid": "orange",
-            "rssi": -84,
-            "bssi": "11:22:33:00:00:00",
-            "channel": 1,
-            "encryptionType": 7,
-        },
-        {
-            "ssid": "FreeWifi",
-            "rssi": -74,
-            "bssi": "11:22:33:00:00:00",
-            "channel": 6,
-            "encryptionType": 8,
-        },
+        {"ssid": "orange", "rssi": -84, "bssi": "11:22:33:00:00:00", "channel": 1, "encryptionType": 7,},
+        {"ssid": "FreeWifi", "rssi": -74, "bssi": "11:22:33:00:00:00", "channel": 6, "encryptionType": 8,},
     ]
     return flask.jsonify(d)
 

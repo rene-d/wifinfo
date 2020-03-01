@@ -450,10 +450,10 @@ TEST(tic, json_empty)
     tinfo.copy_from(empty_tinfo);
 
     // pas de données
-    tic_get_json_array(data);
+    tic_get_json_array(data, false);
     ASSERT_EQ(data, "[]");
 
-    tic_get_json_dict(data);
+    tic_get_json_dict(data, false);
     ASSERT_EQ(data, "{}");
 }
 
@@ -473,14 +473,14 @@ TEST(tic, json)
 
     String output;
 
-    tic_get_json_array(output);
+    tic_get_json_array(output, false);
     // std::cout << output << std::endl;
     auto j1 = json::parse(output.s);
     ASSERT_TRUE(j1.is_array());
     ASSERT_EQ(j1.size(), 12);
     ASSERT_EQ(j1[1]["va"], "111111111111");
 
-    tic_get_json_dict(output);
+    tic_get_json_dict(output, false);
     // std::cout << output << std::endl;
     auto j2 = json::parse(output.s);
     ASSERT_EQ(j2["OPTARIF"], "HC");

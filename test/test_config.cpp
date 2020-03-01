@@ -19,7 +19,7 @@ TEST(config, get_json)
 
     config_reset();
 
-    config_get_json(r);
+    config_get_json(r, false);
 
     auto j1 = json::parse(r.s);
 
@@ -52,7 +52,23 @@ TEST(config, form)
     ESP8266WebServer::arg_called = 0;
     ESP8266WebServer::hasArg_called = 0;
 
-    config_handle_form(server);
+    config_handle_form(server, false);
+
+    EXPECT_NE(ESP8266WebServer::arg_called, 0);
+    EXPECT_NE(ESP8266WebServer::hasArg_called, 0);
+    EXPECT_EQ(ESP8266WebServer::send_code, 200);
+}
+
+
+
+TEST(config, form_restricted)
+{
+    ESP8266WebServer server;
+
+    ESP8266WebServer::arg_called = 0;
+    ESP8266WebServer::hasArg_called = 0;
+
+    config_handle_form(server, true);
 
     EXPECT_NE(ESP8266WebServer::arg_called, 0);
     EXPECT_NE(ESP8266WebServer::hasArg_called, 0);

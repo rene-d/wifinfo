@@ -46,10 +46,6 @@ extern SseClients sse_clients;
 
 static int nb_reconnect = 0;
 
-#ifdef ENABLE_OTA
-static bool ota_blink = false;
-#endif
-
 // format a size to human readable format
 String sys_format_size(size_t bytes)
 {
@@ -96,7 +92,7 @@ String sys_time_now()
 }
 
 // Return JSON string containing system data
-void sys_get_info_json(String &response)
+void sys_get_info_json(String &response, bool restricted)
 {
     char buffer[32];
 
@@ -105,7 +101,7 @@ void sys_get_info_json(String &response)
     js.append(F("Uptime"), sys_uptime());
     js.append(F("Timestamp"), sys_time_now());
 
-    if (WiFi.status() == WL_CONNECTED)
+    if ((WiFi.status() == WL_CONNECTED) && !restricted)
     {
         sprintf_P(buffer, PSTR("%d dB"), WiFi.RSSI());
         js.append(F("Wi-Fi RSSI"), buffer);
@@ -114,39 +110,49 @@ void sys_get_info_json(String &response)
     }
 
     js.append(F("Nb reconnexions Wi-Fi"), nb_reconnect);
-    js.append(F("WifInfo Version"), WIFINFO_VERSION);
-    js.append(F("Compilé le"), __DATE__ " " __TIME__);
 
-    String flags;
+    if (!restricted)
+    {
+        js.append(F("WifInfo Version"), WIFINFO_VERSION);
+        js.append(F("Compilé le"), __DATE__ " " __TIME__);
+
+        String flags;
 #ifdef ENABLE_DEBUG
-    flags += F(" ENABLE_DEBUG");
+        flags += F(" DEBUG");
 #endif
 #ifdef ENABLE_CLI
-    flags += F(" ENABLE_CLI");
+        flags += F(" CLI");
 #endif
-#ifdef DISABLE_LED
-    flags += F(" DISABLE_LED");
+#ifdef ENABLED_LED
+        flags += F(" LED");
 #endif
 #ifdef ENABLE_OTA
-    flags += F(" ENABLE_OTA");
+        flags += F(" OTA");
 #endif
 #ifdef ENABLE_CPULOAD
-    flags += F(" ENABLE_CPULOAD");
+        flags += F(" CPULOAD");
 #endif
+        js.append(F("Options"), flags);
 
-    js.append(F("Options"), flags);
+        js.append(F("SDK Version"), system_get_sdk_version());
 
-    js.append(F("SDK Version"), system_get_sdk_version());
+        sprintf_P(buffer, PSTR("0x%06X"), ESP.getChipId());
+        js.append(F("Chip ID"), buffer);
 
-    sprintf_P(buffer, PSTR("0x%06X"), ESP.getChipId());
-    js.append(F("Chip ID"), buffer);
+        sprintf_P(buffer, PSTR("0x%0X"), system_get_boot_version());
+        js.append(F("Boot Version"), buffer);
 
-    sprintf_P(buffer, PSTR("0x%0X"), system_get_boot_version());
-    js.append(F("Boot Version"), buffer);
+        js.append(F("Flash Real Size"), sys_format_size(ESP.getFlashChipRealSize()));
+        js.append(F("Firmware Size"), sys_format_size(ESP.getSketchSize()));
+    }
 
-    js.append(F("Flash Real Size"), sys_format_size(ESP.getFlashChipRealSize()));
-    js.append(F("Firmware Size"), sys_format_size(ESP.getSketchSize()));
     js.append(F("Free Size"), sys_format_size(ESP.getFreeSketchSpace()));
+    js.append(F("Free RAM"), sys_format_size(system_get_free_heap_size()));
+
+#ifdef ENABLE_CPULOAD
+    sprintf_P(buffer, PSTR("%d %%"), cpuload_cpu());
+    js.append(F("CPU"), buffer);
+#endif
 
     FSInfo info;
     SPIFFS.info(info);
@@ -157,22 +163,21 @@ void sys_get_info_json(String &response)
     sprintf_P(buffer, PSTR("%zu %%"), 100 * info.usedBytes / info.totalBytes);
     js.append(F("SPIFFS Occupation"), buffer);
 
-    js.append(F("Free RAM"), sys_format_size(system_get_free_heap_size()));
-
     js.append(F("SSE clients"), sse_clients.count());
     js.append(F("SSE connexions"), sse_clients.remotes());
-
-#ifdef ENABLE_CPULOAD
-    sprintf_P(buffer, PSTR("%d %%"), cpuload_cpu());
-    js.append(F("CPU"), buffer);
-#endif
 
     js.finalize();
 }
 
 // Purpose : scan Wifi Access Point and return JSON code
-void sys_wifi_scan_json(String &response)
+void sys_wifi_scan_json(String &response, bool restricted)
 {
+    if (restricted)
+    {
+        response = "{}";
+        return;
+    }
+
     response.clear();
 
     int8_t n = WiFi.scanNetworks();
@@ -383,7 +388,7 @@ void sys_handle_factory_reset(ESP8266WebServer &server)
     Serial.println(F("Serving /factory_reset page..."));
     config_reset();
     ESP.eraseConfig();
-    server.send(200, "text/plain", "Reset");
+    server.send(200, mime::mimeTable[mime::txt].mimeType, "Reset");
     Serial.println(F("Ok!"));
     delay(1000);
     ESP.restart();
@@ -394,7 +399,7 @@ void sys_handle_reset(ESP8266WebServer &server)
 {
     // Just to debug where we are
     Serial.println(F("Serving /reset page..."));
-    server.send(200, "text/plain", "Restart");
+    server.send(200, mime::mimeTable[mime::txt].mimeType, "Restart");
     Serial.println(F("Ok!"));
     delay(1000);
     ESP.restart();
@@ -407,8 +412,7 @@ void sys_ota_setup()
     // OTA callbacks
     ArduinoOTA.onStart([]() {
         led_on();
-        Serial.println(F("Update Started"));
-        ota_blink = true;
+        Serial.println(F("Update started"));
     });
 
     ArduinoOTA.onEnd([]() {
@@ -417,33 +421,22 @@ void sys_ota_setup()
     });
 
     ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-        if (ota_blink)
-        {
-            led_on();
-        }
-        else
-        {
-            led_off();
-        }
-        ota_blink = !ota_blink;
-        //Serial.printf("Progress: %u%%\n", (progress / (total / 100)));
+        led_toggle();
     });
 
     ArduinoOTA.onError([](ota_error_t error) {
-        led_on();
-#ifdef ENABLE_DEBUG
-        Serial.printf("Update Error[%u]: ", error);
+        Serial.printf_P(PSTR("Update Error[%u]: "), error);
         if (error == OTA_AUTH_ERROR)
-            Serial.println("Auth Failed");
+            Serial.println(F("Auth Failed"));
         else if (error == OTA_BEGIN_ERROR)
-            Serial.println("Begin Failed");
+            Serial.println(F("Begin Failed"));
         else if (error == OTA_CONNECT_ERROR)
-            Serial.println("Connect Failed");
+            Serial.println(F("Connect Failed"));
         else if (error == OTA_RECEIVE_ERROR)
-            Serial.println("Receive Failed");
+            Serial.println(F("Receive Failed"));
         else if (error == OTA_END_ERROR)
-            Serial.println("End Failed");
-#endif
+            Serial.println(F("End Failed"));
+
         ESP.restart();
     });
 }

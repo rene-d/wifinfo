@@ -4,6 +4,7 @@
 #pragma once
 
 #include "WiFiClient.h"
+#include "mimetable.h"
 
 class ESP8266WebServer
 {

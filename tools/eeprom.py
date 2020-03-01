@@ -23,9 +23,7 @@ def get_eeprom_base():
     """ Lit l'adresse de base de l'EEPROM. """
     cmd = ["esptool.py", "--no-stub", "flash_id"]
     print_cmd(cmd)
-    output = subprocess.run(
-        cmd, stderr=subprocess.DEVNULL, stdout=subprocess.PIPE
-    ).stdout
+    output = subprocess.run(cmd, stderr=subprocess.DEVNULL, stdout=subprocess.PIPE).stdout
     mem = re.search(rb"Detected flash size: (\w+)(?=\n)", output, re.DOTALL)
     if not mem:
         print("Impossible de déterminer la taille de la flash")
@@ -84,8 +82,10 @@ def write_eeprom(config):
         config["httpreq_seuil_bas"],
     )
 
+
+
     eeprom = struct.pack(
-        "<33s65s17s65s65sIHH129s128s256s256s",
+        "<33s65s17s65s65sIHH32s32s65s128s256s256s",
         config["ssid"].encode(),
         config["psk"].encode(),
         config["host"].encode(),
@@ -94,6 +94,8 @@ def write_eeprom(config):
         config["cfg_led_tinfo"],
         config["ota_port"],
         config["sse_freq"],
+        config["username"].encode(),
+        config["password"].encode(),
         b"",  # filler
         emoncms,
         jeedom,
@@ -122,7 +124,7 @@ def read_eeprom(eeprom):
 
     config = {}
 
-    d = struct.unpack("<33s65s17s65s65sIHH129s128s256s256sH", eeprom)
+    d = struct.unpack("<33s65s17s65s65sIHH32s32s65s128s256s256sH", eeprom)
     config["ssid"] = d[0].rstrip(b"\0").decode()
     config["psk"] = d[1].rstrip(b"\0").decode()
     config["host"] = d[2].rstrip(b"\0").decode()
@@ -131,8 +133,10 @@ def read_eeprom(eeprom):
     config["cfg_led_tinfo"] = d[5] & 1
     config["ota_port"] = d[6]
     config["sse_freq"] = d[7]
+    config["username"] = d[8].rstrip(b"\0").decode()
+    config["password"] = d[9].rstrip(b"\0").decode()
 
-    emoncms = struct.unpack_from("<33s33s33sHBI", d[9])
+    emoncms = struct.unpack_from("<33s33s33sHBI", d[11])
     config["emon_host"] = emoncms[0].rstrip(b"\0").decode()
     config["emon_apikey"] = emoncms[1].rstrip(b"\0").decode()
     config["emon_url"] = emoncms[2].rstrip(b"\0").decode()
@@ -140,7 +144,7 @@ def read_eeprom(eeprom):
     config["emon_node"] = emoncms[4]
     config["emon_freq"] = emoncms[5]
 
-    jeedom = struct.unpack_from("<33s49s65s13sHI", d[10])
+    jeedom = struct.unpack_from("<33s49s65s13sHI", d[12])
     config["jdom_host"] = jeedom[0].rstrip(b"\0").decode()
     config["jdom_apikey"] = jeedom[1].rstrip(b"\0").decode()
     config["jdom_url"] = jeedom[2].rstrip(b"\0").decode()
@@ -148,7 +152,7 @@ def read_eeprom(eeprom):
     config["jdom_port"] = jeedom[4]
     config["jdom_freq"] = jeedom[5]
 
-    httpreq = struct.unpack_from("<33s151sHIBHH", d[11])
+    httpreq = struct.unpack_from("<33s151sHIBHH", d[13])
     config["httpreq_host"] = httpreq[0].rstrip(b"\0").decode()
     config["httpreq_url"] = httpreq[1].rstrip(b"\0").decode()
     config["httpreq_port"] = httpreq[2]
@@ -160,7 +164,7 @@ def read_eeprom(eeprom):
     config["httpreq_seuil_haut"] = httpreq[5]
     config["httpreq_seuil_bas"] = httpreq[6]
 
-    config["crc"] = f"0x{d[12]:04x}"
+    config["crc"] = f"0x{d[14]:04x}"
 
     return config
 
@@ -172,12 +176,7 @@ def cli_write():
 
 @cli_write.command(name="write")
 @click.option(
-    "-i",
-    "--input",
-    "input_",
-    help="fichier source",
-    default="config.yaml",
-    type=click.File("rb"),
+    "-i", "--input", "input_", help="fichier source", default="config.yaml", type=click.File("rb"),
 )
 @click.option("-f", "--force", help="pas de question", is_flag=True)
 def write(input_, force):
@@ -229,11 +228,7 @@ def cli_read():
 
 @cli_read.command(name="read")
 @click.option(
-    "-o",
-    "--output",
-    help="fichier destination",
-    default="config.yaml",
-    type=click.File("wb"),
+    "-o", "--output", help="fichier destination", default="config.yaml", type=click.File("wb"),
 )
 def cmd_read(output):
     """ Lit la configuration depuis l'EEPROM. """
@@ -283,12 +278,7 @@ def cli_conv():
 @cli_conv.command(name="conv")
 @click.option("-i", "--input", "input_", help="fichier source", type=click.File("rb"))
 @click.option(
-    "-f",
-    "--format",
-    "format_",
-    help="fichier source",
-    default="yaml",
-    type=click.Choice(["yaml", "json", "bin"]),
+    "-f", "--format", "format_", help="fichier source", default="yaml", type=click.Choice(["yaml", "json", "bin"]),
 )
 def cmd_conf(input_, format_):
     """ Convertit le fichier EEPROM config.bin. """

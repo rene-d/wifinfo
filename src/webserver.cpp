@@ -15,47 +15,98 @@
 
 #include "emptyserial.h"
 
+static const char www_realm[] = "Realm";
+static const String authFailResponse = "Authentication Failed";
+
+static const char redirect_update[] PROGMEM = "<!DOCTYPE HTML PUBLIC<title>update</title><a href=\"/update\">update</a>";
+
 ESP8266WebServer server(80);
 SseClients sse_clients;
 
-template <void (*get_json)(String &)>
-void server_send_json()
+static bool webserver_handle_read(const String &path);
+
+AccessType webserver_get_auth()
 {
-    String response;
-
-    Serial.printf("server %s page\n", server.uri().c_str());
-
-    ESP.wdtFeed(); //Force software watchdog to restart from 0
-    get_json(response);
-    if (response.isEmpty())
+    if (config.username[0] != 0)
     {
-        server.send(200, "text/json", "{}");
-        // server.send(404, "text/plain", "no data");
+        if (!server.authenticate(config.username, config.password))
+        {
+            server.requestAuthentication(BASIC_AUTH, www_realm, authFailResponse);
+            return NO_ACCESS;
+        }
+
+        return server.hasHeader("X-Forwarded-For") ? RESTRICTED : FULL;
+    }
+    return FULL;
+}
+
+bool webserver_access_full()
+{
+    AccessType access = webserver_get_auth();
+    if (access == FULL)
+    {
+        return true;
+    }
+    else if (access == RESTRICTED)
+    {
+        server.send(403, mime::mimeTable[mime::txt].mimeType, "failed");
+        return false;
     }
     else
     {
-        server.send(200, "text/json", response);
+        return false;
+    }
+}
+
+bool webserver_access_ok()
+{
+    AccessType access = webserver_get_auth();
+    return access != NO_ACCESS;
+}
+
+template <void (*get_json)(String &, bool restricted)>
+void server_send_json()
+{
+    AccessType access = webserver_get_auth();
+    if (access == NO_ACCESS)
+    {
+        return;
+    }
+
+    String response;
+    Serial.printf_P("server %s page\n", server.uri().c_str());
+
+    ESP.wdtFeed(); //Force software watchdog to restart from 0
+    get_json(response, access == RESTRICTED);
+    if (response.isEmpty())
+    {
+        server.send(200, mime::mimeTable[mime::json].mimeType, "{}");
+    }
+    else
+    {
+        server.send(200, mime::mimeTable[mime::json].mimeType, response);
     }
     yield(); //Let a chance to other threads to work
 }
 
 void webserver_handle_notfound()
 {
-    const char *value = tic_get_value(server.uri().c_str() + 1);
+    const char *value = nullptr;
+
+    if (server.authenticate(config.username, config.password))
+    {
+        //  http://wifinfo/<étiquette>
+        value = tic_get_value(server.uri().c_str() + 1);
+    }
 
     if (value != nullptr)
     {
-        String response = F("{\"");
-        response += server.uri().c_str() + 1;
-        response += F("\":\"");
-        response += value;
-        response += F("\"}");
-        server.send(200, "text/json", response);
+        server.send(200, mime::mimeTable[mime::txt].mimeType, value);
     }
     else
     {
         // send error message in plain text
-        String message = F("File Not Found\n\n");
+        String message = F("Not Found\n\n");
         message += F("URI: ");
         message += server.uri();
         message += F("\nMethod: ");
@@ -69,57 +120,109 @@ void webserver_handle_notfound()
             message += " " + server.argName(i) + ": " + server.arg(i) + F("\n");
         }
 
-        server.send(404, "text/plain", message);
+        server.send(404, mime::mimeTable[mime::txt].mimeType, message);
     }
 }
 
 void webserver_setup()
 {
     //Server Sent Events will be handled from this URI
-    sse_clients.on("/sse/json", server);
-    sse_clients.on("/tic", server);
+    sse_clients.on(F("/sse/json"), server);
+    sse_clients.on(F("/tic"), server);
 
 #ifdef ENABLE_CPULOAD
     server.on("/cpuload", [] {
-        StringPrint message;
-        cpuload_print(message);
-        server.send(200, "text/plain", message);
+        if (webserver_auth() != NO_ACCESS)
+        {
+            StringPrint message;
+            cpuload_print(message);
+            server.send(200, mime::mimeTable[mime::txt].mimeType, message);
+        }
     });
 #endif
 
-    server.on("/config_form.json", [] { config_handle_form(server); });
-    server.on("/json", server_send_json<tic_get_json_dict>);
-    server.on("/tinfo.json", server_send_json<tic_get_json_array>);
-    server.on("/emoncms.json", server_send_json<tic_emoncms_data>);
-    server.on("/system.json", server_send_json<sys_get_info_json>);
-    server.on("/config.json", server_send_json<config_get_json>);
-    server.on("/spiffs.json", server_send_json<fs_get_spiffs_json>);
-    server.on("/wifiscan.json", server_send_json<sys_wifi_scan_json>);
-    server.on("/factory_reset", [] { sys_handle_factory_reset(server); });
-    server.on("/reset", [] { sys_handle_reset(server); });
+    server.on(F("/config_form.json"), [] {
+        AccessType access = webserver_get_auth();
+        if (access != NO_ACCESS)
+        {
+            config_handle_form(server, access == RESTRICTED);
+        }
+    });
+    server.on(F("/json"), server_send_json<tic_get_json_dict>);
+    server.on(F("/tinfo.json"), server_send_json<tic_get_json_array>);
+    server.on(F("/emoncms.json"), server_send_json<tic_emoncms_data>);
+    server.on(F("/system.json"), server_send_json<sys_get_info_json>);
+    server.on(F("/config.json"), server_send_json<config_get_json>);
+    server.on(F("/spiffs.json"), server_send_json<fs_get_spiffs_json>);
+    server.on(F("/wifiscan.json"), server_send_json<sys_wifi_scan_json>);
 
-    // handler for the hearbeat
+    server.on(F("/factory_reset"), [] {
+        if (webserver_access_full())
+        {
+            sys_handle_factory_reset(server);
+        }
+    });
+    server.on(F("/reset"), [] {
+        if (webserver_access_ok())
+        {
+            sys_handle_reset(server);
+        }
+    });
+
+    // handler for the heartbeat
     server.on("/hb.htm", HTTP_GET, [] {
         server.sendHeader("Connection", "close");
         server.sendHeader("Access-Control-Allow-Origin", "*");
-        server.send(200, "text/html", "OK");
+        server.send(200, mime::mimeTable[mime::txt].mimeType, "OK");
     });
 
     // enregistre le handler de /update
     sys_update_register(server);
+
+    server.on(F("/"), [] {
+        AccessType access = webserver_get_auth();
+
+        if (access == NO_ACCESS)
+        {
+            return;
+        }
+
+        bool ok = false;
+        if (access == RESTRICTED)
+        {
+            ok = webserver_handle_read(F("/index.restrict.html"));
+        }
+        else if (access == FULL)
+        {
+            ok = webserver_handle_read(F("/index.html"));
+        }
+
+        // authentifié mais pas de fichier html trouvé: on redirige vers /update
+        if (!ok)
+        {
+            server.sendHeader("Location:", "/update");
+            server.send(304, mime::mimeTable[mime::html].mimeType, redirect_update);
+        }
+    });
 
     // serves all SPIFFS Web file with 24hr max-age control
     // to avoid multiple requests to ESP
     server.serveStatic("/font", SPIFFS, "/font", "max-age=86400");
     server.serveStatic("/js", SPIFFS, "/js", "max-age=86400");
     server.serveStatic("/css", SPIFFS, "/css", "max-age=86400");
-    server.serveStatic("/version", SPIFFS, "/version", "max-age=86400");
+    server.serveStatic("/favicon.ico", SPIFFS, "/favicon.ico", "max-age=86400");
+    server.serveStatic("/version", SPIFFS, "/version", "max-age=60");
 
     server.onNotFound(webserver_handle_notfound);
 
-    server.serveStatic("/", SPIFFS, "/", "max-age=86400");
+    // server.serveStatic("/", SPIFFS, "/", "max-age=86400");
 
-    //start the webserver
+    //ask server to track these headers
+    const char *headerkeys[] = {"User-Agent", "X-Forwarded-For"};
+    size_t headerkeyssize = sizeof(headerkeys) / sizeof(char *);
+    server.collectHeaders(headerkeys, headerkeyssize);
+
+    // start the webserver
     server.begin();
 }
 
@@ -127,4 +230,37 @@ void webserver_loop()
 {
     server.handleClient();
     sse_clients.handle_clients();
+}
+
+bool webserver_handle_read(const String &path)
+{
+    Serial.printf_P("webserver_handle_read: %s\n", path.c_str());
+
+    if (path.endsWith("/"))
+    {
+        return false;
+    }
+
+    String contentType = esp8266webserver::StaticRequestHandler<WiFiServer>::getContentType(path); // Get the MIME type
+
+    String real_path = path + ".gz";
+    if (!SPIFFS.exists(real_path)) // If there's a compressed version available
+    {
+        if (!SPIFFS.exists(path))
+        {
+            return false;
+        }
+        real_path = path;
+    }
+
+    File file = SPIFFS.open(real_path, "r"); // Open the file
+
+    server.sendHeader("Cache-Control", "max-age=86400");
+
+    size_t sent = server.streamFile(file, contentType); // Send it to the client
+    file.close();                                       // Close the file again
+
+    Serial.printf_P("webserver_handle_read: %s %zu bytes\n", real_path.c_str(), sent);
+
+    return true;
 }

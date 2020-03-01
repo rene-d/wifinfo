@@ -14,6 +14,8 @@ public:
     void trigger() { periodicMs_activate = true; }
     bool periodicMs_activate = false;
 
+    int timeout = 0;
+
 public:
     static const int neverExpires = -1;
     static const int alwaysExpired = 0;
@@ -34,8 +36,14 @@ public:
         periodicMs_activate = false;
     }
 
-    void reset(int)
+    void reset(int t)
     {
+        timeout = t;
+    }
+
+    int getTimeout() const
+    {
+        return timeout;
     }
 };
 
