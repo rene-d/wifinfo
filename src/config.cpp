@@ -67,6 +67,9 @@ static void config_securize_cstrings()
     config.ap_psk[CFG_PSK_LENGTH] = 0;
     config.ota_auth[CFG_PSK_LENGTH] = 0;
 
+    config.username[CFG_USERNAME_LENGTH] = 0;
+    config.password[CFG_PASSWORD_LENGTH] = 0;
+
     config.emoncms.host[CFG_EMON_HOST_LENGTH] = 0;
     config.emoncms.apikey[CFG_EMON_KEY_LENGTH] = 0;
     config.emoncms.url[CFG_EMON_URL_LENGTH] = 0;
