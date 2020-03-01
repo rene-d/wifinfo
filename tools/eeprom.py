@@ -82,8 +82,6 @@ def write_eeprom(config):
         config["httpreq_seuil_bas"],
     )
 
-
-
     eeprom = struct.pack(
         "<33s65s17s65s65sIHH32s32s65s128s256s256s",
         config["ssid"].encode(),

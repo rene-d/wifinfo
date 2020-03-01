@@ -205,17 +205,21 @@ void webserver_setup()
         }
     });
 
+    server.on(F("/version"), []() {
+        File file = SPIFFS.open("/version", "r");
+        server.sendHeader("Cache-Control", "max-age=86400");
+        server.streamFile(file, mime::mimeTable[mime::txt].mimeType);
+        file.close();
+    });
+
     // serves all SPIFFS Web file with 24hr max-age control
     // to avoid multiple requests to ESP
     server.serveStatic("/font", SPIFFS, "/font", "max-age=86400");
     server.serveStatic("/js", SPIFFS, "/js", "max-age=86400");
     server.serveStatic("/css", SPIFFS, "/css", "max-age=86400");
     server.serveStatic("/favicon.ico", SPIFFS, "/favicon.ico", "max-age=86400");
-    server.serveStatic("/version", SPIFFS, "/version", "max-age=60");
 
     server.onNotFound(webserver_handle_notfound);
-
-    // server.serveStatic("/", SPIFFS, "/", "max-age=86400");
 
     //ask server to track these headers
     const char *headerkeys[] = {"User-Agent", "X-Forwarded-For"};
@@ -234,14 +238,14 @@ void webserver_loop()
 
 bool webserver_handle_read(const String &path)
 {
-    Serial.printf_P("webserver_handle_read: %s\n", path.c_str());
+    Serial.printf_P(PSTR("webserver_handle_read: %s\n"), path.c_str());
 
     if (path.endsWith("/"))
     {
         return false;
     }
 
-    String contentType = esp8266webserver::StaticRequestHandler<WiFiServer>::getContentType(path); // Get the MIME type
+    String contentType = esp8266webserver::StaticRequestHandler<WiFiServer>::getContentType(path);
 
     String real_path = path + ".gz";
     if (!SPIFFS.exists(real_path)) // If there's a compressed version available
@@ -253,14 +257,14 @@ bool webserver_handle_read(const String &path)
         real_path = path;
     }
 
-    File file = SPIFFS.open(real_path, "r"); // Open the file
+    File file = SPIFFS.open(real_path, "r");
 
     server.sendHeader("Cache-Control", "max-age=86400");
 
-    size_t sent = server.streamFile(file, contentType); // Send it to the client
-    file.close();                                       // Close the file again
+    size_t sent = server.streamFile(file, contentType);
+    file.close();
 
-    Serial.printf_P("webserver_handle_read: %s %zu bytes\n", real_path.c_str(), sent);
+    Serial.printf_P(PSTR("webserver_handle_read: %s %zu bytes\n"), real_path.c_str(), sent);
 
     return true;
 }
