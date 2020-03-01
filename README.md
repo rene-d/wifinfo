@@ -27,7 +27,7 @@ Ce projet est la fusion de développements réalisés en vue du remplacement d'u
 -   Exemple de stack [InfluxDB](https://www.influxdata.com) + [Grafana](https://grafana.com) pour la visualisation des données (avec sonde Python et client SSE)
 -   Utilisation de [PlatformIO](https://platformio.org) comme environnement de développement
 
-La mise à jour OTA et les notifications jeedom/emoncms ne sont pas testées.
+Les notifications jeedom/emoncms ne sont pas testées.
 
 ## Références
 
@@ -37,7 +37,7 @@ Module [PiTInfo](https://hallard.me/pitinfov12/) et explications pourquoi le mon
 
 ## Interface web
 
-### Affichage des jauges PAPP et IINST (en temps réel)
+### Affichage des jauges PAPP, IINST et index HC/HP (en temps réel)
 
 ![teleinfo](docs/gauges.png)
 
