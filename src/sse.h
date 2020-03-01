@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include "webserver.h"
+
 #include <ESP8266WebServer.h>
 #include <list>
 #include <user_interface.h>
@@ -50,9 +52,9 @@ public:
 
     void send_event(const String &data)
     {
-        client_.print(F("data: "));
+        client_.print("data: ");
         client_.print(data);
-        client_.print(F("\r\n\r\n"));
+        client_.print("\r\n\r\n");
 
         client_.flush();
     }
@@ -74,7 +76,12 @@ class SseClients
 public:
     void on(const String &uri, ESP8266WebServer &server)
     {
-        server.on(uri, [&server, this] { this->handle_sse_data(server); });
+        server.on(uri, [&server, this] {
+            if (webserver_access_ok())
+            {
+                this->handle_sse_data(server);
+            }
+        });
     }
 
     void handle_sse_data(ESP8266WebServer &server)
@@ -90,7 +97,7 @@ public:
         }
         else
         {
-            server.send(503, "text/plain", "Service Unavailable (too many clients)");
+            server.send(503, mime::mimeTable[mime::txt].mimeType, "Service Unavailable (too many clients)");
         }
     }
 

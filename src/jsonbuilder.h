@@ -12,7 +12,7 @@ class JSONBuilder
 public:
     explicit JSONBuilder(String &r) : s(r)
     {
-        s.concat(F("{\""));
+        s.concat("{\"");
     }
 
     explicit JSONBuilder(String &r, size_t reserve_size) : s(r)
@@ -20,46 +20,46 @@ public:
         if (reserve_size != 0)
             s.reserve(reserve_size);
         s.clear();
-        s.concat(F("{\""));
+        s.concat("{\"");
     }
 
     template <typename T>
     void append(const T *name, const char *value, bool last = false)
     {
         s.concat(name);
-        s.concat(F("\":\""));
+        s.concat("\":\"");
         s.concat(value);
 
         if (last)
-            s.concat(F("\"}"));
+            s.concat("\"}");
         else
-            s.concat(F("\",\""));
+            s.concat("\",\"");
     }
 
     template <typename T>
     void append(const T *name, uint32_t value, bool last = false)
     {
         s.concat(name);
-        s.concat(F("\":"));
+        s.concat("\":");
         s.concat(value);
 
         if (last)
-            s.concat(F("}"));
+            s.concat("}");
         else
-            s.concat(F(",\""));
+            s.concat(",\"");
     }
 
     template <typename T>
     void append_without_quote(const T *name, const char *value, bool last = false)
     {
         s.concat(name);
-        s.concat(F("\":"));
+        s.concat("\":");
         s.concat(value);
 
         if (last)
-            s.concat(F("}"));
+            s.concat("}");
         else
-            s.concat(F(",\""));
+            s.concat(",\"");
     }
 
     void finalize()
@@ -91,7 +91,7 @@ class JSONTableBuilder
 public:
     explicit JSONTableBuilder(String &r) : s(r)
     {
-        s.concat(F("["));
+        s.concat("[");
     }
 
     explicit JSONTableBuilder(String &r, size_t reserve_size) : s(r)
@@ -99,17 +99,17 @@ public:
         if (reserve_size != 0)
             s.reserve(reserve_size);
         s.clear();
-        s.concat(F("["));
+        s.concat("[");
     }
 
     template <typename T>
     void append(const T *name, const char *value)
     {
-        s.concat(F("{\"na\":\""));
+        s.concat("{\"na\":\"");
         s.concat(name);
-        s.concat(F("\",\"va\":\""));
+        s.concat("\",\"va\":\"");
         s.concat(value);
-        s.concat(F("\"},"));
+        s.concat("\"},");
     }
 
     template <typename T>
@@ -121,11 +121,11 @@ public:
     template <typename T>
     void append(const T *name, uint32_t value)
     {
-        s.concat(F("{\"na\":\""));
+        s.concat("{\"na\":\"");
         s.concat(name);
-        s.concat(F("\",\"va\":"));
+        s.concat("\",\"va\":");
         s.concat(value);
-        s.concat(F("},"));
+        s.concat("},");
     }
 
     void finalize()

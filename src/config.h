@@ -31,6 +31,8 @@
 #define CFG_SSID_LENGTH 32
 #define CFG_PSK_LENGTH 64
 #define CFG_HOSTNAME_LENGTH 16
+#define CFG_USERNAME_LENGTH 31
+#define CFG_PASSWORD_LENGTH 31
 
 #define CFG_EMON_HOST_LENGTH 32
 #define CFG_EMON_KEY_LENGTH 32
@@ -69,6 +71,8 @@
 #define CFG_FORM_OTA_AUTH FPSTR("ota_auth")
 #define CFG_FORM_OTA_PORT FPSTR("ota_port")
 #define CFG_FORM_SSE_FREQ FPSTR("sse_freq")
+#define CFG_FORM_USERNAME FPSTR("username")
+#define CFG_FORM_PASSWORD FPSTR("password")
 
 #define CFG_FORM_EMON_HOST FPSTR("emon_host")
 #define CFG_FORM_EMON_PORT FPSTR("emon_port")
@@ -145,19 +149,21 @@ struct HttpreqConfig
 // 1024 bytes total including CRC
 struct Config
 {
-    char ssid[CFG_SSID_LENGTH + 1];     // SSID
-    char psk[CFG_PSK_LENGTH + 1];       // Pre shared key
-    char host[CFG_HOSTNAME_LENGTH + 1]; // Hostname
-    char ap_psk[CFG_PSK_LENGTH + 1];    // Access Point Pre shared key
-    char ota_auth[CFG_PSK_LENGTH + 1];  // OTA Authentication password
-    uint32_t options;                   // Bit field register
-    uint16_t ota_port;                  // OTA port
-    uint16_t sse_freq;                  // fréquence mini des mises à jour SSE. 0=dès qu'une trame est dispo
-    uint8_t filler[129];                // in case adding data in config avoiding loosing current conf by bad crc
-    EmoncmsConfig emoncms;              // Emoncms configuration
-    JeedomConfig jeedom;                // jeedom configuration
-    HttpreqConfig httpreq;              // HTTP request
-    uint16_t crc;
+    char ssid[CFG_SSID_LENGTH + 1];         // SSID
+    char psk[CFG_PSK_LENGTH + 1];           // Pre shared key
+    char host[CFG_HOSTNAME_LENGTH + 1];     // Hostname
+    char ap_psk[CFG_PSK_LENGTH + 1];        // Access Point Pre shared key
+    char ota_auth[CFG_PSK_LENGTH + 1];      // OTA Authentication password
+    uint32_t options;                       // Bit field register
+    uint16_t ota_port;                      // OTA port
+    uint16_t sse_freq;                      // fréquence mini des mises à jour SSE. 0=dès qu'une trame est dispo
+    char username[CFG_USERNAME_LENGTH + 1]; // nom pour Basic Auth
+    char password[CFG_PASSWORD_LENGTH + 1]; // mot de passe
+    uint8_t filler[65];                     // in case adding data in config avoiding loosing current conf by bad crc
+    EmoncmsConfig emoncms;                  // Emoncms configuration
+    JeedomConfig jeedom;                    // jeedom configuration
+    HttpreqConfig httpreq;                  // HTTP request
+    uint16_t crc;                           // CRC de validité du bloc de config
 } __attribute__((packed));
 
 // Exported variables/object instancied in main sketch
@@ -169,7 +175,7 @@ extern Config config;
 bool config_read(bool clear_on_error = true);
 bool config_save(void);
 void config_show(void);
-void config_get_json(String &r);
-void config_handle_form(ESP8266WebServer &server);
+void config_get_json(String &r, bool restricted);
+void config_handle_form(ESP8266WebServer &server, bool restricted);
 void config_setup();
 void config_reset();

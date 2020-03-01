@@ -1,3 +1,6 @@
+<!DOCTYPE html>
+<!--MAKE_RESTRICT-->
+
 <html>
 
 <head>
@@ -21,6 +24,7 @@
 <body>
 
     <div class="container">
+
         <!--  Onglets  -->
         <ul class="nav nav-tabs" id="myTab">
             <!-- glyph bootstrap:  https://getbootstrap.com/docs/3.3/components/ -->
@@ -29,8 +33,11 @@
                         id="scharge"></span></a></li>
             <li><a href="#tab_sys" data-toggle="tab"><span class="glyphicon glyphicon-cog">&nbsp;</span>Système</a></li>
             <li><a href="#tab_cfg" data-toggle="tab"><span class="glyphicon glyphicon-wrench">&nbsp;</span>Configuration</a></li>
+
+            <!--RESTRICT_ON-->
             <li><a href="#tab_fs" data-toggle="tab"><span class="glyphicon glyphicon-folder-open">&nbsp;</span>Fichiers&nbsp;<span class="badge"
                         id="sspiffs"></span></a></li>
+            <!--RESTRICT_OFF-->
         </ul>
 
         <!-- Contenu des onglets -->
@@ -47,7 +54,7 @@
 
                     @font-face {
                         font-family: "Digital-7 MonoItalic";
-                        src: url("/fonts/digital-7.monoitalic.ttf") format("truetype");
+                        src: url("/fonts/d-7.monoitalic.ttf") format("truetype");
                     }
 
                     .enedis div {
@@ -106,11 +113,12 @@
                     </tr>
                 </table>
                 <div class="text-center">
-                    <br/>
+                    <br />
                     <small>Rappel: <mark>VA = W / cos &Phi;</mark> <em>(déphasage du courant par rapport à la tension)</em>
                     </small>
                 </div>
-            </div>
+            </div> <!-- tab gauges -->
+
 
             <!-- tab teleinfo -->
             <div class="tab-pane fade" id="tab_tinfo">
@@ -147,8 +155,9 @@
                         </tr>
                     </thead>
                 </table>
-            </div> <!-- tab pane systeme-->
+            </div> <!-- tab systeme-->
 
+            <!--RESTRICT_ON-->
             <!-- tab SPIFFS -->
             <div class="tab-pane fade" id="tab_fs">
                 <h4>Fichiers du système</h4>
@@ -178,17 +187,20 @@
                         </table>
                     </div>
                 </div>
-            </div> <!-- tab pane SPIFFS-->
+            </div> <!-- tab SPIFFS-->
+            <!--RESTRICT_OFF-->
 
             <!-- tab Configuration -->
             <div class="tab-pane fade" id="tab_cfg">
                 <h4>Configuration du système</h4>
                 <div>
                     <form class="form-horizontal row-border" method="post" data-toggle="validator" id="frm_config" action="">
-                        <!-- Panel Config générale -->
+                        <input type="hidden" name="save" value="1">
+
+                        <!--RESTRICT_ON-->
+                        <!-- Panel config Wi-Fi -->
                         <div class="panel-group" id="pan_cfg">
                             <div class="panel panel-primary">
-                                <input type="hidden" name="save" value="1">
                                 <div class="panel-heading clearfix">
                                     <h3 class="panel-title clickable" data-toggle="collapse" data-parent="#pan_cfg" data-target="#col_cfg">
                                         <span class="glyphicon glyphicon-wrench"></span>&nbsp;Générale<span
@@ -197,8 +209,10 @@
                                 </div>
                                 <div class="panel-collapse collapse in" id="col_cfg">
                                     <div class="panel-body">
+
+                                        <!-- nom du réseau -->
                                         <div class="form-group">
-                                            <label class="col-sm-3 control-label">Réseau Wifi</label>
+                                            <label class="col-sm-3 control-label">Réseau Wi-Fi</label>
                                             <div class="col-sm-9">
                                                 <div class="input-group">
                                                     <input type="text" class="form-control" id="ssid" name="ssid" maxlength="32" value=""
@@ -210,6 +224,8 @@
                                                 </div>
                                             </div>
                                         </div>
+
+                                        <!-- mot de passe -->
                                         <div class="form-group">
                                             <label class="col-sm-3 control-label">Clé Wi-Fi</label>
                                             <div class="col-sm-9">
@@ -217,13 +233,34 @@
                                                     placeholder="Clé de votre reseau Wi-Fi">
                                             </div>
                                         </div>
+
+                                        <!-- nom sur le LAN -->
                                         <div class="form-group">
                                             <label class="col-sm-3 control-label">Nom réseau</label>
                                             <div class="col-sm-9">
                                                 <input type="text" class="form-control" id="host" name="host" maxlength="32" value=""
-                                                    placeholder="Nom réseau du module WiInfo">
+                                                    placeholder="Nom réseau du module">
                                             </div>
                                         </div>
+
+     <!-- basic auth username -->
+     <div class="form-group">
+        <label class="col-sm-3 control-label">Utilisateur du module</label>
+        <div class="col-sm-9">
+            <input type="username" class="form-control" id="username" name="username" maxlength="31" value=""
+                placeholder="Nom utilisateur">
+        </div>
+    </div>
+
+    <!-- basic auth password -->
+    <div class="form-group">
+        <label class="col-sm-3 control-label">Mot de passe du module</label>
+        <div class="col-sm-9">
+            <input type="password" class="form-control" id="password" name="password" maxlength="31" value=""
+                placeholder="Mot de passe">
+        </div>
+    </div>
+
                                     </div> <!-- panel body-->
                                     <div class="panel-footer">
                                         <div class="text-center">
@@ -234,7 +271,8 @@
                                     </div>
                                 </div>
                             </div>
-                        </div> <!-- panel config -->
+                        </div> <!-- panel config Wi-Fi -->
+                        <!--RESTRICT_OFF-->
 
                         <!-- Panel Emoncms -->
                         <div class="panel-group" id="pan_emon">
@@ -418,7 +456,8 @@
                                                 <input type="text" class="form-control" id="httpreq_url" name="httpreq_url" maxlength="150" placeholder="URI">
 
                                                 <label class="checkbox-inline"><input type="checkbox" id="httpreq_use_post" name="httpreq_use_post"
-                                                        value="1">Méthode POST (la donnée est le dictionnaire JSON)</label>
+                                                        value="1">Méthode POST (la donnée est le
+                                                    dictionnaire JSON)</label>
 
                                             </div>
                                         </div>
@@ -478,7 +517,7 @@
                             </div>
                         </div> <!-- panel HTTP request -->
 
-                        <!-- Advanced -->
+                        <!-- panel Advanced -->
                         <div class="panel-group" id="pan_advanced">
                             <div class="panel panel-danger">
                                 <div class="panel-heading">
@@ -488,7 +527,9 @@
                                     </h3>
                                 </div>
                                 <div class="panel-collapse collapse out" id="col_advanced">
+
                                     <div class="panel-body">
+                                        <!--RESTRICT_ON-->
                                         <div class="form-group">
                                             <label class="col-sm-3 control-label">Clé en mode AP</label>
                                             <div class="col-sm-9">
@@ -513,6 +554,7 @@
                                                     placeholder="Port OTA">
                                             </div>
                                         </div>
+                                        <!--RESTRICT_OFF-->
 
                                         <div class="form-group">
                                             <label class="col-sm-3 control-label">Délai minimal entre mises à jour SSE</label>
@@ -525,9 +567,6 @@
                                         <div class="form-group">
                                             <label class="col-sm-3 control-label">Options actives</label>
                                             <div class="col-sm-9">
-                                                <!--
-                                              <label class="checkbox-inline"><input type="checkbox" id="cfg_debug" name="cfg_debug" value="">Debug série</label>
--->
                                                 <label class="checkbox-inline"><input type="checkbox" id="cfg_led_tinfo" name="cfg_led_tinfo" value="1">LED
                                                     Teleinfo</label>
                                             </div>
@@ -539,9 +578,11 @@
                                             <div class="btn-group">
                                                 <button class="btn btn-danger" id="btn_reboot">Redémarrer WiFinfo</button>
                                             </div>
+                                            <!--RESTRICT_ON-->
                                             <div class="btn-group">
                                                 <button class="btn btn-danger" data-toggle="modal" data-target="#confirm-raz">RAZ Usine</button>
                                             </div>
+                                            <!--RESTRICT_OFF-->
                                             <div class="btn-group">
                                                 <button type="submit" class="btn btn-default btn-success">Enregistrer</button>
                                             </div>
@@ -553,6 +594,7 @@
 
                     </form> <!-- config form -->
 
+                    <!--RESTRICT_ON-->
                     <!-- upload firmware -->
                     <div class="panel panel-danger">
                         <div class="panel-heading clearfix">
@@ -591,13 +633,14 @@
                         <div class="panel-footer">
                             <p id="fw_info"></p>
                         </div>
-                    </div>
-
+                    </div> <!-- upload firmware -->
+                    <!--RESTRICT_OFF-->
                 </div>
             </div> <!-- tab config-->
 
         </div> <!-- tab content-->
 
+        <!--RESTRICT_ON-->
         <!-- Modal Confirm -->
         <div class="modal fade" id="confirm-raz" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
             <div class="modal-dialog">
@@ -652,6 +695,7 @@
                 </div>
             </div>
         </div> <!-- modal Wifi Scan -->
+        <!--RESTRICT_OFF-->
 
         <!-- Modal Reboot -->
         <div class="modal fade" id="mdl_wait" data-keyboard="false">
@@ -672,13 +716,8 @@
             </div>
         </div> <!-- Modal Reboot -->
 
-        <!-- button type="button" class="btn btn-danger" id="btn_test">test</button -->
     </div> <!-- Container -->
 
-    <!-- Scripts devant être chargés en fin de page -->
-    <!--
-    <script src="js/wifinfo.js"></script>
-    -->
     <script>
         var Timer_sys;
         var Timer_tinfo;
@@ -759,6 +798,7 @@
             return value;
         }
 
+        //<!--RESTRICT_ON-->
         function fileFormatter(value, row) {
             var fname = row.na;
             var htm = '';
@@ -790,6 +830,15 @@
             return htm;
         }
 
+        function progressUpload(data) {
+            if (data.lengthComputable) {
+                var pe = (data.loaded / data.total * 100).toFixed(0);
+                $('#pfw').css('width', pe + '%');
+                $('#psfw').text(formatSize(data.loaded) + ' / ' + formatSize(data.total));
+            }
+        }
+        //<!--RESTRICT_OFF-->
+
         function Notify(mydelay, myicon, mytype, mytitle, mymsg) {
             $.notify({
                 icon: 'glyphicon glyphicon-' + myicon,
@@ -804,14 +853,6 @@
                     delay: mydelay * 1000
                 }
             });
-        }
-
-        function progressUpload(data) {
-            if (data.lengthComputable) {
-                var pe = (data.loaded / data.total * 100).toFixed(0);
-                $('#pfw').css('width', pe + '%');
-                $('#psfw').text(formatSize(data.loaded) + ' / ' + formatSize(data.total));
-            }
         }
 
         function waitReboot() {
@@ -856,7 +897,9 @@
 
             // efface les badges des onglets
             $('#scharge').text("");
+            //<!--RESTRICT_ON-->
             $('#sspiffs').text("");
+            //<!--RESTRICT_OFF-->
 
             // IE10, Firefox, Chrome, etc.
             if (history.pushState)
@@ -875,6 +918,7 @@
                     silent: true,
                     url: '/system.json'
                 });
+                //<!--RESTRICT_ON-->
             } else if (target == '#tab_fs') {
                 $.getJSON("/spiffs.json", function (spiffs_data) {
                     var pe, cl;
@@ -906,6 +950,7 @@
                     .fail(function () {
                         console.log("error while requestiong spiffs data");
                     })
+                //<!--RESTRICT_OFF-->
             } else if (target == '#tab_cfg') {
                 $.getJSON("/config.json", function (form_data) {
                     $("#frm_config").autofill(form_data);
@@ -966,6 +1011,7 @@
                 }, 1000);
         })
 
+        //<!--RESTRICT_ON-->
         $('#tab_fs_data').on('load-success.bs.table', function (e, data) {
             console.log('#tab_fs_data loaded');
         })
@@ -996,6 +1042,7 @@
             waitReboot();
             return false;
         });
+        //<!--RESTRICT_OFF-->
 
         $('#btn_reboot').click(function () {
             $.post('/reset');
@@ -1035,6 +1082,7 @@
             }
         });
 
+        //<!--RESTRICT_ON-->
         // sélection fichier de firmware
         $('#file_fw').change(function () {
             var $txt = $('#txt_upload_fw');
@@ -1044,14 +1092,18 @@
             var name = f.name.toLowerCase();
             var html = f.type + ' - taille:' + f.size + '&nbsp;octets'
 
+            var is_spiffs = name.match("spiffs.bin$");
+            var is_firmware = name.match(".bin$") && !is_spiffs;
+
             $('#pgfw').removeClass('show').addClass('hide');
             $('#sfw').text(name + ' : ');
 
             if (!f.type.match('application/macbinary') && !f.type.match('application/octet-stream')) {
                 Notify(3, 'remove', 'danger', 'Type de fichier non conforme', 'Le fichier de mise à jour doit être un fichier binaire');
                 ok = false;
-            } else if (name != "firmware.bin" && name != "spiffs.bin") {
-                Notify(5, 'remove', 'danger', 'Nom de fichier incorrect', 'Le fichier de mise à jour doit être nommé: <ul><li>firmware.bin (Logiciel)</li><li>spiffs.bin (Système de fichiers)</li></ul>');
+            } else if (!is_spiffs && !is_firmware) {
+                Notify(5, 'remove', 'danger', 'Nom de fichier incorrect',
+                    'Le fichier de mise à jour doit être nommé: <ul><li>firmware.bin (Logiciel)</li><li>spiffs.bin (Système de fichiers)</li></ul>');
                 ok = false;
             }
             if (ok) {
@@ -1061,7 +1113,7 @@
                 $txt.attr('readonly', 'readonly');
 
                 $btn.removeClass('hide');
-                if (name == "firmware.bin") {
+                if (is_firmware) {
                     label = 'Mise à jour Logiciel';
                 } else {
                     label = 'Mise à jour SPIFFS';
@@ -1109,13 +1161,10 @@
                 }
             });
         });
+        //<!--RESTRICT_OFF-->
 
         window.onload = function () {
             var url = document.location.toString();
-            // var full = location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '');
-            // console.log(url);
-            // console.log(full);
-            // console.log(location.port);
 
             if (url.match('#')) {
                 $('.nav-tabs a[href=#' + url.split('#')[1] + ']').tab('show');
@@ -1135,7 +1184,6 @@
                 $('#version').text(data);
             });
         };
-
     </script>
 
     <script>
@@ -1155,8 +1203,8 @@
             minorTicks: 100,
             strokeTicks: false,
             highlights: [
-                { from: 4200, to: 5700, color: 'rgba(78,   78, 76, 0.5)' },
-                { from: 5700, to: 8000, color: 'rgba(225, 7, 23, 0.75)' }
+                { from: 4200, to: 5700, color: 'rgba(78,78,76,0.5)' },
+                { from: 5700, to: 8000, color: 'rgba(225,7,23,0.75)' }
             ],
             colorPlate: '#ddd',
             colorMajorTicks: '#f5f5f5',
@@ -1164,8 +1212,8 @@
             colorTitle: '#fff',
             colorUnits: '#111',
             colorNumbers: '#222',
-            colorNeedle: 'rgba(240, 128, 128, 1)',
-            colorNeedleEnd: 'rgba(255, 160, 122, .9)',
+            colorNeedle: 'rgba(240,128,128,1)',
+            colorNeedleEnd: 'rgba(255,160,122,.9)',
             valueBox: true,
             //animationRule: 'bounce',
             //animationDuration: 0
@@ -1189,8 +1237,8 @@
             minorTicks: 5,
             strokeTicks: false,
             highlights: [
-                { from: 30, to: 40, color: 'rgba(78,   78, 76, 0.5)' },
-                { from: 40, to: 50, color: 'rgba(225, 7, 23, 0.75)' }
+                { from: 30, to: 40, color: 'rgba(78,78,76,0.5)' },
+                { from: 40, to: 50, color: 'rgba(225,7,23,0.75)' }
             ],
             colorPlate: '#ddd',
             colorMajorTicks: '#f5f5f5',
@@ -1212,8 +1260,13 @@
         <small>
             <br />
             Module Wi-Fi de téléinformation -
-            <a href="https://rene-d.github.io/wifinfo">site web</a> - version <span id="version"></span> - <a href="https://github.com/rene-d/wifinfo"><img
-                    src="GitHub-Mark-32px.png" height="16px" width="16px">&nbsp;GitHub</a>
+            <a href="https://rene-d.github.io/wifinfo">site web</a> - <a href="https://github.com/rene-d/wifinfo">
+                <svg height="16" viewBox="0 0 16 16" version="1.1" width="16" aria-hidden="true">
+                    <path fill-rule="evenodd"
+                        d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z">
+                    </path>
+                </svg>
+                &nbsp;GitHub</a> - version <span id="version"></span>
         </small>
     </div>
 </body>

@@ -18,7 +18,7 @@ TEST(sys, get_json)
 {
     String data;
 
-    sys_get_info_json(data);
+    sys_get_info_json(data, false);
 
     // std::cout << data << std::endl;
 
@@ -31,7 +31,7 @@ TEST(sys, wifi_scan)
 {
     String response;
 
-    sys_wifi_scan_json(response);
+    sys_wifi_scan_json(response, false);
 
     // std::cout << response << std::endl;
 
@@ -107,4 +107,28 @@ TEST(led, enabled)
     ASSERT_EQ(pinMode_called, 1);
     ASSERT_EQ(digitalRead_called, 1);  // un appel à digitalRead
     ASSERT_EQ(digitalWrite_called, 3); // et un appel à digitalWrite
+}
+
+TEST(sys, get_json_restricted)
+{
+    String data;
+
+    sys_get_info_json(data, true);
+    // std::cout << data << std::endl;
+
+    EXPECT_EQ(data.s.find("Wi-Fi network"), std::string::npos);
+    EXPECT_NE(data.s.find("Uptime"), std::string::npos);
+
+    auto j1 = json::parse(data.s);
+
+    ASSERT_TRUE(j1.is_array());
+}
+
+TEST(sys, wifi_scan_restricted)
+{
+    String response;
+
+    sys_wifi_scan_json(response, true);
+
+    EXPECT_EQ(response.s, "{}");
 }

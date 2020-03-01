@@ -4,11 +4,27 @@
 #include "settings.h"
 #include "led.h"
 #include "sys.h"
+#include "webserver.h"
 #include <ESP8266WebServer.h>
 #include <Ticker.h>
 
 static bool sys_update_is_ok = false; // indicates a successful update
 static Ticker blink;
+
+static const char update_html[] PROGMEM = R"html(<!DOCTYPE html>
+<html>
+<head>
+<title>Upload firmware or filesystem</title>
+<style>body { font-family: sans-serif; color: #444; background-color: #ddd; }</style>
+</head>
+<body>
+<p>Select a new file to upload to the ESP8266</p>
+<form method="POST" enctype="multipart/form-data">
+<input type="file" name="data">
+<input class="button" type="submit" value="Upload">
+</form>
+</body>
+</html>)html";
 
 extern "C" uint32_t _FS_start;
 extern "C" uint32_t _FS_end;
@@ -31,7 +47,7 @@ static void sys_update_finish(ESP8266WebServer &server, bool finish = false)
 
     server.sendHeader("Connection", "close");
     server.sendHeader("Access-Control-Allow-Origin", "*");
-    server.send(200, "text/plain", sys_update_is_ok ? "OK" : "FAIL");
+    server.send(200, mime::mimeTable[mime::txt].mimeType, sys_update_is_ok ? "OK" : "FAIL");
 }
 
 //
@@ -42,20 +58,10 @@ void sys_update_register(ESP8266WebServer &server)
         "/update",
         HTTP_GET,
         [&]() {
-            server.send(200, "text/html", R"html(<!DOCTYPE html>
-<html>
-<head>
-<title>Upload firmware or filesystem</title>
-<style>body { font-family: sans-serif; color: #444; background-color: #ddd; }</style>
-</head>
-<body>
-<p>Select a new file to upload to the ESP8266</p>
-<form method="POST" enctype="multipart/form-data">
-<input type="file" name="data">
-<input class="button" type="submit" value="Upload">
-</form>
-</body>
-</html>)html");
+            if (webserver_access_full())
+            {
+                server.send(200, mime::mimeTable[mime::html].mimeType, update_html);
+            }
         });
 
     // handler for the /update form POST (once file upload finishes)
@@ -65,19 +71,22 @@ void sys_update_register(ESP8266WebServer &server)
 
         // handler once file upload finishes
         [&]() {
-            if (sys_update_is_ok)
+            if (webserver_access_full())
             {
-                Serial.println(F("upload terminated: restart"));
-                Serial.flush();
+                if (sys_update_is_ok)
+                {
+                    Serial.println(F("upload terminated: restart"));
+                    Serial.flush();
 
-                // reboot dans 0.5s
-                blink.once_ms(500, [] {
-                    ESP.restart();
-                });
-            }
-            else
-            {
-                Serial.println(F("upload terminated: Update has error"));
+                    // reboot dans 0.5s
+                    blink.once_ms(500, [] {
+                        ESP.restart();
+                    });
+                }
+                else
+                {
+                    Serial.println(F("upload terminated: update has error"));
+                }
             }
         },
 

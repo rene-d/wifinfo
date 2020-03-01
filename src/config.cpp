@@ -36,7 +36,6 @@
 // Configuration object for whole program
 Config config;
 
-
 void config_setup()
 {
     // Our configuration is stored into EEPROM
@@ -57,7 +56,6 @@ void config_setup()
 
         Serial.println(F("Reset to default"));
     }
-
 }
 
 static void config_securize_cstrings()
@@ -68,6 +66,9 @@ static void config_securize_cstrings()
     config.host[CFG_HOSTNAME_LENGTH] = 0;
     config.ap_psk[CFG_PSK_LENGTH] = 0;
     config.ota_auth[CFG_PSK_LENGTH] = 0;
+
+    config.username[CFG_USERNAME_LENGTH] = 0;
+    config.password[CFG_PASSWORD_LENGTH] = 0;
 
     config.emoncms.host[CFG_EMON_HOST_LENGTH] = 0;
     config.emoncms.apikey[CFG_EMON_KEY_LENGTH] = 0;
@@ -226,6 +227,11 @@ void config_show()
     Serial.print(F("OTA port :"));
     Serial.println(config.ota_port);
 
+    Serial.print(F("Username :"));
+    Serial.println(config.username);
+    Serial.print(F("Password :"));
+    Serial.println(config.password);
+
     Serial.print(F("SSE freq :"));
     Serial.println(config.sse_freq);
 
@@ -305,17 +311,23 @@ void config_show()
 }
 
 // Return JSON string containing configuration data
-void config_get_json(String &r)
+void config_get_json(String &r, bool restricted)
 {
     JSONBuilder js(r, 1024);
 
-    js.append(CFG_FORM_SSID, config.ssid);
-    js.append(CFG_FORM_PSK, config.psk);
-    js.append(CFG_FORM_HOST, config.host);
-    js.append(CFG_FORM_AP_PSK, config.ap_psk);
+    if (!restricted)
+    {
+        js.append(CFG_FORM_SSID, config.ssid);
+        js.append(CFG_FORM_PSK, config.psk);
+        js.append(CFG_FORM_HOST, config.host);
+        js.append(CFG_FORM_AP_PSK, config.ap_psk);
 
-    js.append(CFG_FORM_OTA_AUTH, config.ota_auth);
-    js.append(CFG_FORM_OTA_PORT, config.ota_port);
+        js.append(CFG_FORM_OTA_AUTH, config.ota_auth);
+        js.append(CFG_FORM_OTA_PORT, config.ota_port);
+
+        js.append(CFG_FORM_USERNAME, config.username);
+        js.append(CFG_FORM_PASSWORD, config.password);
+    }
 
     js.append(CFG_FORM_SSE_FREQ, config.sse_freq);
     js.append(CFG_LED_TINFO, (config.options & OPTION_LED_TINFO) ? 1 : 0);
@@ -357,7 +369,7 @@ static int validate_int(const String &value, int a, int b, int d)
     return d;
 }
 
-void config_handle_form(ESP8266WebServer &server)
+void config_handle_form(ESP8266WebServer &server, bool restricted)
 {
     const char *response;
     int ret;
@@ -373,13 +385,18 @@ void config_handle_form(ESP8266WebServer &server)
 #endif
 
         // Wi-Fi et avancé
-        strncpy_s(config.ssid, server.arg(CFG_FORM_SSID), CFG_SSID_LENGTH);
-        strncpy_s(config.psk, server.arg(CFG_FORM_PSK), CFG_PSK_LENGTH);
-        strncpy_s(config.host, server.arg(CFG_FORM_HOST), CFG_HOSTNAME_LENGTH);
-        strncpy_s(config.ap_psk, server.arg(CFG_FORM_AP_PSK), CFG_PSK_LENGTH);
-        strncpy_s(config.ota_auth, server.arg(CFG_FORM_OTA_AUTH), CFG_PSK_LENGTH);
-        config.ota_port = validate_int(server.arg(CFG_FORM_OTA_PORT), 0, 65535, DEFAULT_OTA_PORT);
+        if (!restricted)
+        {
+            strncpy_s(config.ssid, server.arg(CFG_FORM_SSID), CFG_SSID_LENGTH);
+            strncpy_s(config.psk, server.arg(CFG_FORM_PSK), CFG_PSK_LENGTH);
+            strncpy_s(config.host, server.arg(CFG_FORM_HOST), CFG_HOSTNAME_LENGTH);
+            strncpy_s(config.ap_psk, server.arg(CFG_FORM_AP_PSK), CFG_PSK_LENGTH);
+            strncpy_s(config.ota_auth, server.arg(CFG_FORM_OTA_AUTH), CFG_PSK_LENGTH);
+            config.ota_port = validate_int(server.arg(CFG_FORM_OTA_PORT), 0, 65535, DEFAULT_OTA_PORT);
 
+            strncpy_s(config.username, server.arg(CFG_FORM_USERNAME), CFG_USERNAME_LENGTH);
+            strncpy_s(config.password, server.arg(CFG_FORM_PASSWORD), CFG_PASSWORD_LENGTH);
+        }
         config.sse_freq = validate_int(server.arg(CFG_FORM_SSE_FREQ), 0, 360, 0);
 
         config.options = 0;
@@ -436,7 +453,7 @@ void config_handle_form(ESP8266WebServer &server)
 
     Serial.printf_P(PSTR("Sending response %d %s\n"), ret, response);
 
-    server.send(ret, "text/plain", response);
+    server.send(ret, mime::mimeTable[mime::txt].mimeType, response);
 
     // reprogramme les timers de notification
     tic_make_timers();

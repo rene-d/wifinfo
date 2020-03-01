@@ -35,8 +35,14 @@ void fs_ls()
 }
 
 // Return JSON string containing list of SPIFFS files
-void fs_get_spiffs_json(String &response)
+void fs_get_spiffs_json(String &response, bool restricted)
 {
+    if (restricted)
+    {
+        response = "{}";
+        return;
+    }
+
     response.reserve(512); // about 400 bytes
 
     response = F("{\"files\":");

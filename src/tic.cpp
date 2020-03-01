@@ -116,7 +116,7 @@ void tic_notifs()
     if (timer_sse && (sse_clients.count() != 0))
     {
         String data;
-        tic_get_json_dict(data);
+        tic_get_json_dict(data, false);
         sse_clients.handle_clients(&data);
     }
 }
@@ -127,12 +127,12 @@ void tic_make_timers()
     if ((config.httpreq.freq == 0) || (config.httpreq.host[0] == 0) || (config.httpreq.port == 0))
     {
         timer_http.resetToNeverExpires();
-        Serial.println("timer_http disabled");
+        Serial.println(F("timer_http disabled"));
     }
     else
     {
         timer_http.reset(config.httpreq.freq * 1000);
-        Serial.printf("timer_http enabled, freq=%d s\n", config.httpreq.freq);
+        Serial.printf_P(PSTR("timer_http enabled, freq=%d s\n"), config.httpreq.freq);
     }
 
     // jeedom
@@ -144,7 +144,7 @@ void tic_make_timers()
     else
     {
         timer_jeedom.reset(config.jeedom.freq * 1000);
-        Serial.printf("timer_jeedom enabled, freq=%d s\n", config.jeedom.freq);
+        Serial.printf_P(PSTR("timer_jeedom enabled, freq=%d s\n"), config.jeedom.freq);
     }
 
     // emoncms
@@ -156,9 +156,10 @@ void tic_make_timers()
     else
     {
         timer_emoncms.reset(config.emoncms.freq * 1000);
-        Serial.printf("timer_emoncms enabled, freq=%d s\n", config.emoncms.freq);
+        Serial.printf_P(PSTR("timer_emoncms enabled, freq=%d s\n"), config.emoncms.freq);
     }
 
+    // connexions SSE
     if (config.sse_freq == 0)
     {
         timer_sse.reset(esp8266::polledTimeout::periodicMs::alwaysExpired);
@@ -171,7 +172,7 @@ void tic_make_timers()
     }
 }
 
-void tic_get_json_array(String &data)
+void tic_get_json_array(String &data, bool restricted __attribute__((unused)))
 {
     if (tinfo.is_empty())
     {
@@ -230,7 +231,7 @@ void tic_get_json_dict_notif(String &data, const char *notif)
     js.finalize();
 }
 
-void tic_get_json_dict(String &data)
+void tic_get_json_dict(String &data, bool restricted __attribute__((unused)))
 {
     tic_get_json_dict_notif(data, nullptr);
 }
@@ -458,7 +459,7 @@ void jeedom_notif()
 }
 
 // construct the JSON (without " ???) part of emoncms url
-void tic_emoncms_data(String &url)
+void tic_emoncms_data(String &url, bool restricted __attribute__((unused)))
 {
     const char *label;
     const char *value;
@@ -627,7 +628,7 @@ void emoncms_notif()
     //append json list of values
     url += F("&json=");
 
-    tic_emoncms_data(url); //Get Teleinfo list of values
+    tic_emoncms_data(url, false); //Get Teleinfo list of values
 
     // And submit all to emoncms
     http_request(config.emoncms.host, config.emoncms.port, url);
