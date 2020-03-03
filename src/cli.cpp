@@ -2,6 +2,9 @@
 // rene-d 2020
 
 #include "settings.h"
+
+#ifdef ENABLE_CLI
+
 #include "cli.h"
 #include "config.h"
 #include "filesystem.h"
@@ -213,7 +216,9 @@ void cli_setup()
         Serial.printf_P(PSTR("softAPIP    : %s\n"), WiFi.softAPIP().toString().c_str());
         Serial.printf_P(PSTR("Persistent  : %d\n"), WiFi.getPersistent());
 
+#ifdef ENABLE_DEBUG
         WiFi.printDiag(Serial);
+#endif
         Serial.flush();
     });
 
@@ -271,7 +276,7 @@ int cli_loop_read()
 }
 
 // dump eeprom value to serial
-void cli_eeprom_dump(uint8_t bytesPerRow, size_t size)
+static void cli_eeprom_dump(uint8_t bytesPerRow, size_t size)
 {
     size_t i;
     size_t j = 0;
@@ -306,3 +311,5 @@ void cli_eeprom_dump(uint8_t bytesPerRow, size_t size)
         }
     }
 }
+
+#endif // ENABLE_CLI

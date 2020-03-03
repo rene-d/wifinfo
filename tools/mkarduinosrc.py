@@ -20,12 +20,16 @@ class Amalgamation:
         self.src = src
         self.lines = []
         self.included = set()
-        self.system_headers = set()
+        # self.system_headers = set()
 
         self.lines.append(f"//amalgamation: {src} *.ino *.cpp\n")
 
         for file in src.glob("*.ino"):
             self._add(file)
+
+        f = Path(src / "main.cpp")
+        if f.is_file():
+            self._add(f)
 
         for file in src.glob("*.cpp"):
             self._add(file)
@@ -61,10 +65,10 @@ class Amalgamation:
                     m = re.search(r"#include <(.+)>", line)
                     if m:
                         h = m.group(1)
-                        if h in self.system_headers:
-                            line = "// " + line
-                        else:
-                            self.system_headers.add(h)
+                        # if h in self.system_headers:
+                        #     line = "// " + line
+                        # else:
+                        #     self.system_headers.add(h)
 
                     else:
 

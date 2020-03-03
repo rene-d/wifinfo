@@ -236,7 +236,7 @@ void webserver_loop()
     sse_clients.handle_clients();
 }
 
-bool webserver_handle_read(const String &path)
+static bool webserver_handle_read(const String &path)
 {
     Serial.printf_P(PSTR("webserver_handle_read: %s\n"), path.c_str());
 

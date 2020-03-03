@@ -38,7 +38,10 @@ static void sys_update_finish(ESP8266WebServer &server, bool finish = false)
 
     if (Update.hasError())
     {
+        Serial.print("Update error: ");
+#ifdef ENABLE_DEBUG
         Update.printError(Serial);
+#endif
     }
 
     sys_update_is_ok = Update.end(finish);
@@ -116,11 +119,27 @@ void sys_update_register(ESP8266WebServer &server)
                 {
                     // should be always ok
                     max_size = upload.contentLength;
+
+#ifdef ENABLE_DEBUG
+                    uintptr_t updateStartAddress = 0;
+                    size_t currentSketchSize = (ESP.getSketchSize() + FLASH_SECTOR_SIZE - 1) & (~(FLASH_SECTOR_SIZE - 1));
+                    size_t roundedSize = (max_size + FLASH_SECTOR_SIZE - 1) & (~(FLASH_SECTOR_SIZE - 1));
+
+                    //address of the end of the space available for sketch and update
+                    uintptr_t updateEndAddress = (uintptr_t)&_FS_start - 0x40200000;
+                    updateStartAddress = (updateEndAddress > roundedSize) ? (updateEndAddress - roundedSize) : 0;
+
+                    Serial.printf_P(PSTR("[begin] max_size:           0x%08zX (%zd)\n"), max_size, max_size);
+                    Serial.printf_P(PSTR("[begin] roundedSize:        0x%08zX (%zd)\n"), roundedSize, roundedSize);
+                    Serial.printf_P(PSTR("[begin] updateStartAddress: 0x%08zX (%zd)\n"), updateStartAddress, updateStartAddress);
+                    Serial.printf_P(PSTR("[begin] updateEndAddress:   0x%08zX (%zd)\n"), updateEndAddress, updateEndAddress);
+                    Serial.printf_P(PSTR("[begin] currentSketchSize:  0x%08zX (%zd)\n"), currentSketchSize, currentSketchSize);
+#endif
                 }
 
                 if (!Update.begin(max_size, command))
                 {
-                    Serial.println(F("begin error"));
+                    Serial.printf("begin error %d %d\n", max_size, command);
                     sys_update_finish(server);
                 }
             }
