@@ -158,7 +158,7 @@ public:
     String get_seconds() const
     {
         char buf[32];
-        snprintf(buf, sizeof(buf), "%ld.%03d", timestamp_.tv_sec, timestamp_.tv_usec / 1000);
+        snprintf(buf, sizeof(buf), "%ld.%03d", timestamp_.tv_sec, (int)(timestamp_.tv_usec / 1000));
         return String(buf);
     }
 
