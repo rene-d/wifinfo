@@ -211,8 +211,8 @@ TEST(notifs, http_get_post)
     auto j1 = json::parse(HTTPClient::POST_data.s);
     // std::cout << HTTPClient::POST_data.s << std::endl;
 
-    // 11 valeurs + timestamp + notif
-    ASSERT_EQ(j1.size(), 13u);
+    // 11 valeurs + timestamp + secondes + notif
+    ASSERT_EQ(j1.size(), 14u);
     ASSERT_EQ(j1["notif"], "POST");
     ASSERT_EQ(j1["PAPP"], 1800);
 }
