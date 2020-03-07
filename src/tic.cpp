@@ -40,6 +40,7 @@ static esp8266::polledTimeout::periodicMs timer_sse(esp8266::polledTimeout::peri
 
 Teleinfo tinfo;
 static TeleinfoDecoder tinfo_decoder;
+bool tinfo_pause = false;
 
 static void tic_get_json_dict_notif(String &data, const char *notif);
 static void http_notif(const char *notif);
@@ -51,6 +52,11 @@ static void emoncms_notif();
 
 void tic_decode(int c)
 {
+    if (tinfo_pause)
+    {
+        return;
+    }
+
     tinfo_decoder.put(c);
 
     if (tinfo_decoder.ready())
