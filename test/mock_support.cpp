@@ -15,7 +15,7 @@ ESPClass ESP;
 EEPROMClass EEPROM;
 WiFiClass WiFi;
 SerialClass Serial;
-FS EPFS;
+FS ERFS;
 
 int pinMode_called = 0;
 int digitalRead_called = 0;

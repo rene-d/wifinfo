@@ -25,16 +25,17 @@ void fs_setup()
 
 void fs_ls()
 {
+    int i = 0;
     Dir dir = WIFINFO_FS.openDir("/");
     while (dir.next())
     {
         const String &fileName = dir.fileName();
         size_t fileSize = dir.fileSize();
-        Serial.printf_P(PSTR("FS File: %s, size: %zu\n"), fileName.c_str(), fileSize);
+        Serial.printf("FS File: %2d %s, size: %zu\n", ++i, fileName.c_str(), fileSize);
     }
 }
 
-// Return JSON string containing list of SPIFFS files
+// Return JSON string containing list of files
 void fs_get_json(String &response, bool restricted)
 {
     if (restricted)
@@ -47,7 +48,7 @@ void fs_get_json(String &response, bool restricted)
 
     response = F("{\"files\":");
 
-    // SPIFFS File system array
+    // Files
     {
         JSONTableBuilder js(response);
 

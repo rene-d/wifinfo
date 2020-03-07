@@ -7,10 +7,10 @@
 
 TEST(fs, init)
 {
-    EPFS.begin_called = false;
+    ERFS.begin_called = false;
     fs_setup();
 
-    ASSERT_TRUE(EPFS.begin_called);
+    ASSERT_TRUE(ERFS.begin_called);
 }
 
 TEST(fs, ls)

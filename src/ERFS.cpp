@@ -1,13 +1,54 @@
-// module téléinformation client
-// rene-d 2020
+// ERFS.cpp - Embedded Read-only File System (ERFS)
+// Copyright (c) 2020 René Devichi. All rights reserved.
+//
+// ERFS is heavily inspired by Microchip Proprietary File System (MPFS2)
+//
+//
+// ERFS Structure:
+//     [E][P][F][S]
+//     [BYTE Ver Hi][BYTE Ver Lo][WORD Number of Files]
+//     [Name Hash 0][Name Hash 1]...[Name Hash N]
+//     [File Record 0][File Record 1]...[File Record N]
+//     [String 0][String 1]...[String N]
+//     [File Data 0][File Data 1]...[File Data N]
+//
+// Name Hash (2 bytes):
+//     hash = 0
+//     for each(byte in name)
+//         hash += byte
+//         hash <<= 1
+//
+//     Technically this means the hash only includes the
+//     final 15 characters of a name.
+//
+// File Record Structure (16 bytes):
+//     [DWORD String Ptr]
+//     [DWORD Data Ptr]
+//     [DWORD Len]
+//     [DWORD Timestamp]
+//
+//     Pointers are absolute addresses within the ERFS image.
+//     Timestamp is the UNIX timestamp
+//
+// String Structure (1 to 64 bytes):
+//     ["path/to/file.ext"][0x00]
+//
+//      All characteres are allowed, / has no special meaning.
+//
+// File Data Structure (arbitrary length):
+//     [File Data]
+//
+//
+// All values are aligned on 4-byte boundaries, eventually padded with 0x00.
+//
 
-#include "EPFS.h"
+#include "ERFS.h"
 #include <FSImpl.h>
 #include <flash_hal.h>
 
-struct EPFSHeader
+struct ERFSHeader
 {
-    uint32_t epfs;
+    uint32_t magic;
     uint8_t ver_h;
     uint8_t ver_l;
     uint16_t num_files;
@@ -35,11 +76,11 @@ static inline uint32_t align32(uint32_t n)
     }
 }
 
-class EPFSImpl : public fs::FSImpl
+class ERFSImpl : public fs::FSImpl
 {
 public:
-    EPFSImpl(uint32_t start, uint32_t size) : start_(start), size_(size), num_files_(0) {}
-    virtual ~EPFSImpl() {}
+    ERFSImpl(uint32_t start, uint32_t size) : start_(start), size_(size), num_files_(0) {}
+    virtual ~ERFSImpl() {}
     virtual bool setConfig(const fs::FSConfig &cfg) override { return true; }
     virtual bool begin() override;
     virtual void end() override;
@@ -75,12 +116,12 @@ private:
     uint16_t num_files_;
 };
 
-class EPFSFileImpl : public fs::FileImpl
+class ERFSFileImpl : public fs::FileImpl
 {
 public:
-    EPFSFileImpl(EPFSImpl *impl, const char *path);
+    ERFSFileImpl(ERFSImpl *impl, const char *path);
 
-    virtual ~EPFSFileImpl() {}
+    virtual ~ERFSFileImpl() {}
     virtual size_t write(const uint8_t *buf, size_t size) override { return 0; }
     virtual size_t read(uint8_t *buf, size_t size) override;
     virtual void flush() override {}
@@ -104,18 +145,17 @@ public:
     }
 
 private:
-    EPFSImpl *impl_;
+    ERFSImpl *impl_;
     FATRecord record_;
     char name_[NAME_MAX_SIZE];
     uint32_t pos_{0};
 };
 
-class EPFSDirImpl : public fs::DirImpl
+class ERFSDirImpl : public fs::DirImpl
 {
 public:
-    EPFSDirImpl(EPFSImpl *impl) : impl_(impl), current_(0)
+    ERFSDirImpl(ERFSImpl *impl) : impl_(impl), index_(0)
     {
-        load_record();
     }
 
     virtual fs::FileImplPtr openFile(fs::OpenMode openMode, fs::AccessMode accessMode) override
@@ -129,7 +169,7 @@ public:
 
     virtual const char *fileName() override
     {
-        return is_valid() ? name_ : nullptr;
+        return is_valid() ? name_ : "";
     }
 
     virtual size_t fileSize() override
@@ -151,13 +191,14 @@ public:
 
     virtual bool next() override
     {
-        if (current_ < impl_->num_files())
+        if (index_ < impl_->num_files())
         {
-            ++current_;
-        }
-        if (is_valid())
-        {
-            load_record();
+            uint32_t fat_addr = sizeof(ERFSHeader) + align32(2 * impl_->num_files());
+
+            impl_->hal_read(fat_addr + sizeof(FATRecord) * index_, sizeof(FATRecord), &record_);
+            impl_->hal_read(record_.name_ptr, NAME_MAX_SIZE, name_);
+
+            ++index_;
             return true;
         }
         return false;
@@ -165,53 +206,40 @@ public:
 
     virtual bool rewind() override
     {
-        current_ = 0;
+        index_ = 0;
         return true;
     }
 
 private:
     inline bool is_valid() const
     {
-        return current_ < impl_->num_files();
-    }
-
-    void load_record()
-    {
-        if (is_valid())
-        {
-            uint32_t fat_addr = sizeof(EPFSHeader) + align32(2 * impl_->num_files());
-
-printf("\033[90mhash \033[0m");
-            impl_->hal_read(fat_addr + sizeof(FATRecord) * current_, sizeof(FATRecord), &record_);
-printf("\033[90mname \033[0m");
-            impl_->hal_read(record_.name_ptr, NAME_MAX_SIZE, name_);
-        }
+        return (index_ != 0) && (index_ <= impl_->num_files());
     }
 
 private:
-    EPFSImpl *impl_;
-    FATRecord record_;
-    char name_[NAME_MAX_SIZE];
-    uint16_t current_ = 0;
+    ERFSImpl *impl_;           // ERFS implementation
+    FATRecord record_;         // FAT record
+    char name_[NAME_MAX_SIZE]; // filename
+    uint16_t index_;           // file index between 1 and num_files
 };
 
 ////
 
-fs::FS EPFS = fs::FS(fs::FSImplPtr(new EPFSImpl(FS_PHYS_ADDR, FS_PHYS_SIZE)));
+fs::FS ERFS = fs::FS(fs::FSImplPtr(new ERFSImpl(FS_PHYS_ADDR, FS_PHYS_SIZE)));
 
 ////
 
-bool EPFSImpl::begin()
+bool ERFSImpl::begin()
 {
-    EPFSHeader header;
+    ERFSHeader header;
 
     // try to read the eight bytes header
-    if (!hal_read(0, sizeof(EPFSHeader), &header))
+    if (!hal_read(0, sizeof(ERFSHeader), &header))
     {
         return false;
     }
 
-    if (header.epfs != 0x53465045 || header.ver_h != 3 || header.ver_l != 2) // 'EPFS'
+    if (header.magic != 0x53465245 || header.ver_h != 3 || header.ver_l != 2) // 'ERFS'
     {
         return false;
     }
@@ -221,30 +249,37 @@ bool EPFSImpl::begin()
     return true;
 }
 
-void EPFSImpl::end()
+void ERFSImpl::end()
 {
     num_files_ = 0;
 }
 
-bool EPFSImpl::info(fs::FSInfo &info)
+bool ERFSImpl::info(fs::FSInfo &info)
 {
-    FATRecord record;
-
-    // read the last FAT record, its blob is at the very of the FS
-    uint32_t fat_addr = sizeof(EPFSHeader) + align32(2 * num_files());
-    hal_read(fat_addr + sizeof(FATRecord) * (num_files_ - 1), sizeof(FATRecord), &record);
-
     info.totalBytes = size_;
-    info.usedBytes = record.data_ptr + record.data_length;
+
+    if (num_files_ > 0)
+    {
+        // read the last FAT record, its blob is at the very end of the filesystem
+        FATRecord record;
+        uint32_t fat_addr = sizeof(ERFSHeader) + align32(2 * num_files_);
+        hal_read(fat_addr + sizeof(FATRecord) * (num_files_ - 1), sizeof(FATRecord), &record);
+        info.usedBytes = record.data_ptr + record.data_length;
+    }
+    else
+    {
+        info.usedBytes = sizeof(ERFSHeader);
+    }
+
     info.blockSize = 0;
     info.pageSize = 0;
     info.maxOpenFiles = num_files_;
-    info.maxPathLength = NAME_MAX_SIZE - 1; // 64 with final \0
+    info.maxPathLength = NAME_MAX_SIZE - 1;
 
     return true;
 }
 
-bool EPFSImpl::info64(fs::FSInfo64 &info64)
+bool ERFSImpl::info64(fs::FSInfo64 &info64)
 {
     fs::FSInfo info32;
     info(info32);
@@ -259,29 +294,29 @@ bool EPFSImpl::info64(fs::FSInfo64 &info64)
     return true;
 }
 
-bool EPFSImpl::exists(const char *path)
+bool ERFSImpl::exists(const char *path)
 {
-    EPFSFileImpl test(this, path);
+    ERFSFileImpl test(this, path);
     return test.isFile();
 }
 
-fs::DirImplPtr EPFSImpl::openDir(const char *path)
+fs::DirImplPtr ERFSImpl::openDir(const char *path)
 {
     if (strcmp(path, "/") != 0)
     {
         return nullptr;
     }
-    return std::make_shared<EPFSDirImpl>(this);
+    return std::make_shared<ERFSDirImpl>(this);
 }
 
-fs::FileImplPtr EPFSImpl::open(const char *path, fs::OpenMode openMode, fs::AccessMode accessMode)
+fs::FileImplPtr ERFSImpl::open(const char *path, fs::OpenMode openMode, fs::AccessMode accessMode)
 {
     if ((openMode != fs::OM_DEFAULT) || (accessMode != fs::AM_READ))
     {
         return nullptr;
     }
 
-    fs::FileImplPtr f = std::make_shared<EPFSFileImpl>(this, path);
+    fs::FileImplPtr f = std::make_shared<ERFSFileImpl>(this, path);
 
     // check if we succeeded to open the file
     if (f->isFile())
@@ -292,7 +327,7 @@ fs::FileImplPtr EPFSImpl::open(const char *path, fs::OpenMode openMode, fs::Acce
     return nullptr;
 }
 
-EPFSFileImpl::EPFSFileImpl(EPFSImpl *impl, const char *path)
+ERFSFileImpl::ERFSFileImpl(ERFSImpl *impl, const char *path)
 {
     uint16_t name_hash;
     uint16_t hash_cache[8];
@@ -312,29 +347,25 @@ EPFSFileImpl::EPFSFileImpl(EPFSImpl *impl, const char *path)
         name_hash <<= 1;
     }
 
-    uint32_t fat_addr = sizeof(EPFSHeader) + align32(2 * impl->num_files());
+    uint32_t fat_addr = sizeof(ERFSHeader) + align32(2 * impl->num_files());
 
     for (uint16_t i = 0; i < impl->num_files(); ++i)
     {
         // Read in hashes, and check remainder on a match.  Store 8 in cache for performance
         if ((i % 8) == 0)
         {
-                printf("\033[90mhash \033[0m");
-
-            impl->hal_read(sizeof(EPFSHeader) + i * 2, 8 * 2, &hash_cache);
+            impl->hal_read(sizeof(ERFSHeader) + i * 2, 8 * 2, &hash_cache);
         }
 
         // If the hash matches, compare the full filename
         if (name_hash == hash_cache[i % 8])
         {
-            printf("\033[90mfat  \033[0m");
             impl->hal_read(fat_addr + sizeof(FATRecord) * i, sizeof(FATRecord), &record_);
-            printf("\033[90name \033[0m");
             impl->hal_read(record_.name_ptr, NAME_MAX_SIZE, name_);
 
             if (strncmp(name_, path, NAME_MAX_SIZE) == 0)
             {
-                // save the EPFSImpl pointer, that indicates we have found the file
+                // save the ERFSImpl pointer, that indicates we have found the file
                 impl_ = impl;
                 return;
             }
@@ -342,7 +373,7 @@ EPFSFileImpl::EPFSFileImpl(EPFSImpl *impl, const char *path)
     }
 }
 
-bool EPFSFileImpl::seek(uint32_t pos, fs::SeekMode mode)
+bool ERFSFileImpl::seek(uint32_t pos, fs::SeekMode mode)
 {
     if (mode == fs::SeekSet)
     {
@@ -371,7 +402,7 @@ bool EPFSFileImpl::seek(uint32_t pos, fs::SeekMode mode)
     return false;
 }
 
-size_t EPFSFileImpl::read(uint8_t *buf, size_t size)
+size_t ERFSFileImpl::read(uint8_t *buf, size_t size)
 {
 
     if (impl_ == nullptr || buf == nullptr || size == 0)

@@ -71,13 +71,6 @@ void cli_setup()
     });
 
     cli.addSingleArgCmd("ls", [](cmd *) {
-
-
-        fs::File f = WIFINFO_FS.open("/version", "r");
-        uint8_t buf[20];
-        buf[10]=0;
-        size_t n = f.read(buf, 10);
-        Serial.printf("read %zu %s\n", n, (char*)buf);
         fs_ls();
     });
 
@@ -137,6 +130,28 @@ void cli_setup()
                 Serial.printf_P(PSTR("gpio %d write %d\n"), pin, v);
                 digitalWrite(pin, v);
             }
+        }
+    });
+
+    cli.addBoundlessCmd(("get"), [](cmd *cmdPtr) {
+        Command cmd(cmdPtr);
+
+        if (cmd.countArgs() == 0)
+        {
+            Serial.println(F("nothing to get"));
+            return;
+        }
+
+        String arg = cmd.getArgument(0).getValue();
+
+        if (arg.startsWith(F("ver")))
+        {
+            fs::File f = WIFINFO_FS.open("/version", "r");
+            uint8_t buf[64];
+            buf[10] = 0;
+            size_t n = f.read(buf, 63);
+            buf[n] = 0;
+            Serial.printf("read %zu, version: '%s'\n", n, (char *)buf);
         }
     });
 

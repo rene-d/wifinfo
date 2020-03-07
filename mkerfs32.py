@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# rene-d 2020
-
-# EPFS32 filesystem builder
-# Heavily inspired by Microchip Proprietary File System (MPFS2)
-
+# ERFS.cpp - Embedded Read-only File System (ERFS)
+# Copyright (c) 2020 René Devichi. All rights reserved.
 #
-# EPFS Structure:
+# ERFS is heavily inspired by Microchip Proprietary File System (MPFS2)
+#
+#
+# ERFS Structure:
 #     [E][P][F][S]
 #     [BYTE Ver Hi][BYTE Ver Lo][WORD Number of Files]
 #     [Name Hash 0][Name Hash 1]...[Name Hash N]
@@ -28,7 +28,7 @@
 #     [DWORD Len]
 #     [DWORD Timestamp]
 #
-#     Pointers are absolute addresses within the EPFS image.
+#     Pointers are absolute addresses within the ERFS image.
 #     Timestamp is the UNIX timestamp
 #
 # String Structure (1 to 64 bytes):
@@ -73,7 +73,7 @@ def main(size, create, image_file):
     else:
         size = int(size)
 
-    click.echo(click.style("EPFS32 builder", fg="bright_green"))
+    click.echo(click.style("ERFS 3.2 builder", fg="bright_green"))
 
     total_size = HEADER_SIZE  # the header
     files = []
@@ -104,7 +104,7 @@ def main(size, create, image_file):
     fs = Path(image_file).open("wb")
 
     # 8 byte header
-    fs.write(b"EPFS\x03\x02")
+    fs.write(b"ERFS\x03\x02")
     fs.write(struct.pack("<H", num_files))
 
     # hash table: 2 * num_files bytes

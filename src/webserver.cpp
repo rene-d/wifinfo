@@ -40,6 +40,7 @@ AccessType webserver_get_auth()
     return FULL;
 }
 
+// retourne true si le client s'est authentifié et est sur le LAN
 bool webserver_access_full()
 {
     AccessType access = webserver_get_auth();
@@ -58,6 +59,7 @@ bool webserver_access_full()
     }
 }
 
+// retourne true si le client s'est authentifié
 bool webserver_access_ok()
 {
     AccessType access = webserver_get_auth();
@@ -132,7 +134,7 @@ void webserver_setup()
 
 #ifdef ENABLE_CPULOAD
     server.on("/cpuload", [] {
-        if (webserver_auth() != NO_ACCESS)
+        if (webserver_access_ok())
         {
             StringPrint message;
             cpuload_print(message);

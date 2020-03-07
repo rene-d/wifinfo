@@ -28,5 +28,8 @@
 #endif
 
 //
-#define WIFINFO_FS SPIFFS
-//#include "EPFS.h"
+#define WIFINFO_FS ERFS
+
+#if WIFINFO_FS == ERFS
+#include "ERFS.h"
+#endif

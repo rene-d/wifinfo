@@ -33,7 +33,6 @@
                         id="scharge"></span></a></li>
             <li><a href="#tab_sys" data-toggle="tab"><span class="glyphicon glyphicon-cog">&nbsp;</span>Système</a></li>
             <li><a href="#tab_cfg" data-toggle="tab"><span class="glyphicon glyphicon-wrench">&nbsp;</span>Configuration</a></li>
-
         </ul>
 
         <!-- Contenu des onglets -->
@@ -206,23 +205,23 @@
                                             </div>
                                         </div>
 
-     <!-- basic auth username -->
-     <div class="form-group">
-        <label class="col-sm-3 control-label">Utilisateur du module</label>
-        <div class="col-sm-9">
-            <input type="username" class="form-control" id="username" name="username" maxlength="31" value=""
-                placeholder="Nom utilisateur">
-        </div>
-    </div>
+                                        <!-- basic auth username -->
+                                        <div class="form-group">
+                                            <label class="col-sm-3 control-label">Utilisateur du module</label>
+                                            <div class="col-sm-9">
+                                                <input type="username" class="form-control" id="username" name="username" maxlength="31" value=""
+                                                    placeholder="Nom utilisateur">
+                                            </div>
+                                        </div>
 
-    <!-- basic auth password -->
-    <div class="form-group">
-        <label class="col-sm-3 control-label">Mot de passe du module</label>
-        <div class="col-sm-9">
-            <input type="password" class="form-control" id="password" name="password" maxlength="31" value=""
-                placeholder="Mot de passe">
-        </div>
-    </div>
+                                        <!-- basic auth password -->
+                                        <div class="form-group">
+                                            <label class="col-sm-3 control-label">Mot de passe du module</label>
+                                            <div class="col-sm-9">
+                                                <input type="password" class="form-control" id="password" name="password" maxlength="31" value=""
+                                                    placeholder="Mot de passe">
+                                            </div>
+                                        </div>
 
                                     </div> <!-- panel body-->
                                     <div class="panel-footer">
@@ -574,7 +573,7 @@
                                                 </span>
                                             </span>
                                             <input id="txt_upload_fw" type="text" size="32" class="form-control"
-                                                placeholder="Aucun fichier firmware.bin ou epfss.bin choisi" readonly>
+                                                placeholder="Aucun fichier firmware.bin ou erfs.bin choisi" readonly>
                                         </div>
                                     </div>
                                     <div class="col-xs-3">
@@ -1012,7 +1011,7 @@
             var name = f.name.toLowerCase();
             var html = f.type + ' - taille:' + f.size + '&nbsp;octets'
 
-            var is_filesystem = name.match("epfs.bin$");
+            var is_filesystem = name.match("fs.bin$");
             var is_firmware = name.match(".bin$") && !is_filesystem;
 
             $('#pgfw').removeClass('show').addClass('hide');
@@ -1023,7 +1022,7 @@
                 ok = false;
             } else if (!is_filesystem && !is_firmware) {
                 Notify(5, 'remove', 'danger', 'Nom de fichier incorrect',
-                    'Le fichier de mise à jour doit être nommé: <ul><li>firmware.bin (Logiciel)</li><li>epfs.bin (Système de fichiers)</li></ul>');
+                    'Le fichier de mise à jour doit être nommé: <ul><li>firmware.bin (Logiciel)</li><li>erfs.bin (Système de fichiers)</li></ul>');
                 ok = false;
             }
             if (ok) {
