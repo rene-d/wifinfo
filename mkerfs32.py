@@ -45,27 +45,50 @@
 #
 
 import click
+from collections import namedtuple
+from datetime import datetime
+from fnmatch import fnmatch
+import os
 from pathlib import Path
 import struct
+import sys
+import time
+
 
 HEADER_SIZE = 8
 FATRECORD_SIZE = 16
 
+FATRecord = namedtuple("FATRecord", ["StringPtr", "DataPtr", "Len", "Timestamp"])
 
-def align32(i):
+
+def get_string(fs: bytes, ptr: int, hex_name=False) -> str:
+    if fs[ptr] == 0:
+        if hex_name:
+            return f"{ptr:06X}"
+        else:
+            return "<no name>"
+    s = ""
+    for i in fs[ptr:]:
+        if i == 0:
+            break
+        elif i < 32:
+            s += f"<{i}>"
+        else:
+            s += chr(i)
+    return s
+
+
+def align32(i: int) -> int:
     if i & 3 == 0:
         return i
     else:
         return (i | 3) + 1
 
 
-@click.command()
-@click.option("-s", "--size", help="fs image size, in bytes", type=str, default="1m", show_default=True)
-@click.option("-c", "--create", help="create image from a directory", type=str, default="data", show_default=True)
-@click.option("-b", "--block", help="ignored", type=int, expose_value=False)
-@click.option("-p", "--page", help="ignored", type=int, expose_value=False)
-@click.argument("image_file")
-def main(size, create, image_file):
+def create(data_dir: str, size: str, image_file: str) -> None:
+    """
+    Create a ERFS filesystem image.
+    """
 
     if size[-1].lower() == "k":
         size = int(size[:-1]) * 1024
@@ -78,14 +101,14 @@ def main(size, create, image_file):
 
     total_size = HEADER_SIZE  # the header
     files = []
-    for f in Path(create).rglob("*"):
+    for f in Path(data_dir).rglob("*"):
         if f.is_dir():
             continue
 
         if f.name in [".DS_Store", ".git"]:
             continue
 
-        name = f.relative_to(create).as_posix().encode()
+        name = f.relative_to(data_dir).as_posix().encode()
 
         total_size += 2 + FATRECORD_SIZE + align32(len(name) + 1) + align32(f.stat().st_size)
         files.append((f, name, f.stat()))
@@ -95,7 +118,7 @@ def main(size, create, image_file):
     total_size = align32(total_size)  # need to align because of the hash table
 
     if total_size > size:
-        print(f"FS too small, missing {total_size - size} bytes")
+        print(f"FS too small, missing {total_size - size} bytes", file=sys.stderr)
         exit(2)
 
     num_files = len(files)
@@ -155,6 +178,110 @@ def main(size, create, image_file):
 
     print(f"final size is {size} bytes")
     print(f"{image_file} written")
+
+
+def list_content(image_file: str, verbose: bool, extract_dir: str, patterns) -> None:
+    """
+    List or extract the content of a ERFS image.
+    """
+
+    fs = Path(image_file).read_bytes()
+
+    # process filesystem header
+    signature, ver_hi, ver_lo, n = struct.unpack("<4sBBH", fs[0:HEADER_SIZE])
+    if signature != b"ERFS":
+        print("File is not a ERFS filesystem", file=sys.stderr)
+        exit(2)
+
+    offset = HEADER_SIZE
+    name_hash = [0] * n
+    for i in range(n):
+        (name_hash[i],) = struct.unpack("<H", fs[offset : offset + 2])
+        offset += 2
+    offset = align32(offset)
+
+    record = [None] * n
+    for i in range(n):
+        record[i] = FATRecord._make(struct.unpack("<IIII", fs[offset : offset + FATRECORD_SIZE]))
+        offset += FATRECORD_SIZE
+
+    if extract_dir:
+        if extract_dir != "-":
+            extract_dir = Path(extract_dir)
+    else:
+        print(f"Version: {ver_hi}.{ver_lo}")
+        print(f"Number of files: {n}")
+
+    for i, r in enumerate(record, 1):
+
+        if fs[r.StringPtr] == 0:
+            print(f"Bad file entry {i}: should have a name", i, file=sys.stderr)
+            break
+
+        filename = get_string(fs, r.StringPtr)
+
+        if extract_dir:
+
+            if patterns:
+                if not any(fnmatch(filename, pattern) for pattern in patterns):
+                    continue
+
+            if extract_dir == "-":
+                print(f"extracted {i}/{n}: {filename} {r.Len} bytes", file=sys.stderr)
+                sys.stdout.buffer.write(fs[r.DataPtr : r.DataPtr + r.Len])
+            else:
+                f = extract_dir / filename
+                f.parent.mkdir(exist_ok=True, parents=True)
+
+                f.write_bytes(fs[r.DataPtr : r.DataPtr + r.Len])
+
+                timestamp = datetime.fromtimestamp(r.Timestamp)
+                mt = time.mktime(timestamp.timetuple())
+                os.utime(f.as_posix(), (mt, mt))
+
+                print(f"extracted {i}/{n}: {f.as_posix()} {r.Len} bytes")
+
+        else:
+            timestamp = datetime.fromtimestamp(r.Timestamp).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+            if verbose:
+                print()
+                print(f"FATRecord {i}:")
+                print(f"    .StringPtr = 0x{r.StringPtr:06x}  {filename}")
+                print(f"    .DataPtr   = 0x{r.DataPtr:06x}")
+                print(f"    .Len       = 0x{r.Len:06x}  {r.Len}")
+                print(f"    .Timestamp =", r.Timestamp, timestamp)
+
+            else:
+                print(f"{i:4d}  {r.Len:8d}  {timestamp}  {filename}")
+
+
+@click.command(context_settings={"help_option_names": ["-h", "--help"]})
+@click.option(
+    "-c",
+    "--create",
+    "data_dir",
+    metavar="DATA_DIR",
+    help="create image from a directory",
+    type=str,
+    default="data",
+    show_default=True,
+)
+@click.option("-l", "--list", "list_files", help="list the content of an image", is_flag=True)
+@click.option("-x", "--extract", "extract_dir", metavar="DIR", help="extract files to directory", type=str)
+@click.option("-s", "--size", metavar="SIZE", help="fs image size, in bytes", type=str, default="1m", show_default=True)
+@click.option("-b", "--block", help="ignored", type=int, expose_value=False)
+@click.option("-p", "--page", help="ignored", type=int, expose_value=False)
+@click.option("-v", "--verbose", help="verbose list", is_flag=True)
+@click.argument("image_file")
+@click.argument("files", metavar="[FILES_TO_EXTRACT]", nargs=-1)
+def main(data_dir, list_files, extract_dir, size, verbose, image_file, files):
+
+    if list_files or extract_dir:
+        list_content(image_file, verbose, extract_dir, files)
+
+    else:
+        create(data_dir, size, image_file)
 
 
 if __name__ == "__main__":
