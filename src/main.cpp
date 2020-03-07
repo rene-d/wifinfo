@@ -1,7 +1,7 @@
 // module téléinformation client
 // rene-d 2020
 
-#include "settings.h"
+#include "wifinfo.h"
 #include "timesync.h"
 #include "cli.h"
 #include "config.h"
@@ -27,7 +27,7 @@ void setup()
     // en debug, on reste à 115200: on ne se branche pas au compteur
     Serial.begin(115200);
 #else
-    // sinon, RX est utilisé pour la téléinfo. TX peut toujours envoyer des diags
+    // sinon, RX est utilisé pour la téléinfo. TX est coupé
     Serial.begin(1200, SERIAL_7E1, SERIAL_RX_ONLY);
 #endif
     Serial.flush();

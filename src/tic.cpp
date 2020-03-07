@@ -1,7 +1,7 @@
 // module téléinformation client
 // rene-d 2020
 
-#include "settings.h"
+#include "wifinfo.h"
 #include "tic.h"
 #include "config.h"
 #include "httpreq.h"
@@ -40,6 +40,7 @@ static esp8266::polledTimeout::periodicMs timer_sse(esp8266::polledTimeout::peri
 
 Teleinfo tinfo;
 static TeleinfoDecoder tinfo_decoder;
+bool tinfo_pause = false;
 
 static void tic_get_json_dict_notif(String &data, const char *notif);
 static void http_notif(const char *notif);
@@ -51,6 +52,11 @@ static void emoncms_notif();
 
 void tic_decode(int c)
 {
+    if (tinfo_pause)
+    {
+        return;
+    }
+
     tinfo_decoder.put(c);
 
     if (tinfo_decoder.ready())
@@ -196,7 +202,7 @@ void tic_get_json_array(String &data, bool restricted __attribute__((unused)))
     js.finalize();
 }
 
-void tic_get_json_dict_notif(String &data, const char *notif)
+static void tic_get_json_dict_notif(String &data, const char *notif)
 {
 
     if (tinfo.is_empty())
@@ -211,11 +217,13 @@ void tic_get_json_dict_notif(String &data, const char *notif)
     const char *value;
     const char *state = nullptr;
 
-    js.append(FPSTR("timestamp"), tinfo.get_timestamp_iso8601().c_str());
+    js.append("timestamp", tinfo.get_timestamp_iso8601().c_str());
+
+    js.append("seconds", tinfo.get_seconds().c_str());
 
     if (notif != nullptr)
     {
-        js.append(FPSTR("notif"), notif);
+        js.append("notif", notif);
     }
 
     while (tinfo.get_value_next(label, value, &state))
@@ -260,6 +268,10 @@ static void http_add_value_ex(String &uri, const char *label, const char *notif)
     {
         uri += tinfo.get_timestamp();
     }
+    else if (strcasecmp_P(label, PSTR("seconds")) == 0)
+    {
+        uri += tinfo.get_seconds();
+    }
     else if (strcasecmp_P(label, PSTR("chipid")) == 0)
     {
         char buf[16];
@@ -272,7 +284,7 @@ static void http_add_value_ex(String &uri, const char *label, const char *notif)
     }
 }
 
-void http_notif(const char *notif)
+static void http_notif(const char *notif)
 {
     String uri;
     char label[16];
@@ -344,7 +356,7 @@ void http_notif(const char *notif)
     }
 }
 
-void http_notif_periode_en_cours()
+static void http_notif_periode_en_cours()
 {
     const char *PTEC = tinfo.get_value("PTEC");
     if (PTEC == NULL)
@@ -368,7 +380,7 @@ void http_notif_periode_en_cours()
     }
 }
 
-void http_notif_adps()
+static void http_notif_adps()
 {
     const char *ADPS = tinfo.get_value("ADPS");
 
@@ -392,7 +404,7 @@ void http_notif_adps()
     }
 }
 
-void http_notif_seuils()
+static void http_notif_seuils()
 {
     const char *PAPP = tinfo.get_value("PAPP");
     if (PAPP == NULL)
@@ -419,7 +431,7 @@ void http_notif_seuils()
 }
 
 // Do a http post to jeedom server
-void jeedom_notif()
+static void jeedom_notif()
 {
     if (config.jeedom.host[0] == 0)
     {
@@ -602,7 +614,7 @@ void tic_emoncms_data(String &url, bool restricted __attribute__((unused)))
 }
 
 // emoncmsPost (called by main sketch on timer, if activated)
-void emoncms_notif()
+static void emoncms_notif()
 {
     // Some basic checking
     if (config.emoncms.host[0] == 0)

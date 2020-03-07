@@ -5,6 +5,9 @@
 
 #include <Arduino.h>
 
+namespace fs
+{
+
 class Dir
 {
     int index_{0};
@@ -36,7 +39,7 @@ struct FSInfo
     size_t maxPathLength;
 };
 
-class SPIFFSClass
+class FS
 {
 public:
     bool begin_called{false};
@@ -64,5 +67,9 @@ public:
         info.maxPathLength = 54;
     }
 };
+} // namespace fs
 
-extern SPIFFSClass SPIFFS;
+using fs::Dir;
+//using fs::File;
+using fs::FSInfo;
+using fs::FS;

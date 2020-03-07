@@ -155,6 +155,13 @@ public:
         return String(buf);
     }
 
+    String get_seconds() const
+    {
+        char buf[32];
+        snprintf(buf, sizeof(buf), "%ld.%03d", timestamp_.tv_sec, (int)(timestamp_.tv_usec / 1000));
+        return String(buf);
+    }
+
     size_t get_frame_ascii(char *frame, size_t size) const
     {
         size_t j = 0;

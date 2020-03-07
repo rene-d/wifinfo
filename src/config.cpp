@@ -23,7 +23,7 @@
 //
 // **********************************************************************************
 
-#include "settings.h"
+#include "wifinfo.h"
 #include "config.h"
 #include "jsonbuilder.h"
 #include "strncpy_s.h"
@@ -377,12 +377,10 @@ void config_handle_form(ESP8266WebServer &server, bool restricted)
     // We validated config ?
     if (server.hasArg("save"))
     {
-#ifdef ENABLE_DEBUG
         Serial.println(F("===== Posted configuration"));
         for (int i = 0; i < server.args(); ++i)
             Serial.printf("  %3d  %-20s = %s\n", i, server.argName(i).c_str(), server.arg(i).c_str());
         Serial.println(F("===== Posted configuration"));
-#endif
 
         // Wi-Fi et avancé
         if (!restricted)
@@ -401,7 +399,9 @@ void config_handle_form(ESP8266WebServer &server, bool restricted)
 
         config.options = 0;
         if (server.hasArg(CFG_LED_TINFO))
+        {
             config.options |= OPTION_LED_TINFO;
+        }
 
         // Emoncms
         strncpy_s(config.emoncms.host, server.arg(CFG_FORM_EMON_HOST), CFG_EMON_HOST_LENGTH);

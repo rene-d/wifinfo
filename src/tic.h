@@ -15,3 +15,5 @@ void tic_get_json_dict(String &html, bool restricted);
 void tic_emoncms_data(String &url, bool restricted);
 
 void tic_dump();
+
+extern bool tinfo_pause;

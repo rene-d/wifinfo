@@ -7,10 +7,10 @@
 
 TEST(fs, init)
 {
-    SPIFFS.begin_called = false;
+    ERFS.begin_called = false;
     fs_setup();
 
-    ASSERT_TRUE(SPIFFS.begin_called);
+    ASSERT_TRUE(ERFS.begin_called);
 }
 
 TEST(fs, ls)
@@ -22,12 +22,12 @@ TEST(fs, json)
 {
     String data;
 
-    fs_get_spiffs_json(data, false);
+    fs_get_json(data, false);
     // std::cout << data << std::endl;
 
     auto j1 = json::parse(data.s);
 
-    ASSERT_TRUE(j1["spiffs"].is_array());
+    ASSERT_TRUE(j1["info"].is_object());
 
     ASSERT_TRUE(j1["files"].is_array());
     ASSERT_EQ(j1["files"][0]["na"], "fichier1.txt");
@@ -38,7 +38,7 @@ TEST(fs, json_restricted)
 {
     String data;
 
-    fs_get_spiffs_json(data, true);
+    fs_get_json(data, true);
 
     ASSERT_EQ(data.s, "{}");
 }

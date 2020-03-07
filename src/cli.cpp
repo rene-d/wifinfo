@@ -1,7 +1,12 @@
 // module téléinformation client
 // rene-d 2020
 
-#include "settings.h"
+// commandes par le port série pour la mise au point
+
+#include "wifinfo.h"
+
+#ifdef ENABLE_CLI
+
 #include "cli.h"
 #include "config.h"
 #include "filesystem.h"
@@ -17,6 +22,7 @@
 #include <PolledTimeout.h>
 #include <SimpleCLI.h>
 
+// valeurs positionnées par le linker
 extern "C" uint32_t _EEPROM_start;
 extern "C" uint32_t _FS_start;
 extern "C" uint32_t _FS_end;
@@ -130,6 +136,31 @@ void cli_setup()
         }
     });
 
+    cli.addBoundlessCmd(("get"), [](cmd *cmdPtr) {
+        Command cmd(cmdPtr);
+
+        if (cmd.countArgs() == 0)
+        {
+            Serial.println(F("nothing to get"));
+            return;
+        }
+
+        String arg = cmd.getArgument(0).getValue();
+
+        if (arg.startsWith(F("ver")))
+        {
+            fs::File f = WIFINFO_FS.open(F("/version"), "r");
+            uint8_t buf[64];
+            buf[10] = 0;
+            size_t n = f.read(buf, sizeof(buf) - 1);
+            if (n != (size_t)-1)
+            {
+                buf[n] = 0;
+                Serial.printf_P(PSTR("read %zu, version: '%s'\n"), n, (const char *)buf);
+            }
+        }
+    });
+
     cli.addSingleArgCmd("esp", [](cmd *cmdPtr) {
         Command cmd(cmdPtr);
         String arg = cmd.getArgument().getValue();
@@ -198,13 +229,13 @@ void cli_setup()
         Serial.printf_P(PSTR("HeapFragmentation : %u\n"), ESP.getHeapFragmentation());
 
         FSInfo info;
-        SPIFFS.info(info);
-        Serial.printf_P(PSTR("SPIFFS totalBytes    : %zu\n"), info.totalBytes);
-        Serial.printf_P(PSTR("SPIFFS usedBytes     : %zu\n"), info.usedBytes);
-        Serial.printf_P(PSTR("SPIFFS blockSize     : %zu\n"), info.blockSize);
-        Serial.printf_P(PSTR("SPIFFS pageSize      : %zu\n"), info.pageSize);
-        Serial.printf_P(PSTR("SPIFFS maxOpenFiles  : %zu\n"), info.maxOpenFiles);
-        Serial.printf_P(PSTR("SPIFFS maxPathLength : %zu\n"), info.maxPathLength);
+        WIFINFO_FS.info(info);
+        Serial.printf_P(PSTR("FS totalBytes    : %zu\n"), info.totalBytes);
+        Serial.printf_P(PSTR("FS usedBytes     : %zu\n"), info.usedBytes);
+        Serial.printf_P(PSTR("FS blockSize     : %zu\n"), info.blockSize);
+        Serial.printf_P(PSTR("FS pageSize      : %zu\n"), info.pageSize);
+        Serial.printf_P(PSTR("FS maxOpenFiles  : %zu\n"), info.maxOpenFiles);
+        Serial.printf_P(PSTR("FS maxPathLength : %zu\n"), info.maxPathLength);
 
         Serial.printf_P(PSTR("WiFi status : %d\n"), WiFi.status());
         Serial.printf_P(PSTR("WiFi mode   : %d\n"), WiFi.getMode());
@@ -213,7 +244,9 @@ void cli_setup()
         Serial.printf_P(PSTR("softAPIP    : %s\n"), WiFi.softAPIP().toString().c_str());
         Serial.printf_P(PSTR("Persistent  : %d\n"), WiFi.getPersistent());
 
+#ifdef ENABLE_DEBUG
         WiFi.printDiag(Serial);
+#endif
         Serial.flush();
     });
 
@@ -271,7 +304,7 @@ int cli_loop_read()
 }
 
 // dump eeprom value to serial
-void cli_eeprom_dump(uint8_t bytesPerRow, size_t size)
+static void cli_eeprom_dump(uint8_t bytesPerRow, size_t size)
 {
     size_t i;
     size_t j = 0;
@@ -306,3 +339,5 @@ void cli_eeprom_dump(uint8_t bytesPerRow, size_t size)
         }
     }
 }
+
+#endif // ENABLE_CLI
