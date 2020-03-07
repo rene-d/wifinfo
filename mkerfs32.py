@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # ERFS.cpp - Embedded Read-only File System (ERFS)
 # Copyright (c) 2020 René Devichi. All rights reserved.
+
 #
 # ERFS is heavily inspired by Microchip Proprietary File System (MPFS2)
 #

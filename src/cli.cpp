@@ -1,6 +1,8 @@
 // module téléinformation client
 // rene-d 2020
 
+// commandes par le port série pour la mise au point
+
 #include "wifinfo.h"
 
 #ifdef ENABLE_CLI
@@ -20,6 +22,7 @@
 #include <PolledTimeout.h>
 #include <SimpleCLI.h>
 
+// valeurs positionnées par le linker
 extern "C" uint32_t _EEPROM_start;
 extern "C" uint32_t _FS_start;
 extern "C" uint32_t _FS_end;
@@ -150,7 +153,7 @@ void cli_setup()
             uint8_t buf[64];
             buf[10] = 0;
             size_t n = f.read(buf, sizeof(buf) - 1);
-            if (n != -1)
+            if (n != (size_t)-1)
             {
                 buf[n] = 0;
                 Serial.printf_P(PSTR("read %zu, version: '%s'\n"), n, (const char *)buf);

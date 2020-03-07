@@ -44,7 +44,7 @@ void fs_get_json(String &response, bool restricted)
         return;
     }
 
-    response.reserve(512); // about 400 bytes
+    response.reserve(512); // JSON is about 500 bytes
 
     response = F("{\"files\":");
 

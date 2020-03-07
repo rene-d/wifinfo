@@ -1,8 +1,9 @@
 // ERFS.cpp - Embedded Read-only File System (ERFS)
 // Copyright (c) 2020 René Devichi. All rights reserved.
+
 //
 // ERFS is heavily inspired by Microchip Proprietary File System (MPFS2)
-//
+// It is intended to provide a small read-only filesystem for ESP8266.
 //
 // ERFS Structure:
 //     [E][P][F][S]
@@ -64,6 +65,7 @@ struct FATRecord
 
 #define NAME_MAX_SIZE 64
 
+// returns the next 4-byte boundary
 static inline uint32_t align32(uint32_t n)
 {
     if ((n & 3) == 0)
@@ -111,9 +113,9 @@ public:
     }
 
 private:
-    uint32_t start_; // address
-    uint32_t size_;  // size in bytes
-    uint16_t num_files_;
+    uint32_t start_;     // physical address in flash
+    uint32_t size_;      // size in bytes
+    uint16_t num_files_; // number of files
 };
 
 class ERFSFileImpl : public fs::FileImpl
@@ -157,6 +159,7 @@ public:
     explicit ERFSDirImpl(ERFSImpl *impl) : impl_(impl), index_(0)
     {
         memset(name_, 0, NAME_MAX_SIZE);
+        memset(&record_, 0, sizeof(FATRecord));
     }
 
     virtual fs::FileImplPtr openFile(fs::OpenMode openMode, fs::AccessMode accessMode) override
