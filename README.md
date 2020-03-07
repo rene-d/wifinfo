@@ -18,11 +18,11 @@ Ce projet est la fusion de développements réalisés en vue du remplacement d'u
 -   Minimisation des allocations mémoire (nouvelle librairie teleinfo)
 -   Server-sent event ([SSE](https://fr.wikipedia.org/wiki/Server-sent_events)) pour les mises à jour des index
 -   Notifications HTTP sur changements HC/HP et dépasssement de seuils ou ADPS
+-   Compression et minimisation de la partie web avant écriture du filesystem (`data_src` ⇒ `data` au moment du build)
 -   Client en liaison série pour mise au point avec [SimpleCLI](https://github.com/spacehuhn/SimpleCLI)
 -   Tests unitaires sur PC et couverture
 -   Analyse statique de code
 -   Client Python de simulation [cli.py](tools/cli.py) sur base de `miniterm.py` de [pyserial](https://pyserial.readthedocs.io/)
--   Compression et minimisation de la partie web avant écriture du filesystem (`data_src` ⇒ `data` au moment du build)
 -   Serveur Python [Flask](https://www.palletsprojects.com/p/flask/) pour développement de la partie web
 -   Exemple de stack [InfluxDB](https://www.influxdata.com) + [Grafana](https://grafana.com) pour la visualisation des données (avec sonde Python et client SSE)
 -   Utilisation de [PlatformIO](https://platformio.org) comme environnement de développement
@@ -93,29 +93,31 @@ Elle est envoyée à chaque réception de trame depuis le compteur.
 
 ## Installation
 
-Le projet est compilé automatiquement pour deux boards:
--   [esp01_1m](https://docs.platformio.org/en/latest/boards/espressif8266/esp01_1m.html) : ESP-01S avec 1 Mo de mémoire flash et LED sur GPIO2, dont 256 Ko pour le filesystem SPIFFS
--   [esp12e](https://docs.platformio.org/en/latest/boards/espressif8266/esp12e.html) : ESP-12E (type NodeMCU 1.0) ou ESP-07 avec 4 Mo de flash, dont 1 Mo pour le filesystem SPIFFS
+**Depuis la version 1.6, le projet utilise un autre système de fichiers que SPIFFS (code trop gourmand ~30Ko, et rajoute beaucoup d'overhead dans le filesystem). Les tailles du firmware et du filesystem empêchaient les mises à jour des modules avec 1Mo de mémoire flash.**
+
+Le projet automatiquement est compilé  pour deux boards (_Releases_):
+-   [esp01_1m](https://docs.platformio.org/en/latest/boards/espressif8266/esp01_1m.html) : ESP-01S avec 1 Mo de mémoire flash et LED sur GPIO2, dont 192 Ko pour le filesystem ERFS
+-   [esp12e](https://docs.platformio.org/en/latest/boards/espressif8266/esp12e.html) : ESP-12E (type NodeMCU 1.0) ou ESP-07 avec 4 Mo de flash, dont 1 Mo pour le filesystem ERFS
 
 La programmation d'un module requiert des outils. [esptool.py](https://github.com/espressif/esptool) est l'outil officiel. L'IDE [Arduino](https://www.arduino.cc/en/main/software) permet également de le faire.
 
-Veuillez noter que chaque firmware est compilé pour une board précise, avec un plan d'adressage et une taille mémoire précises.
+Veuillez noter que chaque firmware est compilé pour une board précise, avec un plan d'adressage et une taille mémoire précises. Pour téléverser le programme avec l'IDE Arduino, il faut veiller à choisir la bonne carte et la bonne "Flash Size".
 
 Programmation module 1 Mo :
 ```bash
 esptool.py write_flash 0 firmware.bin
-esptool.py write_flash 0xc0000 spiffs.bin
+esptool.py write_flash 0xcb000 erfs.bin
 ```
 
 Programmation module 4 Mo :
 ```bash
 esptool.py write_flash 0 firmware.bin
-esptool.py write_flash 0x300000 spiffs.bin
+esptool.py write_flash 0x300000 erfs.bin
 ```
 
 ## Compilation
 
-Le projet est prévu pour PlatformIO sous macOS ou Linux, en conjonction avec [Visual Studio Code](https://code.visualstudio.com) et son extension [PlatformIO](https://marketplace.visualstudio.com/items?itemName=platformio.platformio-ide).
+Le projet est conçu pour PlatformIO, en conjonction avec [Visual Studio Code](https://code.visualstudio.com) et son extension [PlatformIO](https://marketplace.visualstudio.com/items?itemName=platformio.platformio-ide).
 
 L'IDE d'Arduino peut également être utilisé.
 
@@ -128,27 +130,54 @@ La page HTML est compressée avec [html-minifier](https://github.com/kangax/html
 -   `ENABLE_LED` : active l'utilisation de LED pour les cartes qui en ont une (esp01s, esp12e)
 -   `ENABLE_OTA` : rajoute le code pour les mises à jour OTA **(non testé)**
 -   `ENABLE_CPULOAD` : mesure de manière empirique la charge CPU
+-   `WIFINFO_FS` : filesystem à utiliser (SPIFFS ou ERFS)
 
 Nota: Sans l'option `ENABLE_DEBUG`, le port série est réglé à 1200 7E1 en RX uniquement. Il y a suffisamment d'outils de mise au point pour ne pas à devoir tester avec un compteur ou un autre microcontrôleur qui simule la téléinformation.
+
+### Génération du filesystem ERFS
+
+Le filesystem est automatiquement construit par PlatformIO - même s'il s'appelle `spiffs.bin`, PlatformIO ne permet pas d'en changer le nom.
+
+Les différentes étapes peuvent être reproduites indépendamment.
+
+Le répertoire `data` est préparé à l'aide du script [prep_data_folder.py](./prep_data_folder.py) (nécessite python3, gzip, html-minifier) :
+
+```bash
+python3 prep_data_folder.py
+```
+
+Le fichier binaire est assemblé par le script [mkerfs32.py](./mkerfs32.py) est l'outil utilisé.
+
+```bash
+# version 1Mo flash dont 192Ko de filesystem
+python3 mkerfs32.py -c data -s 192k erfs.bin
+
+# version 4Mo flash dont 1Mo de filesystem
+python3 mkerfs32.py -c data -s 1000k erfs.bin
+```
 
 ### PlatformtIO
 
 Avec PlatformIO (soit ligne de commandes, soit extension Visual Studio Code):
 
 ```bash
-platformio run -t uploadfs
-platformio run -t upload
+platformio run -e <carte> -t uploadfs
+platformio run -e <carte> -t upload
 ```
+
+Cf. [platformio.ini](./platformio.ini) pour l'environnement `<carte>`.
 
 ### IDE Arduino
 
-Cf. les nombreux tutos pour l'utilisation d'esp8266-arduino et l'upload de SPIFFS. Il sera aussi nécessaire de rajouter la librairie SimpleCLI.
+Cf. les nombreux tutos pour l'utilisation d'esp8266-arduino. Il sera aussi nécessaire de rajouter la librairie SimpleCLI.
 
-Le répertoire `data` est préparé à l'aide du script suivant (nécessite python3, gzip, html-minifier) :
+Le script [mkarduinosrc.py](tools/mkarduinosrc.py) permet l'[amalgamation](https://www.sqlite.org/amalgamation.html) du code source en un seul `wifinfo.ino`.
 
-```bash
-python3 prep_data_folder.py
-```
+Ajout [SimpleCLI](https://github.com/spacehuhn/SimpleCLI):
+![SimpleCLI](docs/arduinoide_simplecli.png)
+
+Sélection de `Flash Size` pour module 1 Mo:
+![Flash Size](docs/arduinoide_1m192.png)
 
 ## Client de test/mise au point
 
@@ -179,9 +208,15 @@ Sans Docker:
 
 ```bash
 mkdir -p build && cd build
-cmake .. -DCODE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug
-make
-make test
+cmake .. -DCODE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug -G Ninja
+ninja
+ninja test
+```
+
+Ou plus simplement:
+
+```bash
+./runtest.sh
 ```
 
 L'installation de certains outils et librairies est nécessaire.
@@ -260,6 +295,7 @@ Le montage final utilise un ESP-01S avec le module [PiTInfo](http://hallard.me/p
 
 -   [Docker](https://www.docker.com) ou [Docker Desktop](https://www.docker.com/products/docker-desktop)
 -   [CMake](https://cmake.org)
+-   [Ninja](https://ninja-build.org)
 -   [Google Test](https://github.com/google/googletest) : Google Testing and Mocking Framework
 -   [nlohmann json](https://github.com/nlohmann/json) : JSON for Modern C++
 -   [gcovr](https://gcovr.com/) : Generate C/C++ code coverage reports with gcov

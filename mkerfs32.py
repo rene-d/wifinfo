@@ -4,7 +4,7 @@
 
 #
 # ERFS is heavily inspired by Microchip Proprietary File System (MPFS2)
-#
+# It is intended to provide a small read-only filesystem for ESP8266.
 #
 # ERFS Structure:
 #     [E][P][F][S]
