@@ -103,9 +103,9 @@ void sys_get_info_json(String &response, bool restricted)
 
     if ((WiFi.status() == WL_CONNECTED) && !restricted)
     {
+        js.append(F("Wi-Fi Réseau"), config.ssid);
         sprintf_P(buffer, PSTR("%d dB"), WiFi.RSSI());
         js.append(F("Wi-Fi RSSI"), buffer);
-        js.append(F("Wi-Fi network"), config.ssid);
         js.append(F("Adresse MAC station"), WiFi.macAddress());
     }
 
@@ -113,7 +113,7 @@ void sys_get_info_json(String &response, bool restricted)
 
     if (!restricted)
     {
-        js.append(F("WifInfo Version"), WIFINFO_VERSION);
+        js.append(F("WifInfo Version (Firmware)"), WIFINFO_VERSION);
         js.append(F("Compilé le"), __DATE__ " " __TIME__);
 
         String flags;
@@ -139,15 +139,15 @@ void sys_get_info_json(String &response, bool restricted)
         sprintf_P(buffer, PSTR("0x%06X"), ESP.getChipId());
         js.append(F("Chip ID"), buffer);
 
-        sprintf_P(buffer, PSTR("0x%0X"), system_get_boot_version());
-        js.append(F("Boot Version"), buffer);
+        // sprintf_P(buffer, PSTR("0x%0X"), system_get_boot_version());
+        // js.append(F("Boot Version"), buffer);
 
-        js.append(F("Flash Real Size"), sys_format_size(ESP.getFlashChipRealSize()));
-        js.append(F("Firmware Size"), sys_format_size(ESP.getSketchSize()));
+        js.append(F("Taille mémoire Flash"), sys_format_size(ESP.getFlashChipRealSize()));
+        js.append(F("Taille Firmware"), sys_format_size(ESP.getSketchSize()));
     }
 
-    js.append(F("Free Size"), sys_format_size(ESP.getFreeSketchSpace()));
-    js.append(F("Free RAM"), sys_format_size(system_get_free_heap_size()));
+    js.append(F("Mémoire Flash libre"), sys_format_size(ESP.getFreeSketchSpace()));
+    js.append(F("Mémoire RAM libre"), sys_format_size(system_get_free_heap_size()));
 
 #ifdef ENABLE_CPULOAD
     sprintf_P(buffer, PSTR("%d %%"), cpuload_cpu());
@@ -158,13 +158,13 @@ void sys_get_info_json(String &response, bool restricted)
     WIFINFO_FS.info(info);
 
     js.append(F("FS Total"), sys_format_size(info.totalBytes));
-    js.append(F("FS Used"), sys_format_size(info.usedBytes));
+    js.append(F("FS Utilisés"), sys_format_size(info.usedBytes));
 
     sprintf_P(buffer, PSTR("%zu %%"), 100 * info.usedBytes / info.totalBytes);
     js.append(F("FS Occupation"), buffer);
 
-    js.append(F("SSE clients"), sse_clients.count());
-    js.append(F("SSE connexions"), sse_clients.remotes());
+    js.append(F("SSE Clients"), sse_clients.count());
+    js.append(F("SSE Connexions"), sse_clients.remotes());
 
     js.finalize();
 }
