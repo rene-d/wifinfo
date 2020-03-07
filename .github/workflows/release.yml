@@ -31,7 +31,7 @@ jobs:
           platformio run -e esp01s_prod -e esp12e_prod
           platformio run -e esp01s_prod -e esp12e_prod -t buildfs
 
-          tools/mkarduinosrc.py -1 arduino.zip
+          tools/mkarduinosrc.py arduino.zip
 
           cd .pio/build
           for i in */spiffs.bin; do mv $i $(dirname $i)/erfs.bin; done

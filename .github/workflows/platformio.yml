@@ -37,10 +37,11 @@ jobs:
     - name: Make artifacts
       run: |
         mkdir -p zip
-        tools/mkarduinosrc.py -1 zip/arduino.zip
+        tools/mkarduinosrc.py -1 zip/source-$(git rev-parse --short HEAD).zip
 
         cd .pio/build
-        zip ../../zip/wifinfo-$(git describe).zip $(ls */spiffs.bin */firmware.bin)
+        for i in */spiffs.bin; do mv $i $(dirname $i)/erfs.bin; done
+        zip ../../zip/wifinfo-$(git rev-parse --short HEAD).zip $(ls */*.bin)
 
     - name: Archive firmware+spiffs
       uses: actions/upload-artifact@v1
