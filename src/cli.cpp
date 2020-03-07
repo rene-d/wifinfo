@@ -1,7 +1,7 @@
 // module téléinformation client
 // rene-d 2020
 
-#include "settings.h"
+#include "wifinfo.h"
 
 #ifdef ENABLE_CLI
 
@@ -71,6 +71,13 @@ void cli_setup()
     });
 
     cli.addSingleArgCmd("ls", [](cmd *) {
+
+
+        fs::File f = WIFINFO_FS.open("/version", "r");
+        uint8_t buf[20];
+        buf[10]=0;
+        size_t n = f.read(buf, 10);
+        Serial.printf("read %zu %s\n", n, (char*)buf);
         fs_ls();
     });
 
@@ -201,13 +208,13 @@ void cli_setup()
         Serial.printf_P(PSTR("HeapFragmentation : %u\n"), ESP.getHeapFragmentation());
 
         FSInfo info;
-        SPIFFS.info(info);
-        Serial.printf_P(PSTR("SPIFFS totalBytes    : %zu\n"), info.totalBytes);
-        Serial.printf_P(PSTR("SPIFFS usedBytes     : %zu\n"), info.usedBytes);
-        Serial.printf_P(PSTR("SPIFFS blockSize     : %zu\n"), info.blockSize);
-        Serial.printf_P(PSTR("SPIFFS pageSize      : %zu\n"), info.pageSize);
-        Serial.printf_P(PSTR("SPIFFS maxOpenFiles  : %zu\n"), info.maxOpenFiles);
-        Serial.printf_P(PSTR("SPIFFS maxPathLength : %zu\n"), info.maxPathLength);
+        WIFINFO_FS.info(info);
+        Serial.printf_P(PSTR("FS totalBytes    : %zu\n"), info.totalBytes);
+        Serial.printf_P(PSTR("FS usedBytes     : %zu\n"), info.usedBytes);
+        Serial.printf_P(PSTR("FS blockSize     : %zu\n"), info.blockSize);
+        Serial.printf_P(PSTR("FS pageSize      : %zu\n"), info.pageSize);
+        Serial.printf_P(PSTR("FS maxOpenFiles  : %zu\n"), info.maxOpenFiles);
+        Serial.printf_P(PSTR("FS maxPathLength : %zu\n"), info.maxPathLength);
 
         Serial.printf_P(PSTR("WiFi status : %d\n"), WiFi.status());
         Serial.printf_P(PSTR("WiFi mode   : %d\n"), WiFi.getMode());

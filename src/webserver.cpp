@@ -1,7 +1,7 @@
 // module téléinformation client
 // rene-d 2020
 
-#include "settings.h"
+#include "wifinfo.h"
 #include "webserver.h"
 #include "config.h"
 #include "cpuload.h"
@@ -153,7 +153,7 @@ void webserver_setup()
     server.on(F("/emoncms.json"), server_send_json<tic_emoncms_data>);
     server.on(F("/system.json"), server_send_json<sys_get_info_json>);
     server.on(F("/config.json"), server_send_json<config_get_json>);
-    server.on(F("/spiffs.json"), server_send_json<fs_get_spiffs_json>);
+    server.on(F("/spiffs.json"), server_send_json<fs_get_json>);
     server.on(F("/wifiscan.json"), server_send_json<sys_wifi_scan_json>);
 
     server.on(F("/factory_reset"), [] {
@@ -206,18 +206,18 @@ void webserver_setup()
     });
 
     server.on(F("/version"), []() {
-        File file = SPIFFS.open("/version", "r");
+        File file = WIFINFO_FS.open("/version", "r");
         server.sendHeader("Cache-Control", "max-age=86400");
         server.streamFile(file, mime::mimeTable[mime::txt].mimeType);
         file.close();
     });
 
-    // serves all SPIFFS Web file with 24hr max-age control
+    // serves all read-only web file with 24hr max-age control
     // to avoid multiple requests to ESP
-    server.serveStatic("/font", SPIFFS, "/font", "max-age=86400");
-    server.serveStatic("/js", SPIFFS, "/js", "max-age=86400");
-    server.serveStatic("/css", SPIFFS, "/css", "max-age=86400");
-    server.serveStatic("/favicon.ico", SPIFFS, "/favicon.ico", "max-age=86400");
+    server.serveStatic("/fonts", WIFINFO_FS, "/fonts", "max-age=86400");
+    server.serveStatic("/js", WIFINFO_FS, "/js", "max-age=86400");
+    server.serveStatic("/css", WIFINFO_FS, "/css", "max-age=86400");
+    server.serveStatic("/favicon.ico", WIFINFO_FS, "/favicon.ico", "max-age=86400");
 
     server.onNotFound(webserver_handle_notfound);
 
@@ -248,16 +248,16 @@ static bool webserver_handle_read(const String &path)
     String contentType = esp8266webserver::StaticRequestHandler<WiFiServer>::getContentType(path);
 
     String real_path = path + ".gz";
-    if (!SPIFFS.exists(real_path)) // If there's a compressed version available
+    if (!WIFINFO_FS.exists(real_path)) // If there's a compressed version available
     {
-        if (!SPIFFS.exists(path))
+        if (!WIFINFO_FS.exists(path))
         {
             return false;
         }
         real_path = path;
     }
 
-    File file = SPIFFS.open(real_path, "r");
+    File file = WIFINFO_FS.open(real_path, "r");
 
     server.sendHeader("Cache-Control", "max-age=86400");
 

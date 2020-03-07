@@ -23,7 +23,7 @@
 //
 // **********************************************************************************
 
-#include "settings.h"
+#include "wifinfo.h"
 #include "config.h"
 #include "jsonbuilder.h"
 #include "strncpy_s.h"

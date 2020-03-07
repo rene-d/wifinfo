@@ -7,7 +7,7 @@
 
 // version logicielle
 // PlatformIO positionne automatiquement à partir de la référence Git
-#define WIFINFO_VERSION "arduino"
+#define WIFINFO_VERSION "arduinoide"
 
 // active la sortie sur le port série TX et vitesse 115200.
 // Non utilisable avec un compteur, il faut utiliser le client de test pour injecter des trames.
@@ -26,3 +26,7 @@
 // #define ENABLE_CPULOAD
 
 #endif
+
+//
+#define WIFINFO_FS SPIFFS
+//#include "EPFS.h"

@@ -34,10 +34,6 @@
             <li><a href="#tab_sys" data-toggle="tab"><span class="glyphicon glyphicon-cog">&nbsp;</span>Système</a></li>
             <li><a href="#tab_cfg" data-toggle="tab"><span class="glyphicon glyphicon-wrench">&nbsp;</span>Configuration</a></li>
 
-            <!--RESTRICT_ON-->
-            <li><a href="#tab_fs" data-toggle="tab"><span class="glyphicon glyphicon-folder-open">&nbsp;</span>Fichiers&nbsp;<span class="badge"
-                        id="sspiffs"></span></a></li>
-            <!--RESTRICT_OFF-->
         </ul>
 
         <!-- Contenu des onglets -->
@@ -156,39 +152,6 @@
                     </thead>
                 </table>
             </div> <!-- tab systeme-->
-
-            <!--RESTRICT_ON-->
-            <!-- tab SPIFFS -->
-            <div class="tab-pane fade" id="tab_fs">
-                <h4>Fichiers du système</h4>
-                <div>
-                    <span style="float:left;width:18ex;text-align:center;">Utilisation : </span>
-                    <div class="progress">
-                        <div class="progress-bar progress-bar-success" style="width:0" id="pfsbar">
-                            <span class=show id="fs_use">Calcul en cours</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <h3 class="panel-title">Système de fichiers SPIFFS</h3>
-                    </div>
-                    <div class="panel-body">
-                        <table data-toggle="table" data-toolbar="#fs_toolbar" class="table table-striped table-condensed" data-show-refresh="true"
-                            data-show-columns="true" data-search="true" id="tab_fs_data" data-select-item-name="toolbar4">
-                            <thead>
-                                <tr>
-                                    <th data-field="na" data-align="left" data-formatter="fileFormatter">Fichier</th>
-                                    <th data-field="va" data-align="center" data-sortable="true">taille (Octets)</th>
-                                    <th data-field="act" data-align="left">Action</th>
-                                </tr>
-                            </thead>
-                        </table>
-                    </div>
-                </div>
-            </div> <!-- tab SPIFFS-->
-            <!--RESTRICT_OFF-->
 
             <!-- tab Configuration -->
             <div class="tab-pane fade" id="tab_cfg">
@@ -611,7 +574,7 @@
                                                 </span>
                                             </span>
                                             <input id="txt_upload_fw" type="text" size="32" class="form-control"
-                                                placeholder="Aucun fichier firmware.bin ou spiffs.bin choisi" readonly>
+                                                placeholder="Aucun fichier firmware.bin ou epfss.bin choisi" readonly>
                                         </div>
                                     </div>
                                     <div class="col-xs-3">
@@ -897,9 +860,6 @@
 
             // efface les badges des onglets
             $('#scharge').text("");
-            //<!--RESTRICT_ON-->
-            $('#sspiffs').text("");
-            //<!--RESTRICT_OFF-->
 
             // IE10, Firefox, Chrome, etc.
             if (history.pushState)
@@ -918,39 +878,6 @@
                     silent: true,
                     url: '/system.json'
                 });
-                //<!--RESTRICT_ON-->
-            } else if (target == '#tab_fs') {
-                $.getJSON("/spiffs.json", function (spiffs_data) {
-                    var pe, cl;
-                    var total = spiffs_data.spiffs[0].Total;
-                    var used = spiffs_data.spiffs[0].Used;
-                    // freeram = spiffs_data.spiffs[0].RAM;
-
-                    //$('#tab_fs_data').bootstrapTable({silent:true, showLoading:true});
-                    $('#tab_fs_data').bootstrapTable('load', spiffs_data.files, {
-                        silent: true,
-                        showLoading: true
-                    });
-
-                    pe = parseInt(used * 100 / total);
-                    if (isNaN(pe))
-                        pe = 0;
-                    cl = 'success';
-                    if (pe > 70) cl = 'warning';
-                    if (pe > 85) cl = 'danger';
-
-                    cl = 'progress-bar-' + cl;
-                    if (pe > 0)
-                        $('#sspiffs').text(pe + '%');
-                    $('#fs_use').text(formatSize(used) + ' / ' + formatSize(total));
-                    $('#pfsbar').attr('class', 'progress-bar ' + cl);
-                    $('#pfsbar').css('width', pe + '%');
-
-                })
-                    .fail(function () {
-                        console.log("error while requestiong spiffs data");
-                    })
-                //<!--RESTRICT_OFF-->
             } else if (target == '#tab_cfg') {
                 $.getJSON("/config.json", function (form_data) {
                     $("#frm_config").autofill(form_data);
@@ -1012,13 +939,6 @@
         })
 
         //<!--RESTRICT_ON-->
-        $('#tab_fs_data').on('load-success.bs.table', function (e, data) {
-            console.log('#tab_fs_data loaded');
-        })
-            .on('load-error.bs.table', function (e, status) {
-                console.log('Event: load-error.bs.table');
-                // myTimer=setInterval(function(){myRefresh()},5000);
-            });
 
         $('#tab_scan').on('click-row.bs.table', function (e, name, args) {
             // var $form = $('#tab_cfg');
@@ -1092,8 +1012,8 @@
             var name = f.name.toLowerCase();
             var html = f.type + ' - taille:' + f.size + '&nbsp;octets'
 
-            var is_spiffs = name.match("spiffs.bin$");
-            var is_firmware = name.match(".bin$") && !is_spiffs;
+            var is_filesystem = name.match("epfs.bin$");
+            var is_firmware = name.match(".bin$") && !is_filesystem;
 
             $('#pgfw').removeClass('show').addClass('hide');
             $('#sfw').text(name + ' : ');
@@ -1101,9 +1021,9 @@
             if (!f.type.match('application/macbinary') && !f.type.match('application/octet-stream')) {
                 Notify(3, 'remove', 'danger', 'Type de fichier non conforme', 'Le fichier de mise à jour doit être un fichier binaire');
                 ok = false;
-            } else if (!is_spiffs && !is_firmware) {
+            } else if (!is_filesystem && !is_firmware) {
                 Notify(5, 'remove', 'danger', 'Nom de fichier incorrect',
-                    'Le fichier de mise à jour doit être nommé: <ul><li>firmware.bin (Logiciel)</li><li>spiffs.bin (Système de fichiers)</li></ul>');
+                    'Le fichier de mise à jour doit être nommé: <ul><li>firmware.bin (Logiciel)</li><li>epfs.bin (Système de fichiers)</li></ul>');
                 ok = false;
             }
             if (ok) {
@@ -1116,7 +1036,7 @@
                 if (is_firmware) {
                     label = 'Mise à jour Logiciel';
                 } else {
-                    label = 'Mise à jour SPIFFS';
+                    label = 'Mise à jour Web';
                 }
                 $btn.val(label);
                 $('#fw_info').html('<strong>' + label + '</strong> ' + html);

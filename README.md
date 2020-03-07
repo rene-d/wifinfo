@@ -77,7 +77,6 @@ Exemple: `/update.php?ptec=$PTEC&conso=~HCHC~+~HCHP~&id=$chipid` ⇒ `/update.ph
 -   <http://wifinfo/system.json> : état du système, utilisé par l'onglet Système de l'interface
 -   <http://wifinfo/config.json> : état du système, utilisé par l'onglet Configuration de l'interface
 -   <http://wifinfo/wifiscan.json> : liste des réseaux Wi-Fi, utilisé par l'onglet Configuration de l'interface
--   <http://wifinfo/spiffs.json> : liste des fichiers, utilisé par l'onglet Fichiers de l'interface
 
 ### Autres requêtes
 

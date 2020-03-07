@@ -23,7 +23,7 @@
 //
 // **********************************************************************************
 
-#include "settings.h"
+#include "wifinfo.h"
 #include "sys.h"
 #include "cpuload.h"
 #include "config.h"
@@ -155,13 +155,13 @@ void sys_get_info_json(String &response, bool restricted)
 #endif
 
     FSInfo info;
-    SPIFFS.info(info);
+    WIFINFO_FS.info(info);
 
-    js.append(F("SPIFFS Total"), sys_format_size(info.totalBytes));
-    js.append(F("SPIFFS Used"), sys_format_size(info.usedBytes));
+    js.append(F("FS Total"), sys_format_size(info.totalBytes));
+    js.append(F("FS Used"), sys_format_size(info.usedBytes));
 
     sprintf_P(buffer, PSTR("%zu %%"), 100 * info.usedBytes / info.totalBytes);
-    js.append(F("SPIFFS Occupation"), buffer);
+    js.append(F("FS Occupation"), buffer);
 
     js.append(F("SSE clients"), sse_clients.count());
     js.append(F("SSE connexions"), sse_clients.remotes());

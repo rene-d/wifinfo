@@ -4,7 +4,7 @@
 // Notes pour Arduino IDE
 
 // Tout le code du sketch se trouve dans les fichiers *.cpp
-// Les réglages de compilation se trouvent dans le fichier settings.h
+// Les réglages de compilation se trouvent dans le fichier wifinfo.h
 // Le dossier data est créé à partir de data_src
 
 // Bibliothèque à installer (Croquis/Include une bibliothèque/Gérer les bibliothèques): SimpleCLI
