@@ -79,7 +79,7 @@ static inline uint32_t align32(uint32_t n)
 class ERFSImpl : public fs::FSImpl
 {
 public:
-    ERFSImpl(uint32_t start, uint32_t size) : start_(start), size_(size), num_files_(0) {}
+    explicit ERFSImpl(uint32_t start, uint32_t size) : start_(start), size_(size), num_files_(0) {}
     virtual ~ERFSImpl() {}
     virtual bool setConfig(const fs::FSConfig &cfg) override { return true; }
     virtual bool begin() override;
@@ -119,7 +119,7 @@ private:
 class ERFSFileImpl : public fs::FileImpl
 {
 public:
-    ERFSFileImpl(ERFSImpl *impl, const char *path);
+    explicit ERFSFileImpl(ERFSImpl *impl, const char *path);
 
     virtual ~ERFSFileImpl() {}
     virtual size_t write(const uint8_t *buf, size_t size) override { return 0; }
@@ -154,8 +154,9 @@ private:
 class ERFSDirImpl : public fs::DirImpl
 {
 public:
-    ERFSDirImpl(ERFSImpl *impl) : impl_(impl), index_(0)
+    explicit ERFSDirImpl(ERFSImpl *impl) : impl_(impl), index_(0)
     {
+        memset(name_, 0, NAME_MAX_SIZE);
     }
 
     virtual fs::FileImplPtr openFile(fs::OpenMode openMode, fs::AccessMode accessMode) override
@@ -196,7 +197,7 @@ public:
             uint32_t fat_addr = sizeof(ERFSHeader) + align32(2 * impl_->num_files());
 
             impl_->hal_read(fat_addr + sizeof(FATRecord) * index_, sizeof(FATRecord), &record_);
-            impl_->hal_read(record_.name_ptr, NAME_MAX_SIZE, name_);
+            impl_->hal_read(record_.name_ptr, NAME_MAX_SIZE - 1, name_);
 
             ++index_;
             return true;
@@ -334,6 +335,8 @@ ERFSFileImpl::ERFSFileImpl(ERFSImpl *impl, const char *path)
 
     impl_ = nullptr;
 
+    memset(name_, 0, NAME_MAX_SIZE);
+
     if (path[0] == '/')
     {
         path += 1; // skip the leading '/'
@@ -361,7 +364,7 @@ ERFSFileImpl::ERFSFileImpl(ERFSImpl *impl, const char *path)
         if (name_hash == hash_cache[i % 8])
         {
             impl->hal_read(fat_addr + sizeof(FATRecord) * i, sizeof(FATRecord), &record_);
-            impl->hal_read(record_.name_ptr, NAME_MAX_SIZE, name_);
+            impl->hal_read(record_.name_ptr, NAME_MAX_SIZE - 1, name_);
 
             if (strncmp(name_, path, NAME_MAX_SIZE) == 0)
             {

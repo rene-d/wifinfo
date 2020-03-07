@@ -146,12 +146,15 @@ void cli_setup()
 
         if (arg.startsWith(F("ver")))
         {
-            fs::File f = WIFINFO_FS.open("/version", "r");
+            fs::File f = WIFINFO_FS.open(F("/version"), "r");
             uint8_t buf[64];
             buf[10] = 0;
-            size_t n = f.read(buf, 63);
-            buf[n] = 0;
-            Serial.printf("read %zu, version: '%s'\n", n, (char *)buf);
+            size_t n = f.read(buf, sizeof(buf) - 1);
+            if (n != -1)
+            {
+                buf[n] = 0;
+                Serial.printf_P(PSTR("read %zu, version: '%s'\n"), n, (const char *)buf);
+            }
         }
     });
 
