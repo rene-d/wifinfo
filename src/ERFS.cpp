@@ -47,6 +47,8 @@
 #include <FSImpl.h>
 #include <flash_hal.h>
 
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
 struct ERFSHeader
 {
     uint32_t magic;

@@ -14,7 +14,6 @@ void fs_setup()
     // Init filesystem, to use web server static files
     if (!WIFINFO_FS.begin())
     {
-        // Serious problem
         Serial.println(F("FS failure"));
     }
     else

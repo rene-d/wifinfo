@@ -11,8 +11,9 @@ extern int pinMode_called;
 extern int digitalRead_called;
 extern int digitalWrite_called;
 
-static inline unsigned long millis() { return 1000; }
-static inline unsigned long micros() { return 1000000; }
+static inline unsigned long millis() { return 1000u; }
+static inline unsigned long micros() { return 1000000u; }
+static inline uint64_t micros64() { return 1000000u; }
 static inline void delay(unsigned) {}
 
 static inline void pinMode(uint8_t pin, uint8_t mode) { ++pinMode_called; }

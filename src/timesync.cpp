@@ -49,16 +49,12 @@
 #define MYTZ TZ_Europe_Paris
 
 ////////////////////////////////////////////////////////
-// for testing purpose:
-extern "C" int clock_gettime(clockid_t unused, struct timespec *tp);
-
-////////////////////////////////////////////////////////
 
 #define PTM(w)                \
     Serial.print(" " #w "="); \
     Serial.print(tm->tm_##w);
 
-static void printTm(const char *what, const tm *tm)
+static void print_tm(const char *what, const tm *tm)
 {
     Serial.print(what);
     PTM(isdst);
@@ -75,28 +71,19 @@ static void printTm(const char *what, const tm *tm)
 void time_show()
 {
     timeval tv;
-    timespec tp;
     time_t now;
     uint32_t now_ms, now_us;
 
     gettimeofday(&tv, nullptr);
-    clock_gettime(0, &tp);
     now = time(nullptr);
     now_ms = millis();
     now_us = micros();
 
     Serial.println();
-    printTm("localtime:", localtime(&now));
+    print_tm("localtime:", localtime(&now));
     Serial.println();
-    printTm("gmtime:   ", gmtime(&now));
+    print_tm("gmtime:   ", gmtime(&now));
     Serial.println();
-
-    // time from boot
-    Serial.print("clock:     ");
-    Serial.print((uint32_t)tp.tv_sec);
-    Serial.print("s / ");
-    Serial.print((uint32_t)tp.tv_nsec);
-    Serial.println("ns");
 
     // time from boot
     Serial.print("millis:    ");

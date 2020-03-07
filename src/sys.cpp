@@ -40,8 +40,6 @@
 
 #include "emptyserial.h"
 
-extern "C" int clock_gettime(clockid_t unused, struct timespec *tp);
-
 extern SseClients sse_clients;
 
 static int nb_reconnect = 0;
@@ -69,11 +67,10 @@ String sys_format_size(size_t bytes)
 
 String sys_uptime()
 {
-    struct timespec tp;
-    clock_gettime((clockid_t)0, &tp);
+    uint64_t m = micros64();
 
     char buff[64];
-    int sec = tp.tv_sec;
+    int sec = (int)(m / 1000000);
     int min = sec / 60;
     int hr = min / 60;
     long day = hr / 24;
