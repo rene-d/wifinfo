@@ -25,7 +25,7 @@ jobs:
         set -x
         mkdir -p build artifacts
         cd build
-        cmake -DCODE_COVERAGE=ON ..
+        cmake -DCODE_COVERAGE=ON .. -G Ninja
         ninja
         ./tic --gtest_output=xml
         cd ..
