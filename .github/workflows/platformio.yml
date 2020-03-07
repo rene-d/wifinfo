@@ -21,6 +21,7 @@ jobs:
 
     - name: Install dependencies
       run: |
+        npm install -g html-minifier
         python -m pip install --upgrade pip
         pip install platformio
 
@@ -35,12 +36,15 @@ jobs:
 
     - name: Make artifacts
       run: |
+        mkdir -p zip
         cd .pio/build
-        mkdir -p ../zip
-        zip ../zip/wifinfo-$(git describe).zip $(ls */spiffs.bin */firmware.bin)
+        for i in */spiffs.bin; do mv $i $(dirname $i)/erfs.bin; done
+        zip ../../zip/wifinfo-$(git describe).zip $(ls */spiffs.bin */firmware.bin)
+
+        tools/mkarduinosrc.py -1 arduino.zip
 
     - name: Archive firmware+spiffs
       uses: actions/upload-artifact@v1
       with:
-        name: firmware-spiffs
-        path: .pio/zip/
+        name: firmware-filesystem-arduino
+        path: zip/
