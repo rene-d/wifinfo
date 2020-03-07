@@ -31,6 +31,7 @@ jobs:
           platformio run -e esp01s_prod -e esp12e_prod -t buildfs
 
           cd .pio/build
+          for i in */spiffs.bin; do echo mv $i mv $(dirname $i)/erfs.bin; done
           zip --junk-paths ../../esp01_1m.zip esp01s_prod/*.bin
           zip --junk-paths ../../esp12e.zip esp12e_prod/*.bin
 

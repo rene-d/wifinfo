@@ -18,8 +18,8 @@ else
     cd build
 fi
 
-cmake -DCODE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug ${src_dir}
-make -j
+cmake -G Ninja -DCODE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug ${src_dir}
+ninja
 ctest --output-on-failure
 
 if [ "$1" = "cov" ]; then

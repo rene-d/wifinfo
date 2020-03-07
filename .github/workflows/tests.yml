@@ -15,7 +15,7 @@ jobs:
 
     - name: Configure system
       run: |
-        sudo apt-get install -y libgtest-dev python3 python3-pip xsltproc
+        sudo apt-get install -y libgtest-dev python3 python3-pip xsltproc ninja-build
         pip3 install -U setuptools wheel
         pip3 install -U gcovr cpp-coveralls coverage click pyyaml
         wget -nv -P test/support/nlohmann/ https://github.com/nlohmann/json/releases/download/v3.7.3/json.hpp
@@ -26,7 +26,7 @@ jobs:
         mkdir -p build artifacts
         cd build
         cmake -DCODE_COVERAGE=ON ..
-        make -j
+        ninja
         ./tic --gtest_output=xml
         cd ..
         coverage run test/test_eeprom.py

@@ -9,7 +9,7 @@
 FROM debian:buster AS toolchain
 
 RUN apt-get update \
-&&  apt-get install -y gdb make cmake gcc g++ libgtest-dev vim wget curl bash gcovr cppcheck git python3 python3-pip
+&&  apt-get install -y gdb make ninja-build cmake gcc g++ libgtest-dev vim wget curl bash gcovr cppcheck git python3 python3-pip
 
 RUN wget -nv -P /usr/local/include/nlohmann/ https://github.com/nlohmann/json/releases/download/v3.7.3/json.hpp
 
