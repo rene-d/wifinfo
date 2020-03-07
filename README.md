@@ -174,9 +174,11 @@ Cf. les nombreux tutos pour l'utilisation d'esp8266-arduino. Il sera aussi néce
 Le script [mkarduinosrc.py](tools/mkarduinosrc.py) permet l'[amalgamation](https://www.sqlite.org/amalgamation.html) du code source en un seul `wifinfo.ino`.
 
 Ajout [SimpleCLI](https://github.com/spacehuhn/SimpleCLI):
+
 ![SimpleCLI](docs/arduinoide_simplecli.png)
 
 Sélection de `Flash Size` pour module 1 Mo:
+
 ![Flash Size](docs/arduinoide_1m192.png)
 
 ## Client de test/mise au point
