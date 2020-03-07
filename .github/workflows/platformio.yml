@@ -21,6 +21,7 @@ jobs:
 
     - name: Install dependencies
       run: |
+        sudo npm install -g html-minifier
         python -m pip install --upgrade pip
         pip install platformio
 

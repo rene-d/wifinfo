@@ -24,6 +24,7 @@ jobs:
 
       - name: Build project # This would actually build your project, using zip for an example artifact
         run: |
+          sudo npm install -g html-minifier
           python -m pip install --upgrade pip
           pip install platformio
 
