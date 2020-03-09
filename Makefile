@@ -32,7 +32,7 @@ test:
 	@-which open && open build/cppcheck/index.html
 
 docker:
-	docker buildx build -t test .
+	docker buildx build -t test --load .
 	docker run --rm \
 		-v $(PWD):/tic:ro \
 		-v $(PWD)/build/build-docker:/build \
