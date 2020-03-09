@@ -410,7 +410,7 @@ class TeleinfoDecoder : public Teleinfo
         wait_cr
     } state_{wait_stx}; // automate de réception
 
-    int (*time_cb_)(struct timeval *, void *){::gettimeofday};
+    int (*time_cb_)(struct timeval *, void *){static_cast<int (*)(struct timeval *, void *)>(::gettimeofday)};
 
 public:
     void set_time_cb(int (*cb)(struct timeval *, void *))

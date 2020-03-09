@@ -477,8 +477,10 @@ TEST(tic, json)
     // std::cout << output << std::endl;
     auto j1 = json::parse(output.s);
     ASSERT_TRUE(j1.is_array());
-    ASSERT_EQ(j1.size(), 12);
-    ASSERT_EQ(j1[1]["va"], "111111111111");
+    ASSERT_EQ(j1.size(), 13u);
+
+    ASSERT_EQ(j1[2]["na"], "ADCO");
+    ASSERT_EQ(j1[2]["va"], "111111111111");
 
     tic_get_json_dict(output, false);
     // std::cout << output << std::endl;

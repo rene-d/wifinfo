@@ -337,7 +337,7 @@ TEST(teleinfo, ascii)
     size_t sz = tinfo.get_frame_ascii(output, sizeof(output));
     //std::cout << sz << std::endl;
     //std::cout << output << std::endl;
-    ASSERT_NE(sz, 0);
+    ASSERT_NE(sz, 0u);
 }
 
 TEST(teleinfo, iterate)
@@ -377,5 +377,5 @@ TEST(teleinfo, iterate)
     }
 
     // 11 valeurs dans la trame de téléinformation
-    ASSERT_EQ(nb, 11);
+    ASSERT_EQ(nb, 11u);
 }
