@@ -4,7 +4,6 @@
  */
 #pragma once
 
-#include "jsonbuilder.h"
 #include <Arduino.h>
 #include <sys/time.h>
 #include <time.h>
@@ -31,6 +30,13 @@
 <ETX>
 */
 
+// Quelques rappels sur le courant alternatif monophasé:
+//  HCHP/HCHC : index en watt*heure (Wh) d'énergie consommée
+//  IINST : intensité instantanée en ampère (A)
+//  PAPP = puissance apparente en volt-ampère VA = U * I
+//  W = puissance active en watt (W) = U * I * cos Φ
+//  en France, la tension nominale est 230V à 50Hz
+
 class Teleinfo
 {
 public:
@@ -41,12 +47,165 @@ protected:
     size_t size_{0};             // offset courant (i.e. longueur de la trame)
     timeval timestamp_{0, 0};    // date du début de la trame
 
+    struct conso
+    {
+        uint32_t date_ms;
+        uint32_t watt_heure;
+    };
+
+    static const size_t CONSO_MAX = 48; // il y a une mesure toute les 1.4 s
+    conso consos_[CONSO_MAX];           // avec 48, on couvre 67 s
+    ssize_t i_consos_{0};
+    conso conso0_{0, 0};
+
 public:
+    Teleinfo()
+    {
+        memset(&consos_, 0, sizeof(consos_));
+    }
+
     void copy_from(const Teleinfo &tinfo)
     {
         size_ = tinfo.size_;
         memmove(frame_, tinfo.frame_, size_);
         timestamp_ = tinfo.timestamp_;
+
+        if (!is_empty())
+        {
+            uint32_t wh = get_value_int("HCHP") + get_value_int("HCHC");
+
+            if (conso0_.date_ms == 0)
+            {
+                // mémorise une valeur initiale pour avoir des valeurs
+                // un peu moins grandes dans le tableau consos_[]
+                conso0_.date_ms = timestamp_.tv_sec - 1;
+                conso0_.watt_heure = wh - 1;
+            }
+
+            consos_[i_consos_].date_ms = (timestamp_.tv_sec - conso0_.date_ms) * 1000 + timestamp_.tv_usec / 1000;
+            consos_[i_consos_].watt_heure = wh - conso0_.watt_heure;
+
+            i_consos_ = (i_consos_ + 1) % CONSO_MAX;
+        }
+    }
+
+    // retourne l'estimation de la puissance en watt en dérivant les index
+    // de consommation d'énergie qui sont en W.h
+    //
+    // faute de pouvoir faire beaucoup de calculs et de connaître les valeurs futures,
+    // on estime que la variation de la puissance est linéaire sur l'intervalle de temps
+    //
+    // il faut une période de 60s pour avoir une mesure si la puissance est de 60 W:
+    // en 60s l'index va monter de 1 Wh, résolution des index HC/HP.
+    uint32_t watt(uint32_t periode = 60) const
+    {
+        ssize_t actuel = (CONSO_MAX + i_consos_ - 1) % CONSO_MAX;
+        uint32_t now = consos_[actuel].date_ms;
+        ssize_t premier = actuel;
+
+        periode = periode * 1000; // secondes -> millisecondes
+
+        // cherche la valeur la plus éloignée dans le tableau circulaire
+        // tout en restant dans la période
+        do
+        {
+            ssize_t suivant = (CONSO_MAX + premier - 1) % CONSO_MAX;
+            if (consos_[suivant].watt_heure == 0)
+            {
+                break;
+            }
+            if (now - consos_[suivant].date_ms > periode)
+            {
+                break;
+            }
+            premier = suivant;
+        } while (premier != i_consos_);
+
+        if (consos_[actuel].date_ms == consos_[premier].date_ms)
+        {
+            // i.e. actuel == premier (sauf si problème de mesure)
+            // pas assez de valeur
+            return 0;
+        }
+
+#if 0
+        // ajustement affine avec toutes les valeurs trouvées
+
+        size_t i = premier;
+        int n = 0;
+        double m_x = 0;
+        double m_y = 0;
+        double s_x2 = 0;
+        double s_y2 = 0;
+        double s_xy = 0;
+        double x_prev = consos_[premier].date_ms;
+
+        while (true)
+        {
+            n += 1;
+
+            double x = consos_[i].date_ms;
+            double y = consos_[i].watt_heure;
+
+            if (x < x_prev)
+            {
+                x += 1000000;
+            }
+            x_prev = x;
+
+            x = x / 3600000.; // convertit x de millisecondes en heures
+
+            m_x += x;
+            m_y += y;
+
+            s_x2 += x * x;
+            s_y2 += y * y;
+            s_xy += x * y;
+
+            if (i == actuel)
+            {
+                break;
+            }
+            i = (i + 1) % CONSO_MAX;
+        }
+
+        m_x = m_x / n;                        // moyenne(x)
+        m_y = m_y / n;                        // moyenne(y)
+        double cov_xy = s_xy / n - m_x * m_y; // Cov(x, y)
+        double v_x = s_x2 / n - m_x * m_x;    // V(x)
+        double v_y = s_y2 / n - m_y * m_y;    // V(x)
+
+        double r = cov_xy / sqrt(v_x * v_y); // coeff de corrélation linéaire
+        double a = cov_xy / v_x;             // Y = a X + b
+        double b = m_y - a * m_x;            //
+
+        uint32_t w = round(a);
+#else
+        // considère uniquement les première et dernière (actuelle) valeurs
+
+        uint32_t wh = consos_[actuel].watt_heure - consos_[premier].watt_heure;
+        int32_t t = now - consos_[premier].date_ms;
+        if (t < 0)
+        {
+            t += 1000000;
+        }
+        uint32_t w = (3600000 * wh) / t;
+#endif
+
+        // for (int i = 0; i < CONSO_MAX; ++i)
+        // {
+        //     char flag = ' ';
+        //     if (i == i_consos_)
+        //         flag = 'i';
+        //     if (i == actuel)
+        //         flag = 'a';
+        //     if (i == premier)
+        //         flag = 'p';
+        //     printf("%2d %c %10d %10d\n", i, flag, consos_[i].date_ms, consos_[i].watt_heure);
+        // }
+        // printf("\tactuel=%2zu  dernier=%2zu   W=%u   a=%.3lf r=%.3lf\n", actuel, premier, w, 0.,0.);
+
+        return w;
     }
 
     bool is_empty() const
@@ -97,6 +256,28 @@ public:
         }
 
         return default_value;
+    }
+
+    uint32_t get_value_int(const char *label, uint32_t default_value = 0) const
+    {
+        const char *value = get_value(label, nullptr, true);
+        if (value == nullptr)
+        {
+            return default_value;
+        }
+
+        // convertit la chaîne en entier
+        uint32_t u = 0;
+        for (const char *c = value; *c; ++c)
+        {
+            int8_t digit = (*c - '0');
+            if ((digit > 9) || (digit < 0))
+            {
+                return default_value;
+            }
+            u = digit + u * 10;
+        }
+        return u;
     }
 
     bool get_value_next(const char *&label, const char *&value, char const **state) const
@@ -150,14 +331,14 @@ public:
     String get_timestamp_iso8601() const
     {
         struct tm *tm = localtime(&timestamp_.tv_sec);
-        char buf[32];
+        char buf[32]; // bien suffisant pour date
         strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S%z", tm);
         return String(buf);
     }
 
     String get_seconds() const
     {
-        char buf[32];
+        char buf[32]; // bien suffisant pour les secondes
         snprintf(buf, sizeof(buf), "%ld.%03d", timestamp_.tv_sec, (int)(timestamp_.tv_usec / 1000));
         return String(buf);
     }
@@ -229,7 +410,14 @@ class TeleinfoDecoder : public Teleinfo
         wait_cr
     } state_{wait_stx}; // automate de réception
 
+    int (*time_cb_)(struct timeval *, void *){::gettimeofday};
+
 public:
+    void set_time_cb(int (*cb)(struct timeval *, void *))
+    {
+        time_cb_ = cb;
+    }
+
     // trame complète, on peut la lire
     bool ready() const
     {
@@ -245,7 +433,7 @@ public:
             // début de trame, on réinitialise et on attend un LF (ou un ETX à la rigueur...)
             offset_ = 0;
             state_ = wait_lf_or_etx;
-            gettimeofday(&timestamp_, nullptr);
+            time_cb_(&timestamp_, nullptr);
         }
         else if (c == LF)
         {
