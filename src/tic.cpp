@@ -5,6 +5,7 @@
 #include "tic.h"
 #include "config.h"
 #include "httpreq.h"
+#include "jsonbuilder.h"
 #include "led.h"
 #include "sse.h"
 #include "strncpy_s.h"
@@ -193,6 +194,9 @@ void tic_get_json_array(String &data, bool restricted __attribute__((unused)))
     const char *state = nullptr;
 
     js.append("timestamp", tinfo.get_timestamp_iso8601());
+
+    // expérimental: la puissance en watt calculée sur la dernière minute
+    js.append("watt", tinfo.watt());
 
     while (tinfo.get_value_next(label, value, &state))
     {
