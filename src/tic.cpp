@@ -251,6 +251,23 @@ void tic_get_json_dict(String &data, bool restricted __attribute__((unused)))
 // interface pour webserver http://wifinfo/<ETIQUETTE>
 const char *tic_get_value(const char *label)
 {
+    static String buf;  // pas top, mais suffisant et simple
+
+    if (strcmp(label, "watt") == 0)
+    {
+        buf = String(tinfo.watt());
+        return buf.c_str();
+    }
+    if (strcmp(label, "seconds") == 0)
+    {
+        buf = tinfo.get_seconds();
+        return buf.c_str();
+    }
+    if (strcmp(label, "timestamp") == 0)
+    {
+        buf = tinfo.get_timestamp_iso8601();
+        return buf.c_str();
+    }
     return tinfo.get_value(label, nullptr, true);
 }
 

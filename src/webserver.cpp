@@ -103,6 +103,7 @@ void webserver_handle_notfound()
 
     if (value != nullptr)
     {
+        server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
         server.send(200, mime::mimeTable[mime::txt].mimeType, value);
     }
     else
@@ -213,6 +214,13 @@ void webserver_setup()
         server.streamFile(file, mime::mimeTable[mime::txt].mimeType);
         file.close();
     });
+
+    /*
+    server.on(F("/firmware"), []() {
+        server.sendHeader("Cache-Control", "max-age=86400");
+        server.send(200, mime::mimeTable[mime::txt].mimeType, WIFINFO_VERSION);
+    });
+    */
 
     // serves all read-only web file with 24hr max-age control
     // to avoid multiple requests to ESP
