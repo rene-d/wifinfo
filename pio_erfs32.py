@@ -8,5 +8,5 @@ Import("env")
 
 
 env.Replace(
-    MKSPIFFSTOOL="./mkerfs32.py"
+    MKFSTOOL="./mkerfs32.py"
 )
